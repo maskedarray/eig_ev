@@ -161,7 +161,15 @@ void setup() {
   //deleteFile(SD, "/ndata.txt");
   //writeFile(SD, "/ndata.txt", "The data contained in this file is not sent\n\n");
   initRTC();
-  
+
+//   uint freeRAM = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+//   int d = 48;
+//   while (1){
+//     freeRAM = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+//     Serial.println(freeRAM);
+//     d = d+1;
+//     delay(1000);
+//   }
 }
 
 void loop() {
