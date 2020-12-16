@@ -151,16 +151,16 @@ void initSD(){
     Serial.printf("SD Card Size: %lluMB\n", cardSize);
 }
 void setup() {
-  Serial.begin(115200); //Start Serial monitor
+    Serial.begin(115200); //Start Serial monitor
 
-  ESP_BT.begin("EiG BT"); //Name of your Bluetooth Signal
-  Serial.println("Bluetooth Device is Ready to Pair");
-  Serial.println("BT ready");
-  //initialize sd card and place file header
-  initSD();
-  //deleteFile(SD, "/ndata.txt");
-  //writeFile(SD, "/ndata.txt", "The data contained in this file is not sent\n\n");
-  initRTC();
+    ESP_BT.begin("EiG BT"); //Name of your Bluetooth Signal
+    Serial.println("Bluetooth Device is Ready to Pair");
+    Serial.println("BT ready");
+    //initialize sd card and place file header
+    initSD();
+    //deleteFile(SD, "/ndata.txt");
+    //writeFile(SD, "/ndata.txt", "The data contained in this file is not sent\n\n");
+    initRTC();
 
 //   uint freeRAM = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
 //   int d = 48;
@@ -174,8 +174,8 @@ void setup() {
 
 void loop() {
   
-  // code below will convert the raw data to Json format
-  StaticJsonDocument<5200> doc; //DynamicJsonDocument doc(1200);
+    // code below will convert the raw data to Json format
+    StaticJsonDocument<5200> doc; //DynamicJsonDocument doc(1200);
     doc["Time"] = String(getTime());
     doc["BSS_ID"] = String("BSS22");
     doc["Total_Slots"] = String(16);
@@ -183,24 +183,24 @@ void loop() {
     doc["BSS_Current"] = String(random(0, 20));
     doc["BSS_Power"] = String(random(0, 50));
     doc["BSS_PowerFactor"] = String(random(0, 50));
-    
-  JsonArray Batteries = doc.createNestedArray("Slots");
-  JsonObject Slot1 = Batteries.createNestedObject();  
-  JsonObject Slot2 = Batteries.createNestedObject();
-  JsonObject Slot3 = Batteries.createNestedObject();
-  JsonObject Slot4 = Batteries.createNestedObject();
-  JsonObject Slot5 = Batteries.createNestedObject();  
-  JsonObject Slot6 = Batteries.createNestedObject();
-  JsonObject Slot7 = Batteries.createNestedObject();
-  JsonObject Slot8 = Batteries.createNestedObject();
-  JsonObject Slot9 = Batteries.createNestedObject();  
-  JsonObject Slot10 = Batteries.createNestedObject();
-  JsonObject Slot11 = Batteries.createNestedObject();
-  JsonObject Slot12 = Batteries.createNestedObject();
-  JsonObject Slot13 = Batteries.createNestedObject();  
-  JsonObject Slot14 = Batteries.createNestedObject();
-  JsonObject Slot15 = Batteries.createNestedObject();
-  JsonObject Slot16 = Batteries.createNestedObject();
+        
+    JsonArray Batteries = doc.createNestedArray("Slots");
+    JsonObject Slot1 = Batteries.createNestedObject();  
+    JsonObject Slot2 = Batteries.createNestedObject();
+    JsonObject Slot3 = Batteries.createNestedObject();
+    JsonObject Slot4 = Batteries.createNestedObject();
+    JsonObject Slot5 = Batteries.createNestedObject();  
+    JsonObject Slot6 = Batteries.createNestedObject();
+    JsonObject Slot7 = Batteries.createNestedObject();
+    JsonObject Slot8 = Batteries.createNestedObject();
+    JsonObject Slot9 = Batteries.createNestedObject();  
+    JsonObject Slot10 = Batteries.createNestedObject();
+    JsonObject Slot11 = Batteries.createNestedObject();
+    JsonObject Slot12 = Batteries.createNestedObject();
+    JsonObject Slot13 = Batteries.createNestedObject();  
+    JsonObject Slot14 = Batteries.createNestedObject();
+    JsonObject Slot15 = Batteries.createNestedObject();
+    JsonObject Slot16 = Batteries.createNestedObject();
     
     //updateSlot(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , String B_Temp, String B_SoC, String B_SoH, String B_RoD,String B_Vol ,String B_Curr, JsonObject Slot){
 
@@ -221,29 +221,29 @@ void loop() {
     Slot15 = updateSlot("15", "15", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12", "20", Slot15);
     Slot16 = updateSlot("16", "16", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12", "26", Slot16);
 
-  towrite = "";
-  //serializeJson(doc, towrite);
-  readNext(SD, "/ndata.txt");
-  //appendFile(SD, "/ndata.txt");
+    towrite = "";
+    //serializeJson(doc, towrite);
+    readNext(SD, "/ndata.txt");
+    //appendFile(SD, "/ndata.txt");
 
-  static long counter = 0;
-  counter++;
-  Serial.println(counter);
-  Serial.println();
-  Serial.println();
-  
-  //sending over BT
-  ESP_BT.print("%S%"); //end byte //start byte
-  serializeJson(doc,ESP_BT);
-  ESP_BT.print("%S%"); //end byte
-  //ESP_BT.println(); //end byte
-  
-  if (ESP_BT.available()){ //Check if we receive anything from Bluetooth
-      for(int i=0; i<4; i++){ // reading four bytes only, need to send data to esp in a standardized form (delimiters)
-         BT_incoming[i] = ESP_BT.read();
-      }
-      Serial.print("Received:"); Serial.println(BT_incoming);
-  }
-  
-  delay(2000);
+    static long counter = 0;
+    counter++;
+    Serial.println(counter);
+    Serial.println();
+    Serial.println();
+    
+    //sending over BT
+    ESP_BT.print("%S%"); //end byte //start byte
+    serializeJson(doc,ESP_BT);
+    ESP_BT.print("%S%"); //end byte
+    //ESP_BT.println(); //end byte
+    
+    if (ESP_BT.available()){ //Check if we receive anything from Bluetooth
+        for(int i=0; i<4; i++){ // reading four bytes only, need to send data to esp in a standardized form (delimiters)
+            BT_incoming[i] = ESP_BT.read();
+        }
+        Serial.print("Received:"); Serial.println(BT_incoming);
+    }
+    
+    delay(2000);
 }
