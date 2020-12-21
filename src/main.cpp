@@ -6,6 +6,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <rtc.h>
+#include <Storage.h>
 
 #include "FS.h"
 #include "SD.h"

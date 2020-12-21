@@ -38,7 +38,7 @@ bool Storage::init_storage(){
 
     if (SD.exists("/config.txt")){
         resume = true;
-        Serial.println("init_storage() -> storage.cpp -> Previous data found!")
+        Serial.println("init_storage() -> storage.cpp -> Previous data found!");
         File file = SD.open("/config.txt");
         char c = file.read();
         String temp;
@@ -53,7 +53,9 @@ bool Storage::init_storage(){
             temp += c;
             c = file.read();
         }
-        curr_read_pos = atol(temp);     //update the position to read
+        char temp2[20];
+        temp.toCharArray(temp2, sizeof(temp2));
+        curr_read_pos = atol(temp2);     //update the position to read
         file.close();
     }
     else {
@@ -115,7 +117,7 @@ void Storage::remove_oldest_file(){
     file.close();
     String path = "/" + String(oldest) + ".txt";    //convert number back to filename
     SD.remove(path);
-    Serial.printf("remove_oldest_file() -> storage.cpp -> File removed at %s", path.c_str);
+    Serial.printf("remove_oldest_file() -> storage.cpp -> File removed at %s", path.c_str());
 }
 
 
@@ -123,10 +125,10 @@ void Storage::remove_oldest_file(){
 String Storage::read_data(){
     String path = "/" + curr_read_file;
     Serial.printf("read_data() -> storage.cpp -> Reading file: %s\n", path);
-    File file = fs.open(path);
+    File file = SD.open(path);
     if(!file){
         Serial.println("read_data() -> storage.cpp -> Failed to open file for reading");
-        return 0;
+        return "";
     }
     String toread = "";
     bool readSt = 0;
@@ -144,7 +146,7 @@ String Storage::read_data(){
     }
     if (!readSt){
         Serial.println("read_data() -> storage.cpp -> No valid data found!");
-        return 0;
+        return "";
     }
     else{
         while(true){
@@ -161,7 +163,7 @@ String Storage::read_data(){
             else {
                 Serial.println("read_data() -> storage.cpp -> Data in file corrupted!");
                 curr_chunk_size = 0;
-                return 0;
+                return "";
             }
         }
     }
@@ -175,7 +177,7 @@ String Storage::read_data(){
 void Storage::mark_data(){
     String path = "/" + curr_read_file;
     Serial.println("mark_data() -> storage.cpp -> Marking current chunk of data");
-    File file = fs.open(path);
+    File file = SD.open(path);
     file.seek(curr_read_pos);
     if(file.read() == '<'){
         file.seek(curr_read_pos);
@@ -190,10 +192,11 @@ void Storage::mark_data(){
         name = String(temp) + ".txt";           //go to next file
         curr_read_pos = 0;
     }
-    file.open("/config.txt");                   //save the filename and read position to the config.txt file
-    file.write(name);
+    file.close();
+    file = SD.open("/config.txt");               //save the filename and read position to the config.txt file
+    file.print(name);
     file.println("$");
-    file.write(String(curr_read_pos));
+    file.print(String(curr_read_pos));
     file.println("$");
     file.close();
 }
