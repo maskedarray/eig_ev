@@ -1,6 +1,8 @@
 #include <Storage.h>
 #include "SD.h"
 
+//TODO: change the curr_read_file variable from filename to filename with directory (add "/" with file name)
+
 bool Storage::init_storage(){
     Serial.println("init_storage() -> storage.cpp -> Initializing SD card...");
     mount_success = false;
@@ -169,6 +171,7 @@ String Storage::read_data(){
 }
 
 
+
 void Storage::mark_data(){
     String path = "/" + curr_read_file;
     Serial.println("mark_data() -> storage.cpp -> Marking current chunk of data");
@@ -194,5 +197,7 @@ void Storage::mark_data(){
     file.println("$");
     file.close();
 }
+
+
 
 Storage storage;
