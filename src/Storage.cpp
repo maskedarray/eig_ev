@@ -30,7 +30,7 @@ bool Storage::init_storage(){
     }
 
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-    Serial.printf("init_storage() -> storage.cpp -> SD Card Size: %lluMB\n", cardSize);
+    Serial.printf("init_storage() -> storage.cpp -> SD Card Size: %lluMB\r\n", cardSize);
     if (cardSize < CARD_SIZE_LIMIT_MB){
         Serial.println("init_storage() -> storage.cpp -> Invalid Card Capacity!");
         return mount_success;
@@ -78,23 +78,37 @@ bool Storage::write_data(String timenow, String data){
     bool write_success = false;
     if(mount_success){
         if((CARD_SIZE_LIMIT_MB - SD.usedBytes()/1048576) < 1024) {   //less than 1GB space left
+            Serial.println("write_data() -> storage.cpp -> Space low! Deleting oldest file");
             this->remove_oldest_file();
         }
         String path = "/" + timenow + ".txt";
-        File file = SD.open(path, FILE_WRITE);
+        File file = SD.open(path, FILE_APPEND);
         if(!file){
             Serial.println("write_data() -> storage.cpp -> Failed to open file for writing");
             return write_success;
         }
-        if(file.print(data)){
+        if(file.print("<")){
+            file.print(data);
+            file.println(">");
             Serial.println("write_data() -> storage.cpp -> File written");
             write_success = true;
         } else {
             Serial.println("write_data() -> storage.cpp -> Write failed");
         }
-        if (!resume){
+        if (!resume){                       //if this is the first time system has started, create config.txt and update variables
             String name = file.name();
             curr_read_file = name;
+            File file2 = SD.open("/config.txt",FILE_APPEND);
+            file2.print(curr_read_file);
+            file2.println("$");
+            file2.print(curr_read_pos);
+            file2.println("$");
+            file2.close();
+            Serial.println("write_data() -> storage.cpp -> config.txt created!");
+            Serial.print("File name: ");
+            Serial.println(curr_read_file);
+            Serial.print("Position: ");
+            Serial.println(curr_read_pos);
             resume = true;
         }
         file.close();
@@ -113,7 +127,8 @@ void Storage::remove_oldest_file(){
     int oldest = 99999999;          //initialized so that first file detected is oldest file
     while(file.openNextFile()){     //convert filename to number and compare to get the oldest
         String name = file.name();
-        if (name != "config.txt"){  //do not check the config.txt file
+        if (name != "/config.txt"){  //do not check the config.txt file
+            name.remove(0,1);
             int temp = name.toInt();
             if (temp < oldest)
                 oldest = temp;
@@ -128,9 +143,9 @@ void Storage::remove_oldest_file(){
 
 
 String Storage::read_data(){
-    String path = "/" + curr_read_file;
-    Serial.printf("read_data() -> storage.cpp -> Reading file: %s\n", path);
-    File file = SD.open(path);
+    Serial.print("read_data() -> storage.cpp -> Reading file: ");
+    Serial.println(curr_read_file);
+    File file = SD.open(curr_read_file);
     if(!file){
         Serial.println("read_data() -> storage.cpp -> Failed to open file for reading");
         return "";
@@ -145,6 +160,7 @@ String Storage::read_data(){
             if(c == '<'){
                 readSt = 1;
                 curr_chunk_size = 1;
+                curr_read_pos += i;
                 break;
             }
         }
@@ -180,25 +196,44 @@ String Storage::read_data(){
 
 
 void Storage::mark_data(){
-    String path = "/" + curr_read_file;
     Serial.println("mark_data() -> storage.cpp -> Marking current chunk of data");
-    File file = SD.open(path);
-    file.seek(curr_read_pos);
-    if(file.read() == '<'){
+    File file = SD.open(curr_read_file, FILE_WRITE);
+    if(!file){
+        Serial.println("mark_data() -> storage.cpp -> Failed to open file for marking");
+        return;
+    }
+
+    if(!file.seek(curr_read_pos)){
+        Serial.println("not working");
+    }
+    char c = file.read();
+    if(c == '<'){
+        Serial.println("mark_data() -> storage.cpp -> Found data for marking");
         file.seek(curr_read_pos);
         file.write('!');
         curr_read_pos += curr_chunk_size;
+    } else{
+        Serial.print("mark_data() -> storage.cpp -> character placed at current position is: ");
+        Serial.println(c);
+        Serial.println("mark_data() -> storage.cpp -> Data not found for marking");
+        return;
     }
     
     String name = file.name();
     if (file.size() - curr_read_pos < 10){      //check if this is the end of file
+        Serial.println("mark_data() -> storage.cpp -> File completed! Moving to next file.");
+        name.remove(0,1);
         int temp = name.toInt();
         temp += 1;
-        name = String(temp) + ".txt";           //go to next file
+        name = "/" + String(temp) + ".txt";           //go to next file //TODO: what if system was off for whole day?
         curr_read_pos = 0;
     }
     file.close();
     file = SD.open("/config.txt");               //save the filename and read position to the config.txt file
+    if(!file){
+        Serial.println("mark_data() -> storage.cpp -> Failed to open file for saving config");
+        return;
+    }
     file.print(name);
     file.println("$");
     file.print(String(curr_read_pos));

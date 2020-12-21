@@ -4,5 +4,6 @@
 
 void initRTC();
 String getTime();
+String getTime2();
 
 #endif
