@@ -57,9 +57,14 @@ bool Storage::init_storage(){
         temp.toCharArray(temp2, sizeof(temp2));
         curr_read_pos = atol(temp2);     //update the position to read
         file.close();
+        Serial.print("File is: ");
+        Serial.println(curr_read_file);
+        Serial.print("Position is: ");
+        Serial.println(curr_read_pos);
     }
     else {
         resume = false;
+        Serial.println("init_storage() -> storage.cpp -> Previous data not found!");
         curr_read_pos = 0;
         curr_read_file = "";    //TODO: handle case when read is called before write
     }

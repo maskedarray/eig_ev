@@ -26,5 +26,6 @@ public:
     long get_unsent_data(void);
 };
 
+extern Storage storage;
 
 #endif
