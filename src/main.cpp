@@ -108,19 +108,19 @@ void deleteFile(fs::FS &fs, const char * path){
 }
 
 JsonObject updateSlot(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , String B_Temp, String B_SoC, String B_SoH, String B_RoC,String B_Vol ,String B_Curr, JsonObject Slot){
-    Slot["Battery_Slot"] =String(B_Slot);
-    Slot["Battery_ID"] = String(B_ID);
-    Slot["Battery_Authorization_ID"] = String(B_Auth); // can be vehicle or BSS
-    Slot["Battery_Age"] = String(B_Age);
-    Slot["Battery_Type"] = String(B_Type);
-    Slot["Battery_Max_Cycles"] = String(B_M_Cycles);
-    Slot["Battery_Utilized_Cycles"] = String(B_U_Cycles);
-    Slot["Battery_Temperature"] = String(B_Temp);
-    Slot["Battery_SoC"] = String(B_SoC);
-    Slot["Battery_SoH"] = String(B_SoH);
-    Slot["Battery_RoC"] = String(B_RoC);
-    Slot["Battery_Volatge"] = String(B_Vol);
-    Slot["Battery_Current"] = String(B_Curr);
+    Slot["BS"] =String(B_Slot);                             //battery slot
+    Slot["ID"] = String(B_ID);                      //batery id
+    Slot["AID"] = String(B_Auth);      //battery authorization id
+    Slot["AG"] = String(B_Age);                    //battery age
+    Slot["TY"] = String(B_Type);                  //battery type
+    Slot["MC"] = String(B_M_Cycles);        //battery max cycles
+    Slot["UC"] = String(B_U_Cycles);   //utilized cycles
+    Slot["TP"] = String(B_Temp);           //temperature
+    Slot["SC"] = String(B_SoC);                    //state of charge
+    Slot["SH"] = String(B_SoH);                    //sate of health
+    Slot["RH"] = String(B_RoC);                    //battery roh
+    Slot["V"] = String(B_Vol);                //voltage
+    Slot["C"] = String(B_Curr);               //battery current
     return Slot;
   }
 
@@ -176,15 +176,15 @@ void loop() {
   
   // code below will convert the raw data to Json format
   StaticJsonDocument<5200> doc; //DynamicJsonDocument doc(1200);
-    doc["Time"] = String(getTime());
-    doc["BSS_ID"] = String("BSS22");
-    doc["Total_Slots"] = String(16);
-    doc["BSS_Voltage"] = String(random(0, 14));
-    doc["BSS_Current"] = String(random(0, 20));
-    doc["BSS_Power"] = String(random(0, 50));
-    doc["BSS_PowerFactor"] = String(random(0, 50));
+    doc["T"] = String(getTime());          //time
+    doc["BID"] = String("BSS22");          //battery id
+    doc["TS"] = String(16);                //total slots
+    doc["BV"] = String(random(0, 14));     //BSS voltage
+    doc["BC"] = String(random(0, 20));     //BSS current
+    doc["BP"] = String(random(0, 50));     //BSS power
+    doc["BPF"] = String(random(0, 50));    //BSS power factor
     
-  JsonArray Batteries = doc.createNestedArray("Slots");
+  JsonArray Batteries = doc.createNestedArray("S"); //array for slots
   JsonObject Slot1 = Batteries.createNestedObject();  
   JsonObject Slot2 = Batteries.createNestedObject();
   JsonObject Slot3 = Batteries.createNestedObject();
@@ -221,11 +221,12 @@ void loop() {
     Slot15 = updateSlot("15", "15", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12", "20", Slot15);
     Slot16 = updateSlot("16", "16", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12", "26", Slot16);
 
-  towrite = "";
+  //towrite = "";
   //serializeJson(doc, towrite);
-  readNext(SD, "/ndata.txt");
+  //readNext(SD, "/ndata.txt");
   //appendFile(SD, "/ndata.txt");
 
+    serializeJson(doc, Serial);
   static long counter = 0;
   counter++;
   Serial.println(counter);
