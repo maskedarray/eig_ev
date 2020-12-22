@@ -3,10 +3,11 @@
 #include <Arduino.h>    //for using String type
 
 #define CARD_SIZE_LIMIT_MB 15000
-#define MIN_CHUNK_SIZE 10
+#define LOW_SPACE_LIMIT_MB 1024    //
+#define MIN_CHUNK_SIZE_B 10
 
 /*
- * The fomrmat for file name is: YYYYMMDD.txt
+ * The fomrmat for file name is: YYYYMMDD.txt this should be strictly followed
  */
 
 class Storage {

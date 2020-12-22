@@ -98,7 +98,7 @@ void loop() {
     serializeJson(doc, towrite);
     storage.write_data(getTime2(), towrite);
     String temp2 = storage.read_data();
-    storage.mark_data();
+    //storage.mark_data();
     Serial.println(temp2);
 
     //readNext(SD, "/ndata.txt");
