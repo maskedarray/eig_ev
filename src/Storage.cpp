@@ -1,27 +1,27 @@
 #include <Storage.h>
-#include <SPIFFS.h>
+#include <SD.h>
 //TODO: change the curr_read_file variable from filename to filename with directory (add "/" with file name)
 
 bool Storage::init_storage(){
     Serial.println("init_storage() -> storage.cpp -> Initializing SD card...");
     mount_success = false;
 
-    if(!SPIFFS.begin()){
+    if(!SD.begin()){
         Serial.println("init_storage() -> storage.cpp -> Card Mount Failed");
         return mount_success;
     }
 
-    uint64_t cardSize = SPIFFS.totalBytes() / (1024 * 1024);
+    uint64_t cardSize = SD.totalBytes() / (1024 * 1024);
     Serial.printf("init_storage() -> storage.cpp -> SD Card Size: %lluMB\r\n", cardSize);
     if (cardSize < CARD_SIZE_LIMIT_MB){
         Serial.println("init_storage() -> storage.cpp -> Invalid Card Capacity!");
         return mount_success;
     }
 
-    if (SPIFFS.exists("/config.txt")){
+    if (SD.exists("/config.txt")){
         resume = true;
         Serial.println("init_storage() -> storage.cpp -> Previous data found!");
-        File file = SPIFFS.open("/config.txt");
+        File file = SD.open("/config.txt");
         char c = file.read();
         String temp;
         while(c != '$'){
@@ -59,12 +59,12 @@ bool Storage::init_storage(){
 bool Storage::write_data(String timenow, String data){
     bool write_success = false;
     if(mount_success){
-        if((CARD_SIZE_LIMIT_MB - SPIFFS.usedBytes()/1048576) < 1024) {   //less than 1GB space left
+        if((CARD_SIZE_LIMIT_MB - SD.usedBytes()/1048576) < 1024) {   //less than 1GB space left
             Serial.println("write_data() -> storage.cpp -> Space low! Deleting oldest file");
             this->remove_oldest_file();
         }
         String path = "/" + timenow + ".txt";
-        File file = SPIFFS.open(path, FILE_APPEND);
+        File file = SD.open(path, FILE_APPEND);
         if(!file){
             Serial.println("write_data() -> storage.cpp -> Failed to open file for writing");
             return write_success;
@@ -80,7 +80,7 @@ bool Storage::write_data(String timenow, String data){
         if (!resume){                       //if this is the first time system has started, create config.txt and update variables
             String name = file.name();
             curr_read_file = name;
-            File file2 = SPIFFS.open("/config.txt",FILE_APPEND);
+            File file2 = SD.open("/config.txt",FILE_APPEND);
             file2.print(curr_read_file);
             file2.println("$");
             file2.print(curr_read_pos);
@@ -105,7 +105,7 @@ bool Storage::write_data(String timenow, String data){
 
 void Storage::remove_oldest_file(){
     Serial.println("remove_oldest_file() -> storage.cpp -> Space is low! Removing oldest file..");
-    File file = SPIFFS.open("/");
+    File file = SD.open("/");
     int oldest = 99999999;          //initialized so that first file detected is oldest file
     while(file.openNextFile()){     //convert filename to number and compare to get the oldest
         String name = file.name();
@@ -118,7 +118,7 @@ void Storage::remove_oldest_file(){
     }
     file.close();
     String path = "/" + String(oldest) + ".txt";    //convert number back to filename
-    SPIFFS.remove(path);
+    SD.remove(path);
     Serial.printf("remove_oldest_file() -> storage.cpp -> File removed at %s", path.c_str());
 }
 
@@ -127,7 +127,7 @@ void Storage::remove_oldest_file(){
 String Storage::read_data(){
     Serial.print("read_data() -> storage.cpp -> Reading file: ");
     Serial.println(curr_read_file);
-    File file = SPIFFS.open(curr_read_file);
+    File file = SD.open(curr_read_file);
     if(!file){
         Serial.println("read_data() -> storage.cpp -> Failed to open file for reading");
         return "";
@@ -179,7 +179,7 @@ String Storage::read_data(){
 
 void Storage::mark_data(){
     Serial.println("mark_data() -> storage.cpp -> Marking current chunk of data");
-    File file = SPIFFS.open(curr_read_file, FILE_APPEND);
+    File file = SD.open(curr_read_file, FILE_APPEND);
     if(!file){
         Serial.println("mark_data() -> storage.cpp -> Failed to open file for marking");
         return;
@@ -211,7 +211,7 @@ void Storage::mark_data(){
         curr_read_pos = 0;
     }
     file.close();
-    file = SPIFFS.open("/config.txt");               //save the filename and read position to the config.txt file
+    file = SD.open("/config.txt");               //save the filename and read position to the config.txt file
     if(!file){
         Serial.println("mark_data() -> storage.cpp -> Failed to open file for saving config");
         return;
