@@ -54,3 +54,15 @@ String getTime(){
       String temp = String(now.year(), DEC) + String(now.month(), DEC) + String(now.day(), DEC);
       return temp;
   }
+
+String getNextDay(int iyear, int imonth, int iday){
+    DateTime temp1(iyear,imonth,iday,0,0,0);
+    TimeSpan temp2(1,0,0,0);
+    temp1 = temp1 + temp2;
+    String YYYY = String(temp1.year(), DEC);
+    String mm = String(temp1.month(), DEC);
+    if (mm.length() == 1){mm = "0" + mm; }
+    String dd = String(temp1.day(), DEC);
+    if (dd.length() == 1){dd = "0" + dd; }
+    return (YYYY + mm + dd);
+}

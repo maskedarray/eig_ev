@@ -1,5 +1,6 @@
 #include <Storage.h>
 #include <SD.h>
+#include <rtc.h>
 
 //TODO: while traversing to next file through increment, handle the scenario where increment takes file above 31 or 30 date
 
@@ -10,19 +11,15 @@
 bool Storage::init_storage(){
     Serial.println(F("init_storage() -> storage.cpp -> Initializing SD card..."));
     mount_success = false;
-
     if(!SD.begin()){
-        Serial.println(F("init_storage() -> storage.cpp -> Card Mount Failed"));
+        Serial.println(F("init_storage() -> storage.cpp -> Card Initialization Failed"));
         return mount_success;
     }
-
     uint8_t cardType = SD.cardType();
-
     if(cardType == CARD_NONE){
         Serial.println(F("init_storage() -> storage.cpp -> No SD card attached"));
         return mount_success;
     }
-
     Serial.print(F("init_storage() -> storage.cpp -> SD Card Type: "));
     if(cardType == CARD_MMC){
         Serial.println(F("MMC"));
@@ -36,7 +33,7 @@ bool Storage::init_storage(){
     }
 
     uint64_t cardSize = SD.totalBytes() / (1024 * 1024);
-    Serial.printf("init_storage() -> storage.cpp -> SD Card Size: %lluMB\r\n", cardSize);
+    Serial.printf("init_storage() -> storage.cpp -> SD Card Size: %lluMB\r\n", cardSize);   //TODO: add a card limit check for better reliability
 
     if (SD.exists("/config.txt")){
         resume = true;
@@ -49,15 +46,13 @@ bool Storage::init_storage(){
             c = file.read();
         }
         curr_read_file = temp;          //update the file name to read from
-        c = file.read();
+        c = file.read();                //read the \n character
         temp = "";
         while(c != '$'){
             temp += c;
             c = file.read();
         }
-        char temp2[20];
-        temp.toCharArray(temp2, sizeof(temp2));
-        curr_read_pos = atol(temp2);     //update the position to read
+        curr_read_pos = atol(temp.c_str());     //update the position to read
         file.close();
         Serial.print(F("init_storage() -> storage.cpp -> File is: "));
         Serial.println(curr_read_file);
@@ -68,7 +63,7 @@ bool Storage::init_storage(){
         resume = false;
         Serial.println(F("init_storage() -> storage.cpp -> Previous data not found!"));
         curr_read_pos = 0;
-        curr_read_file = "";    //TODO: handle case when read is called before write
+        curr_read_file = "";    
     }
     mount_success = true;
     return mount_success;
@@ -92,14 +87,14 @@ bool Storage::write_data(String timenow, String data){
             this->remove_oldest_file();
         }
         String path = "/" + timenow + ".txt";
-        File file = SD.open(path, FILE_APPEND);
+        File file = SD.open(path, FILE_APPEND);    
         if(!file){
             Serial.println(F("write_data() -> storage.cpp -> Failed to open file for writing"));
             return write_success;
         }
         if(file.print("<")){
             file.print(data);
-            file.println(F(">"));
+            file.println(">");
             Serial.println(F("write_data() -> storage.cpp -> File written"));
             write_success = true;
         } else {
@@ -108,7 +103,7 @@ bool Storage::write_data(String timenow, String data){
         if (!resume){                       //if this is the first time system has started, create config.txt and update variables
             String name = file.name();
             curr_read_file = name;
-            File file2 = SD.open("/config.txt",FILE_APPEND);
+            File file2 = SD.open("/config.txt",FILE_WRITE);
             file2.print(curr_read_file);
             file2.println("$");
             file2.print(curr_read_pos);
@@ -158,12 +153,13 @@ void Storage::remove_oldest_file(){
  * - it also updates the size of current chunk of data.
  * - to check the start of data, it checks the next 30 characters for '<'. if this is not found
  *   then it returns false (failure)
+ * - in case the file has ended before detection of start character, that means there is no more data to be read in file.
  * - if data start is not at the curr_read_pos, then it also updates the curr_read_pos variable to start of data.
- * - if the starting character is found, then it loops over the data to check the end character '>' till
- *   the end of file //TODO: add for loop here
+ * - if the starting character is found, then it loops over the data to check the end character '>' 
+ *   till the max_chunk_size_b limit
  * - returns the string without encapsulation "<>" 
  */
-String Storage::read_data(){
+String Storage::read_data(){    
     Serial.print(F("read_data() -> storage.cpp -> Reading file: "));
     Serial.println(curr_read_file);
     File file = SD.open(curr_read_file, FILE_READ);
@@ -185,17 +181,27 @@ String Storage::read_data(){
                 break;
             }
         }
+        else{
+            Serial.println(F("read_data() -> storage.cpp -> File has no data available to be read!"));
+            return "";
+        }
     }
     if (!readSt){
         Serial.println(F("read_data() -> storage.cpp -> No valid data found!"));
         return "";
     }
     else{
-        while(true){    //TODO: infinite loop can cause problems. change with for loop and a const value for max chunk size limit
+       while(true)
+       {
             if (file.available()){  //check if file has ended
                 char c = file.read();
                 curr_chunk_size++;
-                if (c != '>'){   
+                if(curr_chunk_size > MAX_CHUNK_SIZE_B){
+                    Serial.println(F("read_data() -> storage.cpp -> Valid data not found for reading!"));
+                    curr_chunk_size = 0;
+                    return "";
+                }
+                else if (c != '>'){   
                     toread += c;
                 }
                 else{
@@ -203,10 +209,11 @@ String Storage::read_data(){
                 }
             }
             else {  //if end character '>' not found till the end of file then data is corrupted
-                Serial.println(F("read_data() -> storage.cpp -> Data in file corrupted!"));
+                Serial.println(F("read_data() -> storage.cpp -> File ended before data read completed. Data Corrupt!"));
                 curr_chunk_size = 0;
                 return "";
             }
+        
         }
     }
     file.close();
@@ -219,7 +226,8 @@ String Storage::read_data(){
  * mark_data updates the curr_read_pos in config.txt
  * - if the remaining data in file is less than 10 it also updates the filename
  */
-void Storage::mark_data(){
+void Storage::mark_data(String timenow){
+    String curr_write_file = "/" + timenow + ".txt";
     Serial.println(F("mark_data() -> storage.cpp -> Marking current chunk of data"));
     File file = SD.open(curr_read_file, FILE_READ);
     if(!file){
@@ -229,26 +237,26 @@ void Storage::mark_data(){
     file.seek(curr_read_pos);
     char c = file.read();
     if (c == '<'){
-        String name = file.name();
-        if (file.size() - (curr_read_pos + curr_chunk_size) < 10){      //check if this is the end of file  //TODO: convert 10 to const
+        if (file.size() - (curr_read_pos + curr_chunk_size) < MIN_CHUNK_SIZE_B){      //check if this is the end of file 
+            file.close();
             Serial.println(F("mark_data() -> storage.cpp -> File completed! Moving to next file."));
-            name.remove(0,1);                             //remove '/' from filename
-            int temp = name.toInt();                      //converts the sring to integer up to the point a non-integer character is found
-            temp += 1;
-            name = "/" + String(temp) + ".txt";           //go to next file //TODO: what if system was off for whole day?
+            String next_filename = next_file(curr_read_file);
+            while(!SD.exists(next_filename) && (next_filename < curr_write_file)){
+                next_filename = next_file(next_filename);
+            }
             curr_read_pos = 0;
-            curr_read_file = name;
+            curr_read_file = next_filename;
         }
         else{
             curr_read_pos += curr_chunk_size + 1;
+            file.close();
         }
-        file.close();
         file = SD.open("/config.txt", FILE_WRITE);               //save the filename and read position to the config.txt file
         if(!file){
             Serial.println(F("mark_data() -> storage.cpp -> Failed to open file for saving config"));
             return;
         }
-        file.print(name);
+        file.print(curr_read_file);
         file.println("$");
         file.print(String(curr_read_pos));
         file.println("$");
@@ -260,11 +268,24 @@ void Storage::mark_data(){
     }
 }
 
+String Storage::next_file(String curr_file){
+    String syear = curr_file.substring(1,4);
+    String smonth = curr_file.substring(5,6);
+    String sday = curr_file.substring(7,8);
+    int iyear = syear.toInt();
+    int imonth = smonth.toInt();
+    int iday = sday.toInt();
+    String next_file = getNextDay(iyear,imonth,iday);
+    next_file = "/" + next_file + ".txt";
+    return next_file;
+}
+
 /*
  * get_unsent_data returns the data in MBs
  */
-long Storage::get_unsent_data(){ 
+long Storage::get_unsent_data(String timenow){ 
     String filename;
+    String curr_write_file = "/" + timenow + ".txt";
     long filepos;
     File file = SD.open("/config.txt", FILE_READ);
     {   //read filename and file position from config.txt
@@ -281,34 +302,15 @@ long Storage::get_unsent_data(){
             temp += c;
             c = file.read();
         }
-        char temp2[20];
-        temp.toCharArray(temp2, sizeof(temp2));
-        filepos = atol(temp2);     //update the position to read
+        filepos = atol(temp.c_str());     //update the position to read
     }
-    
     file.close();
     file = SD.open(filename);   //read the file from where curent data is being sent to cloud
     long total_bytes;
     total_bytes = file.size() - filepos;        //update total bytes
 
-    int old_file;
-    {
-        String temp2;
-        strcpy(temp2, filename);
-        temp2.remove(0,1);
-        old_file = temp2.toInt();
-    }
-    int curr_file;
-    {
-        String temp2;
-        strcpy(temp2, curr_read_file);
-        temp2.remove(0,1);
-        curr_file = temp2.toInt();
-    }
-
-    while(old_file < curr_file){
-        old_file += 1;
-        filename = "/" + String(old_file) + ".txt";           //go to next file according to date
+    while(filename <= curr_write_file){
+        filename = next_file(filename);
         if(SD.exists(filename)){
             file = SD.open(filename);
             total_bytes += file.size();
