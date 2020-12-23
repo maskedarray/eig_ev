@@ -2,7 +2,6 @@
 #include <SD.h>
 #include <rtc.h>
 
-//TODO: while traversing to next file through increment, handle the scenario where increment takes file above 31 or 30 date
 
 /*
  * init_storage initialises storage (SD card)
