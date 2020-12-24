@@ -1,6 +1,7 @@
 #ifndef __STORAGE_H__
 #define __STORAGE_H__
 #include <Arduino.h>    //for using String type
+#include <SD.h>
 
 #define CARD_SIZE_LIMIT_MB 15000
 #define LOW_SPACE_LIMIT_MB 1024    //
@@ -22,7 +23,7 @@ private:
     bool mount_success;
     void remove_oldest_file();
     String next_file(String);
-
+    void create_header(File);
 public:
     bool init_storage(); 
     bool write_data(String timenow, String data);
