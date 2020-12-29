@@ -3,6 +3,7 @@
 #include <rtc.h>
 #include <Storage.h>
 #include <can.h>
+#include <bluetooth.h>
 
 String towrite, toread;
 
