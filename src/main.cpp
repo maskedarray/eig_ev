@@ -1,11 +1,8 @@
-/* 
- *  make CSV file
- *
- */
 
 #include <Arduino.h>
 #include <rtc.h>
 #include <Storage.h>
+#include <can.h>
 
 String towrite, toread;
 
