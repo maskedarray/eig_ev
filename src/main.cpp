@@ -4,10 +4,12 @@
 #include <Storage.h>
 #include <can.h>
 #include <bluetooth.h>
+#include "esp32-mqtt.h"
 
 String towrite, toread;
 
-void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , String B_Temp, String B_SoC, String B_SoH, String B_RoC,String B_Vol ,String B_Curr){
+void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , 
+                    String B_Temp, String B_SoC, String B_SoH, String B_RoC,String B_Vol ,String B_Curr){
     towrite += B_Slot + "," + B_ID + "," + B_Auth + "," + B_Age + "," + B_Type + "," + B_M_Cycles + "," + 
             B_U_Cycles + "," + B_Temp + "," + B_SoC + "," + B_SoH + "," + B_RoC + "," + B_Vol + "," + B_Curr;
     return;
@@ -17,9 +19,11 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 
 void setup() {
     Serial.begin(115200); //Start Serial monitor
+    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(2, OUTPUT);
+    setupCloudIoT();
     initRTC();
-
-    if(storage.init_storage()){
+    /*if(storage.init_storage()){
         Serial.println("main() -> main.cpp -> storage initialization success!");
     }
     else{
@@ -27,11 +31,13 @@ void setup() {
             Serial.println("main() -> main.cpp -> storage initialization failed!");
             delay(1000);
         }
-    }
+    }*/
 }
-
+unsigned long lastMillis = 0;
+String CloudData = "";
 void loop() {
     //we need to place a valid CSV string in towrite string
+    if(WiFi.status() == WL_CONNECTED){digitalWrite(2, 1);}
     towrite = "";
     towrite += getTime() + ",";                 //time
     towrite += String("BSS1715001") + ",";      //BSSID
@@ -60,8 +66,19 @@ void loop() {
     addSlotsData("15", "1518953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
     addSlotsData("16", "1718253129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");
     //Now towrite string contains one valid string of CSV data chunk
-
-    storage.write_data(getTime2(), towrite);
+    mqtt->loop();
+    delay(10);  // <- fixes some issues with WiFi stability
+    if (!mqttClient->connected()) {
+        connect();
+    }
+    if (mqttClient->connected()) {
+        Serial.println("*****");
+        Serial.println(publishTelemetry(towrite));
+        Serial.println(ESP.getFreeHeap());
+        //Serial.println(publishTelemetry("hi"));
+        Serial.println("*****");
+    }
+    //storage.write_data(getTime2(), towrite);
     static long counter = 0;
     counter++;
     Serial.println(counter);

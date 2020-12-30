@@ -8,7 +8,8 @@ class ESP_BT {
 private:
 
 public:
-    bool init_bt();
+    bool init();
+    bool send(String tosend);
 };
 
 extern ESP_BT bt;
