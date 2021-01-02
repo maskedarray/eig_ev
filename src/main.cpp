@@ -21,7 +21,7 @@ void setup() {
     Serial.begin(115200); //Start Serial monitor
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(2, OUTPUT);
-    setupCloudIoT();
+    //setupCloudIoT();
     initRTC();
     /*if(storage.init_storage()){
         Serial.println("main() -> main.cpp -> storage initialization success!");
@@ -66,7 +66,8 @@ void loop() {
     addSlotsData("15", "1518953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
     addSlotsData("16", "1718253129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");
     //Now towrite string contains one valid string of CSV data chunk
-    mqtt->loop();
+    
+    /*mqtt->loop();
     delay(10);  // <- fixes some issues with WiFi stability
     if (!mqttClient->connected()) {
         connect();
@@ -77,8 +78,8 @@ void loop() {
         Serial.println(ESP.getFreeHeap());
         //Serial.println(publishTelemetry("hi"));
         Serial.println("*****");
-    }
-    //storage.write_data(getTime2(), towrite);
+    }*/
+    storage.write_data(getTime2(), towrite);
     static long counter = 0;
     counter++;
     Serial.println(counter);

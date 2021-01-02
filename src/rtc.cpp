@@ -50,9 +50,13 @@ String getTime(){
  */
 
   String getTime2(){
-      DateTime now = rtc.now();
-      String temp = String(now.year(), DEC) + String(now.month(), DEC) + String(now.day(), DEC);
-      return temp;
+    DateTime now = rtc.now();
+    String YYYY = String(now.year(), DEC);
+    String mm = String(now.month(), DEC);
+    if (mm.length() == 1){mm = "0" + mm; }
+    String dd = String(now.day(), DEC);
+    if (dd.length() == 1){dd = "0" + dd; }
+    return YYYY + mm + dd;
   }
 
 String getNextDay(int iyear, int imonth, int iday){
