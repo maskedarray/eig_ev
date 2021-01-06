@@ -22,8 +22,9 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(2, OUTPUT);
     //setupCloudIoT();
+    //bt.init();
     initRTC();
-    /*if(storage.init_storage()){
+    if(storage.init_storage()){
         Serial.println("main() -> main.cpp -> storage initialization success!");
     }
     else{
@@ -31,7 +32,7 @@ void setup() {
             Serial.println("main() -> main.cpp -> storage initialization failed!");
             delay(1000);
         }
-    }*/
+    }
 }
 unsigned long lastMillis = 0;
 String CloudData = "";
@@ -80,6 +81,13 @@ void loop() {
         Serial.println("*****");
     }*/
     storage.write_data(getTime2(), towrite);
+    towrite= "";
+    towrite = storage.read_data();
+    if(towrite != ""){
+        storage.write_data("copy",towrite);
+        storage.mark_data(getTime2());
+    }
+    Serial.println(towrite);
     static long counter = 0;
     counter++;
     Serial.println(counter);

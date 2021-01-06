@@ -7,6 +7,7 @@
 #define LOW_SPACE_LIMIT_MB 1024    //
 #define MIN_CHUNK_SIZE_B 10
 #define MAX_CHUNK_SIZE_B 1500
+#define FILE_START_POS 2292     //depends on size of header placed at start of file.
 
 /*
  * The fomrmat for file name is: YYYYMMDD.txt this should be strictly followed
