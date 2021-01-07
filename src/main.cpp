@@ -1,4 +1,4 @@
-#define DATA_ACQUISITION_FREQ 1
+#define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #include <Arduino.h>
 #include <FreeRTOS.h>
 #include <rtc.h>
@@ -8,7 +8,7 @@
 #include "esp32-mqtt.h"
 
 String towrite, toread;
-
+TaskHandle_t dataTask, blTask, storageTask, wifiTask;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
 void vStorage( void *pvParameters );
@@ -40,23 +40,23 @@ void setup() {
             delay(1000);
         }
     }
-    /*semaAqData1 = xSemaphoreCreateBinary();
+    semaAqData1 = xSemaphoreCreateBinary();
     seamAqData2 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
     semaStorage1 = xSemaphoreCreateBinary();
     seamStorage2 = xSemaphoreCreateBinary();
     semaWifi1 = xSemaphoreCreateBinary();
     xSemaphoreGive(semaAqData1);
-    xSemaphoreGive(seamAqData2);*/
+    xSemaphoreGive(seamAqData2);
+    xSemaphoreGive(semaWifi1);
     Serial.println("creating all tasks");
     Serial.flush();
-    TaskHandle_t dataTask, blTask, storageTask, wifiTask;
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 200, NULL, 2, &dataTask, 0);
-    //xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 200, NULL, 1, &blTask, 0);
-    //xTaskCreatePinnedToCore(vStorage, "Storage Handler", 200, NULL, 2, &storageTask, 1);
-    //xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 200, NULL, 1, &wifiTask, 1);
+    
+    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask, 0);
+    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 1);
     Serial.println("created all tasks");
-    //vTaskStartScheduler();
 }
 unsigned long lastMillis = 0;
 String CloudData = "";
@@ -95,12 +95,13 @@ void loop() {
 }
 void vAcquireData( void *pvParameters ){
     TickType_t xLastWakeTime;
-    const TickType_t xFrequency = DATA_ACQUISITION_FREQ;
+    const TickType_t xFrequency = DATA_ACQUISITION_TIME;
+    xLastWakeTime = xTaskGetTickCount();
 
     for(;;){
         //TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
-        //xSemaphoreTake(semaAqData1, portMAX_DELAY);
-        //xSemaphoreTake(seamAqData2, portMAX_DELAY);
+        xSemaphoreTake(semaAqData1, portMAX_DELAY);
+        xSemaphoreTake(seamAqData2, portMAX_DELAY);
         //Dummy acquisition of data
         //we need to place a valid CSV string in towrite string
         towrite = "";
@@ -130,8 +131,8 @@ void vAcquireData( void *pvParameters ){
         addSlotsData("15", "1518953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
         addSlotsData("16", "1718253129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");
         Serial.println("Acquire data task ended!");
-        //xSemaphoreGive(semaBlTx1);
-        //xSemaphoreGive(semaStorage1);
+        xSemaphoreGive(semaBlTx1);
+        xSemaphoreGive(semaStorage1);
         //Now towrite string contains one valid string of CSV data chunk
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }
@@ -151,7 +152,9 @@ void vStorage( void *pvParameters ){
         xSemaphoreTake(semaStorage1,portMAX_DELAY);
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
         //storage.write_data(getTime2(), towrite);
+        Serial.println("Pin toggled");
         digitalWrite(2, !digitalRead(2));
+        xSemaphoreGive(semaWifi1);
         xSemaphoreGive(seamAqData2);
     }
 }
