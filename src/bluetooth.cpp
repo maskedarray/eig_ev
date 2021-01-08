@@ -28,8 +28,9 @@ bool ESP_BT::init(){
  */
 bool ESP_BT::send(String tosend){
     long len = tosend.length();
-    tosend = String(len) + "," + tosend;
     esp_bt.print("%S%");    //start byte
+    esp_bt.print(String(len));
+    esp_bt.print(",");
     esp_bt.print(tosend);   //data, first parameter is length of data starting from next value (after comma)
     esp_bt.print("%S%");    //end byte
     esp_bt.println();       //end byte

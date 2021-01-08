@@ -1,4 +1,17 @@
+/*
+ * Copyright 2020, Energy Informatics Group, LUMS University. All rights reserved.
+ * Developed by Abdur Rahman(rao.arrn@gmail.com), Wajahat Ali(s_ali@lums.edu.pk).
+ * 
+ * Main file for Battery Swapping Station code
+ * 
+ * This file is the property of Energy Informaics Group, Lums University. Its sole private
+ * ownership remains with LUMS and it should not be shared with anyone without the consent 
+ * of respective authority.
+ */
+
+//TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
+
 #include <Arduino.h>
 #include <FreeRTOS.h>
 #include <rtc.h>
@@ -27,14 +40,13 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 void setup() {
     Serial.begin(115200); //Start Serial monitor
     pinMode(LED_BUILTIN, OUTPUT);
-    if(WiFi.status() == WL_CONNECTED){digitalWrite(2, 1);}
     //setupCloudIoT();
     //bt.init();
     initRTC();
     if(storage.init_storage()){
         Serial.println("main() -> main.cpp -> storage initialization success!");
     }
-    else{
+    else{   //TODO: handle when storage connection fails
         while(1){
             Serial.println("main() -> main.cpp -> storage initialization failed!");
             delay(1000);
@@ -98,82 +110,88 @@ void vAcquireData( void *pvParameters ){
     const TickType_t xFrequency = DATA_ACQUISITION_TIME;
     xLastWakeTime = xTaskGetTickCount();
 
-    for(;;){
-        //TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
-        xSemaphoreTake(semaAqData1, portMAX_DELAY);
+    for(;;){    //infinite loop
+        xSemaphoreTake(semaAqData1, portMAX_DELAY); //semaphore to check if sending of data over bluetooth and storage has returned
         xSemaphoreTake(seamAqData2, portMAX_DELAY);
-        //Dummy acquisition of data
-        //we need to place a valid CSV string in towrite string
-        towrite = "";
-        towrite += getTime() + ",";                 //time
-        towrite += String("BSS1715001") + ",";      //BSSID
-        towrite += String("16") + ",";              //total slots
-        towrite += String("20.273") + ",";              //BSS voltage
-        towrite += String("55.781") + ",";              //BSS CURRENT
-        towrite += String("7400") + ",";                  //BSS POWER
-        towrite += String("0.8") + ",";                 //BSS power factor
-        //addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,
-        //             String B_U_Cycles , String B_Temp, String B_SoC, String B_SoH, String B_RoD,String B_Vol ,String B_Curr)
-        addSlotsData("01", "1718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("02", "1718953130", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("03", "1718953131", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("04", "1718953128", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
-        addSlotsData("05", "1718953127", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("06", "1718953126", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("07", "1718953125", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("08", "1718953124", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
-        addSlotsData("09", "1718953123", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("10", "1718953122", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("11", "1718953121", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("12", "1718953120", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
-        addSlotsData("13", "1718953119", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("14", "2718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("15", "1518953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-        addSlotsData("16", "1718253129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");
-        Serial.println("Acquire data task ended!");
-        xSemaphoreGive(semaBlTx1);
-        xSemaphoreGive(semaStorage1);
-        //Now towrite string contains one valid string of CSV data chunk
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);
-    }
-}
+        if(WiFi.status() == WL_CONNECTED)   digitalWrite(2, !digitalRead(2));   //LED will blink when there is connection
+        {
+            //Dummy acquisition of data
+            //we need to place a valid CSV string in towrite string
+            towrite = "";
+            towrite += getTime() + ",";                 //time
+            towrite += String("BSS1715001") + ",";      //BSSID
+            towrite += String("16") + ",";              //total slots
+            towrite += String("20.273") + ",";              //BSS voltage
+            towrite += String("55.781") + ",";              //BSS CURRENT
+            towrite += String("7400") + ",";                  //BSS POWER
+            towrite += String("0.8") + ",";                 //BSS power factor
+            //addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,
+            //             String B_U_Cycles , String B_Temp, String B_SoC, String B_SoH, String B_RoD,String B_Vol ,String B_Curr)
+            addSlotsData("01", "1718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("02", "1718953130", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("03", "1718953131", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("04", "1718953128", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
+            addSlotsData("05", "1718953127", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("06", "1718953126", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("07", "1718953125", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("08", "1718953124", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
+            addSlotsData("09", "1718953123", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("10", "1718953122", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("11", "1718953121", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("12", "1718953120", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
+            addSlotsData("13", "1718953119", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("14", "2718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("15", "1518953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            addSlotsData("16", "1718253129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");
+            //Now towrite string contains one valid string of CSV data chunk
+        }
+        xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
+        xSemaphoreGive(semaStorage1);   //signal to call storage save data function once
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);    //defines the data acquisition rate
+    }   //end for
+}   //end vAcquireData
 
-void vBlTransfer( void *pvParameters ){
-    for(;;){
+void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
+    for(;;){    //infinite loop
         xSemaphoreTake(semaBlTx1,portMAX_DELAY);
-        //transfer data to bluetooth
-        Serial.println("data to bluetooth transferred");
+        {
+            bt.send(towrite);
+        }
         xSemaphoreGive(semaAqData1);
-    }
-}
+    }   //end for
+}   //end vBlTransfer task
 
 void vStorage( void *pvParameters ){
-    for(;;){
+    for(;;){    //infinite loop
         xSemaphoreTake(semaStorage1,portMAX_DELAY);
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        //storage.write_data(getTime2(), towrite);
-        Serial.println("Pin toggled");
-        digitalWrite(2, !digitalRead(2));
-        xSemaphoreGive(semaWifi1);
+        {
+            storage.write_data(getTime2(), towrite);
+        }
+        xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
         xSemaphoreGive(seamAqData2);
-    }
-}
+    }   //end for
+}   //end vStorage task
 
 void vWifiTransfer( void *pvParameters ){
-    TickType_t xLastWakeTime;
-    const TickType_t xFrequency = 2;
-    for(;;){
-        xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        //if(WiFi.status() == WL_CONNECTED){digitalWrite(2, 1);}
-        //else    digitalWrite(2,0);
-        if(1){
-            Serial.println("data sent over wifi");
-        } else{
-            vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        }
-        xSemaphoreGive(semaWifi1);
+    for(;;){    //infinite loop
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
-    }
-    
-}
+        xSemaphoreTake(semaWifi1,portMAX_DELAY);
+        /*{
+            mqtt->loop();
+            delay(10);  // <- fixes some issues with WiFi stability
+            if (!mqttClient->connected()) {
+                connect();
+            }
+            if (mqttClient->connected()) {
+                Serial.println("*****");
+                Serial.println(publishTelemetry(towrite));
+                Serial.println(ESP.getFreeHeap());
+                //Serial.println(publishTelemetry("hi"));
+                Serial.println("*****");
+            }
+        }*/
+        xSemaphoreGive(semaWifi1);
+    }   //end for
+}   //end vWifiTransfer task
