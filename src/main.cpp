@@ -41,7 +41,7 @@ void setup() {
     Serial.begin(115200); //Start Serial monitor
     pinMode(LED_BUILTIN, OUTPUT);
     //setupCloudIoT();
-    //bt.init();
+    bt.init();
     initRTC();
     if(storage.init_storage()){
         Serial.println("main() -> main.cpp -> storage initialization success!");
