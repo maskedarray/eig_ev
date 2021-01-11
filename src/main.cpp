@@ -10,7 +10,9 @@
  */
 
 //TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
+//TODO: OPTIMIZATION: convert String to c string.
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
+#define DATA_MAX_LEN 1200   //bytes
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -61,13 +63,11 @@ void setup() {
     xSemaphoreGive(semaAqData1);
     xSemaphoreGive(seamAqData2);
     xSemaphoreGive(semaWifi1);
-    Serial.println("creating all tasks");
-    Serial.flush();
     
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 100000, NULL, 1, &blTask, 0);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 1);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 100000, NULL, 1, &wifiTask, 1);
     Serial.println("created all tasks");
 }
 unsigned long lastMillis = 0;
