@@ -63,6 +63,24 @@ bool Storage::init_storage(){
         curr_read_pos = 0;
         curr_read_file = "";    
     }
+
+    // New addition to the init function
+    if (SD.exists("/APs.txt")) // Check for APs.txt on SD card
+    {
+        Serial.println(F("init_storage() -> storage.cpp -> AP storage found!"));
+        APList_exists = true;
+    }
+    else
+    {
+        Serial.println(F("init_storage() -> storage.cpp -> AP storage not found. Creating new file"));
+        File APList = SD.open("/APs.txt", FILE_WRITE);
+        APList.print('<');
+        APList.print("EiG,12344321");   // Default entry for the APlist
+        APList.print('>');
+        APList.close();
+        APList_exists = true;
+    }
+
     mount_success = true;
     return mount_success;
 }
@@ -125,6 +143,102 @@ bool Storage::write_data(String timenow, String data){
         return write_success;
     } else{
         Serial.println(F("write_data() -> storage.cpp -> Storage mount failed or not mounted! Try again"));
+        return write_success;
+    }
+}
+
+/**
+ * This function adds an access point to the SD card file APs.txt
+ */
+bool Storage::write_AP(String SSID, String Password) //made with small edits to the write_data function
+{
+    bool write_success = false;
+    if(mount_success){
+        String path = "/APs.txt";
+        File file;
+        if(!SD.exists(path)){
+            file = SD.open(path, FILE_APPEND);
+            if(!file){
+                Serial.println(F("write_AP() -> storage.cpp -> Failed to open file for writing"));
+                return write_success;
+            }
+        }
+        else {
+            file = SD.open(path, FILE_APPEND); 
+            if(!file){
+                Serial.println(F("write_AP() -> storage.cpp -> Failed to open file for writing"));
+                return write_success;
+            }
+        }  
+        if(file.print("<")){
+            file.print(SSID + ",");
+            file.print(Password);
+            file.println(">");
+            Serial.println(F("write_AP() -> storage.cpp -> File written"));
+            write_success = true;
+        } else {
+            Serial.println(F("write_AP() -> storage.cpp -> Write failed"));
+        }
+        file.close();
+        return write_success;
+    } else{
+        Serial.println(F("write_AP() -> storage.cpp -> Storage mount failed or not mounted! Try again"));
+        return write_success;
+    }
+}
+
+/**
+ * This function clears the APs.txt file and adds new credentials according to
+ * the String passed to it. It is called whenever the AP list exceeds a set
+ * limit or a saved SSID is being connected to with a different password.
+ */
+bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
+{
+    bool write_success = false;
+    int i = 0;
+    if(mount_success)
+    {
+        String path = "/APs.txt";
+        File file;
+        if(!SD.exists(path)){
+            file = SD.open(path, FILE_WRITE);
+            if(!file){
+                Serial.println(F("rewrite_storage_APs() -> storage.cpp -> Failed to open file for writing"));
+                return write_success;
+            }
+        }
+        else {
+            file = SD.open(path, FILE_WRITE); 
+            if(!file){
+                Serial.println(F("rewrite_storage_APs() -> storage.cpp -> Failed to open file for writing"));
+                return write_success;
+            }
+        }
+        while(!SSID[i].isEmpty() && i < 10)
+        {
+            if(file.print("<"))
+            {
+                file.print(SSID[i] + ",");
+                file.print(Password[i]);
+                file.print(">");
+                Serial.printf("rewrite_storage_APs() -> storage.cpp -> File written %s and %s \n", SSID[i].c_str(), Password[i].c_str());
+                i++;
+            } 
+            else 
+            {
+                Serial.println(F("rewrite_storage_APs() -> storage.cpp -> Write failed"));
+                file.close();
+                SD.remove(path);
+                return false;
+            }
+        }
+        write_success = true;
+        file.close();
+        return write_success;
+    }
+    else
+    {
+        Serial.println(F("rewrite_storage_APs() -> storage.cpp -> Storage mount failed or not mounted! Try again"));
         return write_success;
     }
 }
@@ -254,6 +368,123 @@ String Storage::read_data(){
     return toread;
 }
 
+/**
+ * This funtion cycles through the APs stored in the SD card and stores them in
+ * a String array. Since the String array parameter degenerates to a pointer it
+ * chenges the original referenced parameter and thus returns the list of
+ * credentials in two arrays.
+ */
+void Storage::return_APList(String SSID_List [10], String Password_List[10])
+{
+    int i = 0;
+    while(!SSID_List[i].isEmpty() || !Password_List[i].isEmpty())
+    {
+        SSID_List[i].clear();
+        Password_List[i].clear();
+        i++;
+    }
+    i = 0;
+    if(mount_success && APList_exists)
+    {
+        char temp = '\0';
+        int16_t max_iter_limit = 0;
+        int16_t i = 0;
+        bool read_st = false;
+        bool SSID_rd = false;
+        bool Password_rd = false;
+        File AP = SD.open("/APs.txt", FILE_READ);
+
+        while(1)
+        {
+            if(AP.available() && !read_st)
+            {
+                temp = AP.read();
+                if(temp == '<' && max_iter_limit < 10)
+                {
+                    Serial.println(F("return_APList -> storage.cpp -> Start of frame found"));
+                    temp = AP.read();
+                    max_iter_limit = 0;
+                    read_st = true;
+                }
+
+                if(max_iter_limit > 10) // could not find the start of frame
+                {
+                    Serial.println(F("return_APList -> storage.cpp -> Start of frame missing"));
+                    return;
+                }
+                else
+                {
+                    max_iter_limit++;
+                }
+            }
+
+            if(AP.available() && read_st)
+            {
+                while(temp != ',' && max_iter_limit < 40)
+                {
+                    curr_SSID += temp;
+                    temp = AP.read();
+                    max_iter_limit++;
+                    if(max_iter_limit >= 40) //username greater than assigned limit. Maybe define global variables??
+                    {
+                        Serial.println(F("return_APList -> storage.cpp -> Invalid username"));
+                        break;
+                    }
+                    if(temp == ',')
+                    {
+                        SSID_rd = true;
+                        Serial.println(curr_SSID);
+                    }
+                }
+                temp = AP.read();
+                while(temp != '>' && max_iter_limit < 40)
+                {
+                    curr_Password += temp;
+                    temp = AP.read();
+                    max_iter_limit++;
+                    if(max_iter_limit >= 40)
+                    {
+                        Serial.println(F("return_APList -> storage.cpp -> Invalid password"));
+                        break;
+                    }
+                    if(temp == '>')
+                    {
+                        Password_rd = true;
+                        Serial.println(curr_Password);
+                    }
+                }
+            }
+            if(SSID_rd && Password_rd) // One frame of credentials has been read
+            {
+                if(i < 10)
+                {
+                    SSID_List[i] = curr_SSID;
+                    Password_List[i] = curr_Password;
+                    i++;
+                    Serial.println(F("return_APList -> storage.cpp -> New AP returned"));
+                }
+                else
+                {
+                    Serial.println(F("update_APList -> storage.cpp -> Maximum number of APs stored in SD card. Please free up space"));
+                }
+                curr_SSID = "";
+                curr_Password = "";
+                Password_rd = false;
+                SSID_rd = false;
+                read_st = false;
+                max_iter_limit = 0;
+            }
+            if(!AP.available())
+            {
+                Serial.println(F("end of data reached"));
+                break;
+            }
+        }
+        AP.close();
+        i = 0;
+        return;
+    }
+}
 
 /*
  * mark_data updates the curr_read_pos in config.txt
