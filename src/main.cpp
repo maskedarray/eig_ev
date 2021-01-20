@@ -1,6 +1,6 @@
 /*
  * Copyright 2020, Energy Informatics Group, LUMS University. All rights reserved.
- * Developed by Abdur Rahman(rao.arrn@gmail.com), Wajahat Ali(s_ali@lums.edu.pk).
+ * Developed by Abdur Rahman(rao.arrn@gmail.com), Wajahat Ali(s_ali@lums.edu.pk), Farasat(razi97@hotmail.com).
  * 
  * Main file for Battery Swapping Station code
  * 
@@ -11,6 +11,7 @@
 
 //TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
 //TODO: OPTIMIZATION: convert String to c string.
+//TODO: optimization of data that is to be saved and sent
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 
