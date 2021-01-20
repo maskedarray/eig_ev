@@ -120,4 +120,28 @@ void ESP_BT::display(String ID, String Username, String Password)
     Serial.print("display() -> bluetooth.cpp -> Password: " + Password + "\n");
 }
 
+/**
+ * @brief This is a wrapper function which checks for incoming bluetooth messages and stores them accordingly. It uses some other functions defined previously in this library. 
+ * 
+ * @param ID refers to the parsed ID. This dictates the purpose of the message as well as the function needed to be performed 
+ * @param Username refers to the first String entry parsed
+ * @param Password refers to the second String entry parsed
+ * @return true if bluetooth is available and read is successful
+ * @return false if otherwise
+ */
+bool ESP_BT::check_bluetooth(String &ID, String &Username, String &Password)
+{
+    if (this->SerialBT.available() && !got_credentials)
+    {
+        got_credentials = this->bt_read(ID, Username, Password);
+        got_credentials = !got_credentials;
+        return !got_credentials;
+    }
+    else
+    {
+        return false;
+    }
+    
+}
+
 ESP_BT bt;

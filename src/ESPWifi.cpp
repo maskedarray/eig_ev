@@ -148,6 +148,48 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
 }
 
 /**
+ * @brief This function uses functions previously defined here and in
+ * bluetooth.h to connect to a new WiFi connection. This is a wrapper for all
+ * intents and purposes and designed for use in a loop/task.
+ *
+ * @return Connection established
+ * @return Connection failed
+ */
+bool ESP_WiFi::connect_to_new_credentials()
+{
+    if (bt.check_bluetooth(temp_ID, temp_SSID, temp_Password))
+    {
+        if (temp_ID == "3") // Check ID for correct function to run
+        {
+            if (this->create_new_connection(temp_SSID.c_str(), temp_Password.c_str()))
+            {
+                digitalWrite(LED, HIGH);
+                Serial.printf("connect_to_new_credentials() -> ESP_WiFi.cpp -> Connection Status: %d\n", WiFi.status());
+                Serial.println("connect_to_new_credentials() -> ESP_WiFi.cpp -> Connected to: " + WiFi.SSID());    
+                temp_ID = "";
+                temp_SSID = "";
+                temp_Password = "";
+                return true;
+            }
+        }
+        else // Turn to switch statementsin the event that we use more functions according to ID
+        {
+            Serial.println("connect_to_new_credentials() -> ESP_WiFi.cpp -> entered the wrong ID");
+            temp_ID = "";
+            temp_SSID = "";
+            temp_Password = "";
+            return false;
+        }
+    }
+    else
+    {
+        Serial.println("connect_to_new_credentials() -> ESP_WiFi.cpp -> bluetooth read failed");
+        return false;
+    }
+    return false;
+}
+
+/**
  * This function serves to destroy and recreate a WiFiMulti class in order to
  * change the list of APs. This is done as the AP list (vector) is a private
  * variable
@@ -212,6 +254,40 @@ bool ESP_WiFi::connect_to_nearest()
     {
         Serial.println(F("connect_to_nearest() -> ESP_WiFi.cpp -> Connection established"));
         return true;
+    }
+}
+
+/**
+ * @brief This function is a wrapper function which checks the status of the
+ * wifi connection. It is designed to be used in a loop. Can be altered
+ * according to requirements.
+ *
+ * @return previous connection exists 
+ * @return previous connection doesn't exist
+ */
+bool ESP_WiFi::check_connection()
+{
+    if (WiFi.isConnected()) // Check WiFi connection
+    {
+        digitalWrite(LED, HIGH);
+        Serial.println("Connected to: " + WiFi.SSID());
+        delay(1000);
+        return true;
+    }
+    else
+    {
+        digitalWrite(LED, HIGH);
+        delay(50);
+        digitalWrite(LED, LOW);
+        delay(50);
+        digitalWrite(LED, HIGH);
+        delay(50);
+        digitalWrite(LED, LOW);
+
+        Serial.println("WiFi not connected. Establishing connection");
+        this->connect_to_nearest();
+        delay(100);
+        return false;
     }
 }
 

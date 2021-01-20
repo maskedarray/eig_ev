@@ -14,6 +14,7 @@
 
 class ESP_BT {
 private:
+    bool got_credentials;
 
 public:
     BluetoothSerial SerialBT;
@@ -22,6 +23,7 @@ public:
     bool bt_read(String &ID, String &Username, String &Password);
     void wifi_parse(String text, String &Username, String &Password);
     void display(String ID, String Username, String Password);
+    bool check_bluetooth(String &ID, String &Username, String &Password);
 };
 
 extern ESP_BT bt;
