@@ -25,10 +25,16 @@ private:
     void remove_oldest_file();
     String next_file(String);
     void create_header(File);
+    bool APList_exists;
+    String curr_SSID;
+    String curr_Password;
 public:
-    bool init_storage(); 
+    bool init_storage(); // Small addition added to init to check for AP list as well.
     bool write_data(String timenow, String data);
+    bool write_AP(String SSID, String Password); // Add a new AP to the list on the SD card
+    bool rewrite_storage_APs(String SSID[10], String Password[10]); // Erase and rewrite the storage using the String array as paremeters
     String read_data(void);
+    void return_APList(String SSID[10], String Password[10]); // Return String arrays for SSIDs and Passwords
     void mark_data(String timenow);
     long get_unsent_data(String timenow);       //return unsent data in MBs
 };
