@@ -66,9 +66,9 @@ void setup() {
     xSemaphoreGive(semaWifi1);
     
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 100000, NULL, 1, &blTask, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask, 0);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 100000, NULL, 1, &wifiTask, 1);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 1000, NULL, 1, &wifiTask, 1);
     Serial.println("created all tasks");
 }
 unsigned long lastMillis = 0;
