@@ -27,20 +27,12 @@ bool ESP_BT::init(){
  */
 bool ESP_BT::send(String tosend){
     long len = tosend.length();
-<<<<<<< HEAD
-    esp_bt.print("%S%");    //start byte
-    esp_bt.print(String(len));
-    esp_bt.print(",");
-    esp_bt.print(tosend);   //data, first parameter is length of data starting from next value (after comma)
-    esp_bt.print("%S%");    //end byte
-    esp_bt.println();       //end byte
-=======
-    tosend = String(len) + "," + tosend;
     SerialBT.print("%S%");    //start byte
+    SerialBT.print(String(len));
+    SerialBT.print(",");
     SerialBT.print(tosend);   //data, first parameter is length of data starting from next value (after comma)
     SerialBT.print("%S%");    //end byte
     SerialBT.println();       //end byte
->>>>>>> wifiaps
     
     if (SerialBT.available()){ //Check if we receive anything from Bluetooth
         for(int i=0; i<4; i++){ // reading four bytes only, need to send data to esp in a standardized form (delimiters)

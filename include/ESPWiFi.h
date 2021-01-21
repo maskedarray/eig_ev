@@ -14,6 +14,8 @@
  * This library adds functions to connect to the closest available AP for WiFi
  * or create a new AP for use. The maximum limit for the number of credentials
  * is set to limit the number of APs to cycle through
+ * NOTE: This library includes other libraries. Any changes in those libraries
+ * will affect this library. 
  */
 class ESP_WiFi
 {

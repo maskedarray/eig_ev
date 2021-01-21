@@ -2,7 +2,7 @@
 #include <RTClib.h>
 
 RTC_DS3231 rtc;
-
+//TODO: Update time from internet after a while
 /*
  * Function initRTC initializes RTC and adjusts date and time in case of power loss
  * TODO: Handle error in case RTC initialization fails
