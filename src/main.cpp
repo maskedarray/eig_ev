@@ -17,9 +17,9 @@
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
-#include <rtc.h>
-#include <Storage.h>
-#include <can.h>
+//#include <rtc.h>
+//#include <Storage.h>
+//#include <can.h>
 #include <bluetooth.h>
 #include "esp32-mqtt.h"
 
@@ -42,8 +42,12 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 
 void setup() {
     Serial.begin(115200); //Start Serial monitor
+    Serial.print("Free Heap: ");
+    Serial.println(ESP.getFreeHeap());
     pinMode(2, OUTPUT);
     setupCloudIoT();
+    Serial.print("Free Heap: ");
+    Serial.println(ESP.getFreeHeap());
     //bt.init();
     //initRTC();
     // if(storage.init_storage()){
@@ -65,11 +69,13 @@ void setup() {
     xSemaphoreGive(seamAqData2);
     xSemaphoreGive(semaWifi1);
     
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask, 0);
-    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 1000, NULL, 1, &wifiTask, 1);
+    //xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 0);
+    //xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask, 0);
+    //xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
+    //xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 1000, NULL, 1, &wifiTask, 1);
     Serial.println("created all tasks");
+    Serial.print("Free Heap: ");
+    Serial.println(ESP.getFreeHeap());
 }
 unsigned long lastMillis = 0;
 String CloudData = "";
@@ -105,6 +111,46 @@ void loop() {
     Serial.println(counter);
     Serial.println();
     delay(1000);*/
+    towrite = "";
+    // towrite += getTime() + ",";                 //time
+    towrite += String("BSS1715001") + ",";      //BSSID
+    towrite += String("16") + ",";              //total slots
+    towrite += String("20.273") + ",";              //BSS voltage
+    towrite += String("55.781") + ",";              //BSS CURRENT
+    towrite += String("7400") + ",";                  //BSS POWER
+    towrite += String("0.8") + ",";                 //BSS power factor
+
+    Serial.println("bt send");
+
+    {
+        //storage.write_data(getTime2(), towrite);
+        Serial.println("mqtt send");
+        mqtt->loop();
+        delay(10);  // <- fixes some issues with WiFi stability
+        if (!mqttClient->connected()) {
+            connect();
+        }
+        if (mqttClient->connected()) {
+            Serial.println("*****");
+            Serial.print("Publish Success: ");
+            Serial.println(publishTelemetry("towrite"));
+            Serial.print("Heap Size: ");
+            Serial.println(ESP.getHeapSize());
+            Serial.print("Free Heap: ");
+            Serial.println(ESP.getFreeHeap());
+            Serial.print("Min Free Heap: ");
+            Serial.println(ESP.getMinFreeHeap());
+            Serial.print("Max Alloc Heap: ");
+            Serial.println(ESP.getMaxAllocHeap());
+            Serial.print("Used PSRAM: ");
+            Serial.println(ESP.getPsramSize() - ESP.getFreePsram());
+            
+
+            //Serial.println(publishTelemetry("hi"));
+            Serial.println("*****");
+        }
+    }
+    delay(1000);
 }
 void vAcquireData( void *pvParameters ){
     TickType_t xLastWakeTime;

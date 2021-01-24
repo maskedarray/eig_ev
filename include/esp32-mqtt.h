@@ -100,20 +100,37 @@ bool publishTelemetry(String subfolder, const char *data, int length){
 }
 
 void connect(){
+  delay(100);
+  log_v("Free internal heap before connectwifi %u", ESP.getFreeHeap());
   connectWifi();
+  delay(100);
+  log_v("Free internal heap after connectwifi %u", ESP.getFreeHeap());
   mqtt->mqttConnect();
+  delay(100);
+  log_v("Free internal heap after mqttconnect %u", ESP.getFreeHeap());
 }
 
 void setupCloudIoT(){
   device = new CloudIoTCoreDevice(
       project_id, location, registry_id, device_id,
       private_key_str);
-
+  delay(100);
+  log_v("Free internal heap after cloudiotcoredevice %u", ESP.getFreeHeap());
   setupWifi();
+  delay(100);
+  log_v("Free internal heap after wifi %u", ESP.getFreeHeap()); 
   netClient = new WiFiClientSecure();
+  delay(100);
+  log_v("Free internal heap afer wificlientsecure %u", ESP.getFreeHeap());
   mqttClient = new MQTTClient(6000); // number of characters 
   mqttClient->setOptions(180, true, 1000); // keepAlive, cleanSession, timeout
+  delay(200);
+  log_v("Free internal heap after mqttclient %u", ESP.getFreeHeap());
   mqtt = new CloudIoTCoreMqtt(mqttClient, netClient, device);
+  delay(200);
+  log_v("Free internal heap afer cloudiotcoremqtt %u", ESP.getFreeHeap());
   mqtt->setUseLts(true);
   mqtt->startMQTT();
+  delay(200);
+  log_v("Free internal heap after startmqtt %u", ESP.getFreeHeap());
 }

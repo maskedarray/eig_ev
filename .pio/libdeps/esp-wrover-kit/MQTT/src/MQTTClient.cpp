@@ -279,11 +279,14 @@ bool MQTTClient::connect(const char clientID[], const char username[], const cha
 
   // save client
   this->network.client = this->netClient;
-
+  delay(100);
+  log_v("Free internal heap before clientconnect %u", ESP.getFreeHeap());
   // connect to host
   if (!skip) {
     int ret;
     if (this->hostname != nullptr) {
+        delay(100);
+  log_v("Free internal heap before netclient->connect %u", ESP.getFreeHeap());
       ret = this->netClient->connect(this->hostname, (uint16_t)this->port);
     } else {
       ret = this->netClient->connect(this->address, (uint16_t)this->port);
@@ -293,7 +296,6 @@ bool MQTTClient::connect(const char clientID[], const char username[], const cha
       return false;
     }
   }
-
   // prepare options
   lwmqtt_options_t options = lwmqtt_default_options;
   options.keep_alive = this->keepAlive;
