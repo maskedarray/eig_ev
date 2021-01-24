@@ -37,7 +37,7 @@ const char* ntp_secondary = "time.nist.gov";
 // of hex digits). If it's bigger and it starts with "00:" delete the "00:". If
 // it's smaller add "00:" to the start. If it's too big or too small something
 // is probably wrong with your key.
-const char *private_key_str = 
+const char *private_key_str PROGMEM = 
     "7b:e0:a5:ba:1d:60:f2:9b:40:43:34:80:85:1d:21:"
     "a4:40:c3:b2:37:87:0e:90:e6:df:d9:53:5e:2e:f3:"
     "8c:07";
@@ -52,7 +52,7 @@ const int jwt_exp_secs = 60*20; // Maximum 24H (3600*24)
 // Copy the certificate (all lines between and including ---BEGIN CERTIFICATE---
 // and --END CERTIFICATE--) to root.cert and put here on the root_cert variable.
 
-const char *root_cert =
+const char *root_cert PROGMEM =
     "-----BEGIN CERTIFICATE-----\n"
     "MIIErjCCA5agAwIBAgIQW+5sTJWKajts11BgHkBRwjANBgkqhkiG9w0BAQsFADBU\n"
     "MQswCQYDVQQGEwJVUzEeMBwGA1UEChMVR29vZ2xlIFRydXN0IFNlcnZpY2VzMSUw\n"

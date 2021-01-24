@@ -42,19 +42,19 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 
 void setup() {
     Serial.begin(115200); //Start Serial monitor
-    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(2, OUTPUT);
     setupCloudIoT();
-    bt.init();
-    initRTC();
-    if(storage.init_storage()){
-        Serial.println("main() -> main.cpp -> storage initialization success!");
-    }
-    else{   //TODO: handle when storage connection fails
-        while(1){
-            Serial.println("main() -> main.cpp -> storage initialization failed!");
-            delay(1000);
-        }
-    }
+    //bt.init();
+    //initRTC();
+    // if(storage.init_storage()){
+    //     Serial.println("main() -> main.cpp -> storage initialization success!");
+    // }
+    // else{   //TODO: handle when storage connection fails
+    //     while(1){
+    //         Serial.println("main() -> main.cpp -> storage initialization failed!");
+    //         delay(1000);
+    //     }
+    // }
     semaAqData1 = xSemaphoreCreateBinary();
     seamAqData2 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
@@ -119,7 +119,7 @@ void vAcquireData( void *pvParameters ){
             //Dummy acquisition of data
             //we need to place a valid CSV string in towrite string
             towrite = "";
-            towrite += getTime() + ",";                 //time
+            // towrite += getTime() + ",";                 //time
             towrite += String("BSS1715001") + ",";      //BSSID
             towrite += String("16") + ",";              //total slots
             towrite += String("20.273") + ",";              //BSS voltage
@@ -157,7 +157,7 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         xSemaphoreTake(semaBlTx1,portMAX_DELAY);
         {
             Serial.println("bt send");
-            bt.send("towrite");
+            //bt.send("towrite");
         }
         xSemaphoreGive(semaAqData1);
     }   //end for
@@ -169,6 +169,31 @@ void vStorage( void *pvParameters ){
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
         {
             //storage.write_data(getTime2(), towrite);
+            Serial.println("mqtt send");
+            mqtt->loop();
+            delay(10);  // <- fixes some issues with WiFi stability
+            if (!mqttClient->connected()) {
+                connect();
+            }
+            if (mqttClient->connected()) {
+                Serial.println("*****");
+                Serial.print("Publish Success: ");
+                Serial.println(publishTelemetry("towrite"));
+                Serial.print("Heap Size: ");
+                Serial.println(ESP.getHeapSize());
+                Serial.print("Free Heap: ");
+                Serial.println(ESP.getFreeHeap());
+                Serial.print("Min Free Heap: ");
+                Serial.println(ESP.getMinFreeHeap());
+                Serial.print("Max Alloc Heap: ");
+                Serial.println(ESP.getMaxAllocHeap());
+                Serial.print("Used PSRAM: ");
+                Serial.println(ESP.getPsramSize() - ESP.getFreePsram());
+                
+
+                //Serial.println(publishTelemetry("hi"));
+                Serial.println("*****");
+            }
         }
         xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
         xSemaphoreGive(seamAqData2);
@@ -181,19 +206,19 @@ void vWifiTransfer( void *pvParameters ){
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
         {
-            Serial.println("mqtt send");
-            mqtt->loop();
-            delay(10);  // <- fixes some issues with WiFi stability
-            if (!mqttClient->connected()) {
-                connect();
-            }
-            if (mqttClient->connected()) {
-                Serial.println("*****");
-                Serial.println(publishTelemetry("towrite"));
-                Serial.println(ESP.getFreeHeap());
-                //Serial.println(publishTelemetry("hi"));
-                Serial.println("*****");
-            }
+            // Serial.println("mqtt send");
+            // mqtt->loop();
+            // delay(10);  // <- fixes some issues with WiFi stability
+            // if (!mqttClient->connected()) {
+            //     connect();
+            // }
+            // if (mqttClient->connected()) {
+            //     Serial.println("*****");
+            //     Serial.println(publishTelemetry("towrite"));
+            //     Serial.println(ESP.getFreeHeap());
+            //     //Serial.println(publishTelemetry("hi"));
+            //     Serial.println("*****");
+            // }
             vTaskDelay(100);
         }
         xSemaphoreGive(semaWifi1);
