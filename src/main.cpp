@@ -43,7 +43,7 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 void setup() {
     Serial.begin(115200); //Start Serial monitor
     pinMode(LED_BUILTIN, OUTPUT);
-    //setupCloudIoT();
+    setupCloudIoT();
     bt.init();
     initRTC();
     if(storage.init_storage()){
@@ -128,22 +128,22 @@ void vAcquireData( void *pvParameters ){
             towrite += String("0.8") + ",";                 //BSS power factor
             //addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,
             //             String B_U_Cycles , String B_Temp, String B_SoC, String B_SoH, String B_RoD,String B_Vol ,String B_Curr)
-            addSlotsData("01", "1718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("02", "1718953130", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("03", "1718953131", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("04", "1718953128", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
-            addSlotsData("05", "1718953127", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("06", "1718953126", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("07", "1718953125", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("08", "1718953124", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
-            addSlotsData("09", "1718953123", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("10", "1718953122", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("11", "1718953121", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("12", "1718953120", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
-            addSlotsData("13", "1718953119", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("14", "2718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("15", "1518953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("16", "1718253129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");
+            // addSlotsData("01", "1718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("02", "1718953130", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("03", "1718953131", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("04", "1718953128", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
+            // addSlotsData("05", "1718953127", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("06", "1718953126", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("07", "1718953125", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("08", "1718953124", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
+            // addSlotsData("09", "1718953123", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("10", "1718953122", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("11", "1718953121", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("12", "1718953120", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");towrite += ",";
+            // addSlotsData("13", "1718953119", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("14", "2718953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("15", "1518953129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+            // addSlotsData("16", "1718253129", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");
             //Now towrite string contains one valid string of CSV data chunk
         }
         xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
@@ -156,7 +156,8 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
     for(;;){    //infinite loop
         xSemaphoreTake(semaBlTx1,portMAX_DELAY);
         {
-            bt.send(towrite);
+            Serial.println("bt send");
+            bt.send("towrite");
         }
         xSemaphoreGive(semaAqData1);
     }   //end for
@@ -167,7 +168,7 @@ void vStorage( void *pvParameters ){
         xSemaphoreTake(semaStorage1,portMAX_DELAY);
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
         {
-            storage.write_data(getTime2(), towrite);
+            //storage.write_data(getTime2(), towrite);
         }
         xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
         xSemaphoreGive(seamAqData2);
@@ -179,7 +180,8 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        /*{
+        {
+            Serial.println("mqtt send");
             mqtt->loop();
             delay(10);  // <- fixes some issues with WiFi stability
             if (!mqttClient->connected()) {
@@ -187,12 +189,13 @@ void vWifiTransfer( void *pvParameters ){
             }
             if (mqttClient->connected()) {
                 Serial.println("*****");
-                Serial.println(publishTelemetry(towrite));
+                Serial.println(publishTelemetry("towrite"));
                 Serial.println(ESP.getFreeHeap());
                 //Serial.println(publishTelemetry("hi"));
                 Serial.println("*****");
             }
-        }*/
+            vTaskDelay(100);
+        }
         xSemaphoreGive(semaWifi1);
     }   //end for
 }   //end vWifiTransfer task
