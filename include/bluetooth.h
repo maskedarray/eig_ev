@@ -20,10 +20,11 @@ public:
     BluetoothSerial SerialBT;
     bool init();
     bool send(String tosend);
-    bool bt_read(String &ID, String &Username, String &Password);
+    String bt_read();
     void wifi_parse(String text, String &Username, String &Password);
+    void EV_ID_parse(String text, String &unique_identifier);
     void display(String ID, String Username, String Password);
-    bool check_bluetooth(String &ID, String &Username, String &Password);
+    String check_bluetooth();
 };
 
 extern ESP_BT bt;
