@@ -15,14 +15,12 @@
 class ESP_BT {
 private:
     bool got_credentials;
+    String bt_read();
 
 public:
     BluetoothSerial SerialBT;
     bool init();
     bool send(String tosend);
-    String bt_read();
-    void wifi_parse(String text, String &Username, String &Password);
-    void EV_ID_parse(String text, String &unique_identifier);
     void display(String ID, String Username, String Password);
     String check_bluetooth();
 };
