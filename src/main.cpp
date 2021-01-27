@@ -14,21 +14,17 @@
 //TODO: optimization of data that is to be saved and sent
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
+#define LED_1   2
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
-#include <rtc.h>
-#include <Storage.h>
 #include <can.h>
 #include <bluetooth.h>
-#include "esp32-mqtt.h"
 
 String towrite, toread;
-TaskHandle_t dataTask, blTask, storageTask, wifiTask;
+TaskHandle_t dataTask, blTask;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
-void vStorage( void *pvParameters );
-void vWifiTransfer( void *pvParameters );
 
 SemaphoreHandle_t semaAqData1, seamAqData2, semaBlTx1, semaStorage1, seamStorage2, semaWifi1;
 void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , 
@@ -39,87 +35,36 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 }
 
 
-
 void setup() {
     Serial.begin(115200); //Start Serial monitor
-    pinMode(LED_BUILTIN, OUTPUT);
-    //setupCloudIoT();
+    pinMode(LED_1, OUTPUT);
     bt.init();
-    initRTC();
-    if(storage.init_storage()){
-        Serial.println("main() -> main.cpp -> storage initialization success!");
-    }
-    else{   //TODO: handle when storage connection fails
-        while(1){
-            Serial.println("main() -> main.cpp -> storage initialization failed!");
-            delay(1000);
-        }
-    }
     semaAqData1 = xSemaphoreCreateBinary();
     seamAqData2 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
-    semaStorage1 = xSemaphoreCreateBinary();
-    seamStorage2 = xSemaphoreCreateBinary();
-    semaWifi1 = xSemaphoreCreateBinary();
     xSemaphoreGive(semaAqData1);
-    xSemaphoreGive(seamAqData2);
-    xSemaphoreGive(semaWifi1);
     
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 0);
+    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 1);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask, 0);
-    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 1000, NULL, 1, &wifiTask, 1);
-    Serial.println("created all tasks");
+    log_d("created all tasks");
 }
 unsigned long lastMillis = 0;
 String CloudData = "";
 void loop() {
     
-    /*if(WiFi.status() == WL_CONNECTED){digitalWrite(2, 1);}
-    
-    
-    
-    
-    mqtt->loop();
-    delay(10);  // <- fixes some issues with WiFi stability
-    if (!mqttClient->connected()) {
-        connect();
-    }
-    if (mqttClient->connected()) {
-        Serial.println("*****");
-        Serial.println(publishTelemetry(towrite));
-        Serial.println(ESP.getFreeHeap());
-        //Serial.println(publishTelemetry("hi"));
-        Serial.println("*****");
-    }
-    storage.write_data(getTime2(), towrite);
-    towrite= "";
-    towrite = storage.read_data();
-    if(towrite != ""){
-        storage.write_data("copy",towrite);
-        storage.mark_data(getTime2());
-    }
-    Serial.println(towrite);
-    static long counter = 0;
-    counter++;
-    Serial.println(counter);
-    Serial.println();
-    delay(1000);*/
 }
 void vAcquireData( void *pvParameters ){
     TickType_t xLastWakeTime;
-    const TickType_t xFrequency = DATA_ACQUISITION_TIME;
+    const TickType_t xPeriod = DATA_ACQUISITION_TIME;
     xLastWakeTime = xTaskGetTickCount();
 
     for(;;){    //infinite loop
         xSemaphoreTake(semaAqData1, portMAX_DELAY); //semaphore to check if sending of data over bluetooth and storage has returned
-        xSemaphoreTake(seamAqData2, portMAX_DELAY);
-        if(WiFi.status() == WL_CONNECTED)   digitalWrite(2, !digitalRead(2));   //LED will blink when there is connection
         {
             //Dummy acquisition of data
             //we need to place a valid CSV string in towrite string
             towrite = "";
-            towrite += getTime() + ",";                 //time
+            //towrite += getTime() + ",";                 //time
             towrite += String("BSS1715001") + ",";      //BSSID
             towrite += String("16") + ",";              //total slots
             towrite += String("20.273") + ",";              //BSS voltage
@@ -147,8 +92,7 @@ void vAcquireData( void *pvParameters ){
             //Now towrite string contains one valid string of CSV data chunk
         }
         xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
-        xSemaphoreGive(semaStorage1);   //signal to call storage save data function once
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);    //defines the data acquisition rate
+        vTaskDelayUntil(&xLastWakeTime, xPeriod);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
 
@@ -161,38 +105,3 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         xSemaphoreGive(semaAqData1);
     }   //end for
 }   //end vBlTransfer task
-
-void vStorage( void *pvParameters ){
-    for(;;){    //infinite loop
-        xSemaphoreTake(semaStorage1,portMAX_DELAY);
-        xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        {
-            storage.write_data(getTime2(), towrite);
-        }
-        xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
-        xSemaphoreGive(seamAqData2);
-    }   //end for
-}   //end vStorage task
-
-void vWifiTransfer( void *pvParameters ){
-    for(;;){    //infinite loop
-        //check unsent data and send data over wifi
-        //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
-        xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        /*{
-            mqtt->loop();
-            delay(10);  // <- fixes some issues with WiFi stability
-            if (!mqttClient->connected()) {
-                connect();
-            }
-            if (mqttClient->connected()) {
-                Serial.println("*****");
-                Serial.println(publishTelemetry(towrite));
-                Serial.println(ESP.getFreeHeap());
-                //Serial.println(publishTelemetry("hi"));
-                Serial.println("*****");
-            }
-        }*/
-        xSemaphoreGive(semaWifi1);
-    }   //end for
-}   //end vWifiTransfer task

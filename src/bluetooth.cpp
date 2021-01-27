@@ -15,7 +15,7 @@ bool auth_flag1 = false;
  */
 bool ESP_BT::init(){
     SerialBT.begin(BLUETOOTH_NAME); //Name of your Bluetooth Signal
-    Serial.println(F("init_bt() -> bluetooth.cpp -> Bluetooth Device is Ready to Pair"));
+    log_d("Bluetooth Device is Ready to Pair");
     return true;
 }
 
@@ -33,13 +33,6 @@ bool ESP_BT::send(String tosend){
     SerialBT.print(tosend);   //data, first parameter is length of data starting from next value (after comma)
     SerialBT.print("%S%");    //end byte
     SerialBT.println();       //end byte
-    
-    if (SerialBT.available()){ //Check if we receive anything from Bluetooth
-        for(int i=0; i<4; i++){ // reading four bytes only, need to send data to esp in a standardized form (delimiters)
-            BT_incoming[i] = SerialBT.read();
-        }
-        Serial.print("Received:"); Serial.println(BT_incoming);
-    }
     return true;
 }
 
@@ -68,7 +61,7 @@ String ESP_BT::bt_read() // TODO: take ID first and define various reads accordi
         }
         if(size >= 90)
         {
-            Serial.println("Credentials exceed set limit");
+            log_d("Credentials exceed set limit");
             return "";
         }
         BTread += temp;
@@ -76,15 +69,6 @@ String ESP_BT::bt_read() // TODO: take ID first and define various reads accordi
     return BTread;
 }
 
-/**
- * This is a simple diagnostic function for debugging purposes.
- */
-void ESP_BT::display(String ID, String Username, String Password)
-{
-    Serial.print("display() -> bluetooth.cpp -> ID: " + ID + "\n");
-    Serial.print("display() -> bluetooth.cpp -> Username: " + Username +  "\n");
-    Serial.print("display() -> bluetooth.cpp -> Password: " + Password + "\n");
-}
 
 /**
  * @brief This is a wrapper function which checks for incoming bluetooth messages and stores them accordingly. It uses some other functions defined previously in this library. 

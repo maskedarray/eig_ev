@@ -1,4 +1,4 @@
-#include <cmdlib.h>
+#include <cmdlib-master.h>
 
 #define AUTH_CODE "123456"
 #define ESP_ID "012501202101"
@@ -100,7 +100,7 @@ bool command_3(String message)
 {
     String SSID = parse_by_key(message, 1);
     String Password = parse_by_key(message, 2);
-    return wf.create_new_connection(SSID.c_str(), Password.c_str());
+    //return wf.create_new_connection(SSID.c_str(), Password.c_str());
 };
 
 /**
