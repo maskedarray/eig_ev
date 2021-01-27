@@ -19,9 +19,8 @@ class ESP_WiFi
     private:
         int32_t timer;
         int32_t credential_length;
-        String temp_ID;
-        String temp_entry_1;
-        String temp_entry_2;
+        bool remake_access_points();
+        void update_APs();
 
     public:
         String SSID_List[10];
@@ -29,8 +28,6 @@ class ESP_WiFi
         WiFiMulti *access_points;
         bool init();
         bool create_new_connection(const char *SSID, const char *Password);
-        bool remake_access_points();
-        void update_APs();
         bool connect_to_nearest();
         bool check_connection();
 };

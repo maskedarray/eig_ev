@@ -39,6 +39,7 @@ bool ESP_BT::send(String tosend){
         }
         Serial.print("Received:"); Serial.println(BT_incoming);
     }
+    return true;
 }
 
 /**
@@ -72,31 +73,6 @@ String ESP_BT::bt_read() // TODO: take ID first and define various reads accordi
         BTread += temp;
     }
     return BTread;
-}
-
-/**
- * This parses the text provided to return an SSID and Password.
- */
-void ESP_BT::wifi_parse(String text, String &Username, String &Password)
-{
-    text = text.substring(text.indexOf(',') + 1, text.indexOf('>') + 1);
-    Username = text.substring(0, text.indexOf(','));
-    text = text.substring(text.indexOf(',') + 1, text.indexOf('>') + 1);
-    Password = text.substring(0, text.indexOf('>'));
-    return;
-}
-
-/**
- * @brief This parses the given data to get a unique identifier for the specific EV.
- * 
- * @param text the received text to be read
- * @param unique_identifier the unique identifer parsed
- */
-void ESP_BT::EV_ID_parse(String text, String &unique_identifier)
-{
-    text = text.substring(text.indexOf(',') + 1, text.indexOf('>') + 1);
-    unique_identifier = text.substring(0, text.indexOf('>'));
-    return;
 }
 
 /**
