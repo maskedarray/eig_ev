@@ -4,10 +4,9 @@
 #include <WiFiMulti.h> // for multiple APs and connecting to the closest
 #include <Arduino.h>
 #include <Storage.h> // to access APs.txt
-#include <bluetooth.h> // to recieve data from bluetooth serial
 
 #define LED 2
-#define DEFAULT_SSID "EG"
+#define DEFAULT_SSID "EiG"
 #define DEFAULT_PASSWORD "12344321"
 
 /**
@@ -23,8 +22,8 @@ class ESP_WiFi
         int32_t timer;
         int32_t credential_length;
         String temp_ID;
-        String temp_SSID;
-        String temp_Password;
+        String temp_entry_1;
+        String temp_entry_2;
 
     public:
         String SSID_List[10];
@@ -32,7 +31,6 @@ class ESP_WiFi
         WiFiMulti *access_points;
         bool init();
         bool create_new_connection(const char *SSID, const char *Password);
-        bool connect_to_new_credentials();
         bool remake_access_points();
         void update_APs();
         bool connect_to_nearest();

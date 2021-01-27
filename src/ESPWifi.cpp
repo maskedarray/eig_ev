@@ -147,47 +147,6 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
     return true;
 }
 
-/**
- * @brief This function uses functions previously defined here and in
- * bluetooth.h to connect to a new WiFi connection. This is a wrapper for all
- * intents and purposes and designed for use in a loop/task.
- *
- * @return Connection established
- * @return Connection failed
- */
-bool ESP_WiFi::connect_to_new_credentials()
-{
-    if (bt.check_bluetooth(temp_ID, temp_SSID, temp_Password))
-    {
-        if (temp_ID == "3") // Check ID for correct function to run
-        {
-            if (this->create_new_connection(temp_SSID.c_str(), temp_Password.c_str()))
-            {
-                digitalWrite(LED, HIGH);
-                Serial.printf("connect_to_new_credentials() -> ESP_WiFi.cpp -> Connection Status: %d\n", WiFi.status());
-                Serial.println("connect_to_new_credentials() -> ESP_WiFi.cpp -> Connected to: " + WiFi.SSID());    
-                temp_ID = "";
-                temp_SSID = "";
-                temp_Password = "";
-                return true;
-            }
-        }
-        else // Turn to switch statementsin the event that we use more functions according to ID
-        {
-            Serial.println("connect_to_new_credentials() -> ESP_WiFi.cpp -> entered the wrong ID");
-            temp_ID = "";
-            temp_SSID = "";
-            temp_Password = "";
-            return false;
-        }
-    }
-    else
-    {
-        Serial.println("connect_to_new_credentials() -> ESP_WiFi.cpp -> bluetooth read failed");
-        return false;
-    }
-    return false;
-}
 
 /**
  * This function serves to destroy and recreate a WiFiMulti class in order to

@@ -2,7 +2,7 @@
 
 
 char BT_incoming[32]; // array of characyters, to read incoming data
-
+bool auth_flag1 = false;
 //TODO: return statements are dummy. handle the scenario when connection fails 
 //or sending of data fails
 
@@ -43,20 +43,19 @@ bool ESP_BT::send(String tosend){
 }
 
 /**
- * This function reads an incoming serial message and parses it. The output is
- * passed to the parameters, which are referenced. The value of the ID will
- * change the output and the parse function in use.
- */ 
-bool ESP_BT::bt_read(String &ID, String &Username, String &Password) // TODO: take ID first and define various reads according to it
+ * @brief This function reads and returns a serially transmitted message from
+ * the controller (phone application). It is built with generalizability in mind
+ * and records everything in <>.
+ *
+ * @return String 
+ */
+String ESP_BT::bt_read() // TODO: take ID first and define various reads according to it
 {
     int32_t size = 0;
     char start = '<';
     char end = '>';
     char temp = '\0';
     String BTread = "";
-    ID = "";
-    Username = "";
-    Password = "";
     temp = SerialBT.read();
     if(temp == start)
     {
@@ -66,38 +65,14 @@ bool ESP_BT::bt_read(String &ID, String &Username, String &Password) // TODO: ta
             temp = SerialBT.read();
             size++;
         }
-        if(size > 90)
+        if(size >= 90)
         {
             Serial.println("Credentials exceed set limit");
-            ID = "";
-            Username = "";
-            Password = "";
-            return false;
+            return "";
         }
         BTread += temp;
-        ID = BTread.substring(BTread.indexOf('<') + 1, BTread.indexOf(','));
-        if(ID.length() < 3)
-        {
-            Serial.println("ID: " + ID);
-        }
-        else
-        {
-            Serial.println("ID exceeds set limit");
-            ID = "";
-            Username = "";
-            Password = "";
-            return false;
-        }
-        switch(ID.toInt())
-        {
-            case 3: // An ID of 3 means data is SSID and Password
-                this->wifi_parse(BTread, Username, Password);
-                break;
-            default:
-                break;
-        }
     }
-    return true;
+    return BTread;
 }
 
 /**
@@ -109,6 +84,20 @@ void ESP_BT::wifi_parse(String text, String &Username, String &Password)
     Username = text.substring(0, text.indexOf(','));
     text = text.substring(text.indexOf(',') + 1, text.indexOf('>') + 1);
     Password = text.substring(0, text.indexOf('>'));
+    return;
+}
+
+/**
+ * @brief This parses the given data to get a unique identifier for the specific EV.
+ * 
+ * @param text the received text to be read
+ * @param unique_identifier the unique identifer parsed
+ */
+void ESP_BT::EV_ID_parse(String text, String &unique_identifier)
+{
+    text = text.substring(text.indexOf(',') + 1, text.indexOf('>') + 1);
+    unique_identifier = text.substring(0, text.indexOf('>'));
+    return;
 }
 
 /**
@@ -124,25 +113,18 @@ void ESP_BT::display(String ID, String Username, String Password)
 /**
  * @brief This is a wrapper function which checks for incoming bluetooth messages and stores them accordingly. It uses some other functions defined previously in this library. 
  * 
- * @param ID refers to the parsed ID. This dictates the purpose of the message as well as the function needed to be performed 
- * @param Username refers to the first String entry parsed
- * @param Password refers to the second String entry parsed
- * @return true if bluetooth is available and read is successful
- * @return false if otherwise
+ * @return String message
  */
-bool ESP_BT::check_bluetooth(String &ID, String &Username, String &Password)
+String ESP_BT::check_bluetooth()
 {
-    if (this->SerialBT.available() && !got_credentials)
+    if (this->SerialBT.available())
     {
-        got_credentials = this->bt_read(ID, Username, Password);
-        got_credentials = !got_credentials;
-        return !got_credentials;
+        return this->bt_read();
     }
     else
     {
-        return false;
+        return "";
     }
-    
 }
 
 ESP_BT bt;
