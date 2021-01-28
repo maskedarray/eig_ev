@@ -139,9 +139,10 @@ bool command_4(String message, String auth_code)
  */
 bool command_5()
 {
-    initial_cycles = 3;   
+    initial_cycles = 3;
+    String Station_ID = "654321";
     Serial.println(F("command_5() -> cmdlib.hpp -> entered battery swap mode"));
-    return true;
+    return bt.send(Station_ID);
 };
 
 /**
