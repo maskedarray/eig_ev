@@ -533,9 +533,9 @@ void Storage::mark_data(String timenow){
 }
 
 String Storage::next_file(String curr_file){
-    String syear = curr_file.substring(1,4);
-    String smonth = curr_file.substring(5,6);
-    String sday = curr_file.substring(7,8);
+    String syear = curr_file.substring(1,5);
+    String smonth = curr_file.substring(5,7);
+    String sday = curr_file.substring(7,9);
     int iyear = syear.toInt();
     int imonth = smonth.toInt();
     int iday = sday.toInt();
@@ -545,13 +545,17 @@ String Storage::next_file(String curr_file){
 }
 
 /*
- * get_unsent_data returns the data in MBs
+ * get_unsent_data returns the data in bytes
  */
 long Storage::get_unsent_data(String timenow){ 
     String filename;
     String curr_write_file = "/" + timenow + ".txt";
     long filepos;
     File file = SD.open("/config.txt", FILE_READ);
+    if(!file){
+        Serial.println(F("mark_data() -> storage.cpp -> Failed to open config file"));
+        return 0;
+    }
     {   //read filename and file position from config.txt
         char c = file.read();
         String temp;
@@ -572,15 +576,15 @@ long Storage::get_unsent_data(String timenow){
     file = SD.open(filename);   //read the file from where curent data is being sent to cloud
     long total_bytes;
     total_bytes = file.size() - filepos;        //update total bytes
-
-    while(filename <= curr_write_file){
+    while(filename < curr_write_file){
         filename = next_file(filename);
         if(SD.exists(filename)){
             file = SD.open(filename);
             total_bytes += file.size();
+            file.close();
         }
     }
-    return total_bytes/1048576;
+    return total_bytes;
 }
 
 

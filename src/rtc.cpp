@@ -70,3 +70,7 @@ String getNextDay(int iyear, int imonth, int iday){
     if (dd.length() == 1){dd = "0" + dd; }
     return (YYYY + mm + dd);
 }
+
+String unixTime(){
+    return unixTime();
+}
