@@ -20,6 +20,7 @@
 #include <FreeRTOS.h>
 #include <can.h>
 #include <bluetooth.h>
+#include <Time.h>
 
 String towrite, toread;
 TaskHandle_t dataTask, blTask;

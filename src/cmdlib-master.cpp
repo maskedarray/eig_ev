@@ -1,11 +1,67 @@
 #include <cmdlib-master.h>
 
+
 #define AUTH_CODE "123456"
 #define ESP_ID "012501202101"
+// #define SEND_ACK_PIN 33
+// #define ACK_WAIT 50         //equal to 1 second
 
 bool auth_flag = false;
 int initial_cycles = 0;
 int final_cycles = 0;
+
+void cmdinit(){
+    Serial2.begin(115200);
+    Serial2.setTimeout(200);
+}
+
+// /**
+//  * @brief sends the command over serial2 and waits 1 second for acknowledgement
+//  * through the digital read of pin
+//  * 
+//  * @param tosend the string to send
+//  * @return true when the acknowledgement is received after string is sent
+//  * @return false when acknowledgement is not recieved after string is sent
+//  */
+// bool cmdsend_ack(String tosend){
+//     Serial2.println(tosend);
+//     bool ack = false;
+//     int counter = 0;
+//     while(!ack && counter < ACK_WAIT){
+//         ack = (bool)digitalRead(SEND_ACK_PIN);
+//         counter++;
+//         vTaskDelay(20);
+//     }
+//     return ack;
+// }
+
+bool cmdsend(String tosend){
+    Serial2.println(tosend);
+}
+
+/**
+ * @brief this functions checks serial port for availability of command data
+ * If there is data available it parses and returns a number based on the command parsed
+ * 
+ * @return int is the number of commnad that is parsed
+ */
+int cmdreceive(){
+    if(Serial2.available()){
+        String received = Serial2.readStringUntil('\n');
+        int cmdnum = (10 * ((uint8_t)received[0] - 48)) + ((uint8_t)received[1] - 48);
+        switch(cmdnum){
+            case 1:
+                break;
+            case 2:
+                break;
+            default:
+                break;
+        }
+    }
+    else{
+        return 0;
+    }
+}
 
 /**
  * @brief This function takes the received message as a string and parses it to
@@ -174,14 +230,13 @@ bool command_6()
 bool command_bt()
 {
     String message = "";
-    int ID = 0;
     message = bt.check_bluetooth();
-    Serial.println("command_bt() -> cmdlib.hpp -> message received: " + message);
+    log_d("message received: %s \n", message);
     if(message.length() > 0)
     {
-        ID = ID_parse(message);
-        Serial.printf("command_bt() -> cmdlib.hpp -> the authorization status is: %d \n", auth_flag);
-        if(ID == 4 && !auth_flag)
+        int ID = (10 * ((uint8_t)message[1] - 48)) + ((uint8_t)message[2] - 48);
+        log_d("the authorization status is: %d \n", auth_flag);
+        if(ID == 4)
         {
             return command_4(message, AUTH_CODE);
         }
@@ -200,20 +255,20 @@ bool command_bt()
                     return command_6();
                 default:
                     auth_flag = false;
-                    Serial.println("command_bt() -> cmdlib.hpp -> invalid ID");
+                    log_e("invalid ID");
                     return false;
             }
         }
         else
         {
-            Serial.println(F("command_bt() -> cmdlib.hpp -> entered invalid ID or authorization not met"));
+            log_e("entered invalid ID or authorization not met");
             return false;
         }
 
     }
     else
     {
-        Serial.println(F("command_bt() -> cmdlib.hpp -> invalid message"));
+        log_e("invalid message");
         return false;
     }
 }
