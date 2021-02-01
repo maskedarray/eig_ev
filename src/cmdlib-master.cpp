@@ -116,11 +116,11 @@ String parse_by_key(String message, int key)
         index++;
     }
     
-    Serial.printf("parse_by_key() -> cmdlib.hpp -> The counter value is %d and there are %d commas in our code. \n", index, comma_count);
+    log_d("parse_by_key() -> cmdlib.hpp -> The counter value is %d and there are %d commas in our code. \n", index, comma_count);
     index = 0;
     if(key > comma_count)
     {
-        Serial.println(F("parse_by_key() -> cmdlib.hpp -> key exceeds number of entries"));
+        log_e("parse_by_key() -> cmdlib.hpp -> key exceeds number of entries");
         return "";
     }
     
@@ -139,7 +139,7 @@ String parse_by_key(String message, int key)
         key_value += temp;
         index++;
     }
-    Serial.printf("the value of the given key is %s \n", key_value.c_str());
+    log_d("the value of the given key is %s \n", key_value.c_str());
     return key_value;
 
 };
@@ -149,13 +149,13 @@ String parse_by_key(String message, int key)
  * in the list of APs. It requires authentication first (command 4)
  *
  * @param message the received string
- * @return true if connection is successful
+ * @return true if connection instruction is sent
  * @return false otherwise
  */
 bool command_3(String message)
 {
-    String SSID = parse_by_key(message, 1);
-    String Password = parse_by_key(message, 2);
+    cmdsend(message);
+    return true;
     //return wf.create_new_connection(SSID.c_str(), Password.c_str());
 };
 
@@ -176,12 +176,12 @@ bool command_4(String message, String auth_code)
     if(entered_code == auth_code)
     {
         auth_flag = true;
-        Serial.println(F("command_4() -> cmdlib.hpp -> Authentication successfful"));
+        log_d("command_4() -> cmdlib.hpp -> Authentication successful");
         return true;
     }
     else
     {
-        Serial.println(F("command_4() -> cmdlib.hpp -> Authentication unsuccessfful"));
+        log_e("command_4() -> cmdlib.hpp -> Authentication unsuccessfful");
         return false;
     }
 };
@@ -195,8 +195,9 @@ bool command_4(String message, String auth_code)
  */
 bool command_5()
 {
-    initial_cycles = 3;   
-    Serial.println(F("command_5() -> cmdlib.hpp -> entered battery swap mode"));
+    cmdsend("<40>");
+    initial_cycles = 3; 
+    log_d("command_5() -> cmdlib.hpp -> entered battery swap mode");
     return true;
 };
 
@@ -214,8 +215,8 @@ bool command_6()
     String diff_str = (String)difference;
     initial_cycles = 0;
     final_cycles = 0;
-    Serial.println("command_6() -> cmdlib.hpp -> successful typecast " + diff_str);
-    Serial.println(F("command_6() -> cmdlib.hpp -> exited battery swap mode"));
+    log_d("command_6() -> cmdlib.hpp -> successful typecast %S \n", diff_str);
+    log_d("command_6() -> cmdlib.hpp -> exited battery swap mode");
     return bt.send(diff_str);
 };
 

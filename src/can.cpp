@@ -14,9 +14,9 @@ bool EVCan::init_can(){
 
     for(int i = 0; i < 5; i++){
         if(CAN_OK != mcp_can.begin(CAN_500KBPS))
-            Serial.println(F("init_can() -> can.cpp -> CAN bus init failed!"));
+            log_e("init_can() -> can.cpp -> CAN bus init failed!");
         else{
-            Serial.println(F("init_can() -> can.cpp -> CAN bus initialized!"));
+            log_d("init_can() -> can.cpp -> CAN bus initialized!");
             return true;
         }
         delay(500);
@@ -53,11 +53,11 @@ void EVCan::send_msg(uint16_t id, float soc, float hi_temp, float lo_temp, float
         data[6] = (byte)((int)((current + 1000) * 10));
         data[7] = (byte)(((int)((current + 1000) * 10)) >> 8);
         mcp_can.sendMsgBuf(id, 0, 8, data);
-        Serial.println(F("send_msg() -> can.cpp -> Data sent!"));
+        log_d("send_msg() -> can.cpp -> Data sent!");
         break;
     
     default:
-        Serial.println(F("send_msg() -> can.cpp -> Invalid ID!"));
+        log_e("send_msg() -> can.cpp -> Invalid ID!");
         break;
     }
 }
@@ -76,12 +76,12 @@ bool EVCan::receive_msg(void){
     bool read_success = false;
     byte data[8];
     if(CAN_MSGAVAIL == mcp_can.checkReceive()){
-        Serial.println(F("receive_msg() -> can.cpp -> Data found on CAN bus. Reading.."));
+        log_d("receive_msg() -> can.cpp -> Data found on CAN bus. Reading..");
         read_success = true;
         unsigned char len = 0;
         mcp_can.readMsgBuf(&len, data);
         this->id = mcp_can.getCanId();
-        Serial.print(F("receive_msg() -> can.cpp -> ID: "));
+        log_d("receive_msg() -> can.cpp -> ID: ");
         Serial.println(this->id,HEX);
         switch (this->id)
         {
