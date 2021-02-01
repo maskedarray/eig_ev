@@ -72,5 +72,6 @@ String getNextDay(int iyear, int imonth, int iday){
 }
 
 String unixTime(){
-    return unixTime();
+    DateTime now = rtc.now();
+    return String(now.unixtime());
 }

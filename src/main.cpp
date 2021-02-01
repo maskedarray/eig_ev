@@ -34,6 +34,7 @@ SemaphoreHandle_t semaStorage1, seamStorage2, semaWifi1;
 void setup() {
     Serial.begin(115200); //Start Serial monitor
     Serial2.begin(15200);
+    Serial2.setTimeout(1000);
     pinMode(LED_BUILTIN, OUTPUT);
     setupCloudIoT();
     initRTC();
@@ -61,10 +62,10 @@ String CloudData = "";
 void loop() {
     
 }
-//TODO: Serial2.setTimeout
+
 void vRpcService(void *pvParameters){
     for(;;){
-        if(Serial2.available()){
+        if(true){
             String cmd = Serial2.readStringUntil('\n');
             int cmd_num = (10 * ((uint8_t)cmd[1] - 48)) + ((uint8_t)cmd[2] - 48);
             switch(cmd_num){
@@ -75,10 +76,10 @@ void vRpcService(void *pvParameters){
                     Serial2.println(ret_msg);
                     break;
                 }
-                case 11:    //add ap to wifi ap list
+                case 11:    //create new connection
                 {
                     bool ret = false;
-
+                    //parse string and create new connection
                     String ret_msg =  "<" + String(11) + "," + String(ret) + ">";
                     Serial2.println(ret_msg);
                     break;
@@ -101,6 +102,10 @@ void vRpcService(void *pvParameters){
                     String ret_msg = "<" + String(30) + "," + ret + ">";
                     Serial2.println(ret_msg);
                     break;
+                }
+                case 40:
+                {
+                    
                 }
                 default:
                     break;
@@ -149,5 +154,6 @@ void vWifiTransfer( void *pvParameters ){
             }
         }
         xSemaphoreGive(semaWifi1);
+        vTaskDelay(10);
     }   //end for
 }   //end vWifiTransfer task
