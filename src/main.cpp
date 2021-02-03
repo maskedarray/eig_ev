@@ -129,6 +129,10 @@ String parse_by_key(String message, int key)
  * server is available in the branch dummy-server. Also note that we have to provide a bss wifi for
  * new connection. eg: successful return will be something like <40,BSS1904>
  * 
+ * WARNING: we have used \n as the string terminator. Normally, println function appends \r\n to the 
+ * ending of string. So when we parse string till \n, we will get one extra character (\r) at the 
+ * end of command sent or received. It may pose a problem in sending or receiving, so it is proposed
+ * to use print with explicit addition \n character at the end of string to be sent.
  * @param pvParameters void
  */
 void vRpcService(void *pvParameters){
