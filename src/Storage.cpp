@@ -60,7 +60,7 @@ bool Storage::init_storage(){
     else {
         resume = false;
         Serial.println(F("init_storage() -> storage.cpp -> Previous data not found!"));
-        curr_read_pos = 0;
+        curr_read_pos = FILE_START_POS;
         curr_read_file = "";    
     }
 
@@ -500,16 +500,18 @@ void Storage::mark_data(String timenow){
     }
     file.seek(curr_read_pos);
     char c = file.read();
-    if (c == '<'){
-        if (file.size() - (curr_read_pos + curr_chunk_size) < MIN_CHUNK_SIZE_B){      //check if this is the end of file 
+    if (c == '<'){  
+        if ((file.size() - (curr_read_pos + curr_chunk_size) < MIN_CHUNK_SIZE_B) && (curr_write_file != curr_read_file)){      //check if this is the end of file 
             file.close();
             Serial.println(F("mark_data() -> storage.cpp -> File completed! Moving to next file."));
             String next_filename = next_file(curr_read_file);
             while(!SD.exists(next_filename) && (next_filename < curr_write_file)){
                 next_filename = next_file(next_filename);
             }
-            curr_read_pos = 0;
-            curr_read_file = next_filename;
+            if(SD.exists(next_filename)){
+                curr_read_pos = FILE_START_POS;
+                curr_read_file = next_filename;
+            }
         }
         else{
             curr_read_pos += curr_chunk_size + 1;
@@ -580,7 +582,7 @@ long Storage::get_unsent_data(String timenow){
         filename = next_file(filename);
         if(SD.exists(filename)){
             file = SD.open(filename);
-            total_bytes += file.size();
+            total_bytes += file.size() - FILE_START_POS;
             file.close();
         }
     }

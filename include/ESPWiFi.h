@@ -5,7 +5,6 @@
 #include <Arduino.h>
 #include <Storage.h> // to access APs.txt
 
-#define LED 2
 #define DEFAULT_SSID "EiG"
 #define DEFAULT_PASSWORD "12344321"
 
@@ -19,7 +18,6 @@
 class ESP_WiFi
 {
     private:
-        int32_t timer;
         int32_t credential_length;
         bool remake_access_points();
         void update_APs();
