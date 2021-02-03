@@ -71,8 +71,10 @@ String ESP_BT::bt_read() // TODO: take ID first and define various reads accordi
 
 
 /**
- * @brief This is a wrapper function which checks for incoming bluetooth messages and stores them accordingly. It uses some other functions defined previously in this library. 
- * 
+ * @brief This is a wrapper function which checks for incoming bluetooth
+ * messages and stores them accordingly. It uses some other functions defined
+ * previously in this library. 
+ *
  * @return String message
  */
 String ESP_BT::check_bluetooth()

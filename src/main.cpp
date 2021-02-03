@@ -21,13 +21,14 @@
 #include <can.h>
 #include <bluetooth.h>
 #include <Time.h>
+#include <cmdlib-master.h>
 
 String towrite, toread;
-TaskHandle_t dataTask, blTask;
+TaskHandle_t dataTask, blTask1, blTask2;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
 
-SemaphoreHandle_t semaAqData1, seamAqData2, semaBlTx1, semaStorage1, seamStorage2, semaWifi1;
+SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1;
 void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , 
                     String B_Temp, String B_SoC, String B_SoH, String B_RoC,String B_Vol ,String B_Curr){
     towrite += B_Slot + "," + B_ID + "," + B_Auth + "," + B_Age + "," + B_Type + "," + B_M_Cycles + "," + 
@@ -41,12 +42,14 @@ void setup() {
     pinMode(LED_1, OUTPUT);
     bt.init();
     semaAqData1 = xSemaphoreCreateBinary();
-    seamAqData2 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
+    semaBlRx1 = xSemaphoreCreateBinary();
+
     xSemaphoreGive(semaAqData1);
     
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 1);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask1, 0);
+    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 10000, NULL, 1, &blTask1, 0);
     log_d("created all tasks");
 }
 unsigned long lastMillis = 0;
@@ -98,11 +101,31 @@ void vAcquireData( void *pvParameters ){
 }   //end vAcquireData
 
 void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
+    
+
     for(;;){    //infinite loop
-        xSemaphoreTake(semaBlTx1,portMAX_DELAY);
+        xSemaphoreTake(semaBlTx1, portMAX_DELAY);
+        xSemaphoreTake(semaBlRx1, portMAX_DELAY);
         {
             bt.send(towrite);
         }
         xSemaphoreGive(semaAqData1);
+        xSemaphoreGive(semaBlRx1);
+        
     }   //end for
 }   //end vBlTransfer task
+
+void vBlCheck( void *pvParameters ){
+    TickType_t xLastWakeTime_2;
+    TickType_t xPeriod_2 = 0.1*DATA_ACQUISITION_TIME; // Period for sending will be one minute
+    xLastWakeTime_2 = xTaskGetTickCount();
+    
+    for(;;){
+        xSemaphoreTake(semaBlRx1, portMAX_DELAY);
+        {
+            command_bt();
+        }
+        xSemaphoreGive(semaBlRx1);
+        vTaskDelayUntil(&xLastWakeTime_2, xPeriod_2);
+    }
+}
