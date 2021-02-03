@@ -12,6 +12,7 @@
 //TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
 //TODO: OPTIMIZATION: convert String to c string.
 //TODO: optimization of data that is to be saved and sent
+//TODO: cleanup rtc code
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 #define COMMAND_RECEIVE_TIMEOUT 1000    //millisecond
@@ -110,6 +111,26 @@ String parse_by_key(String message, int key)
     return key_value;
 
 }
+/**
+ * @brief this task reads a line of command from serial bus and performs some function
+ * Below is the list of available commands:
+ * 
+ * 1. <10>\n will return the status of wifi connection. eg: <10,0>\n if disconnected.
+ * 
+ * 2. <11,ssid,pass>\n will add a new wifi ssid and password to the AP list if it is available
+ * at that time. It will return true if operation was successful. eg: <11,1>\n if successful.
+ * 
+ * 3. <20,data>\n will upload data to cloud. It will return true in any case. Note that we have to
+ * follow the data generating rules(eg: length > 1000 bytes) because system is not tested otherwise
+ * 
+ * 4. <30>\n will return the unix time.
+ * 
+ * 5. <40>\n will return the bss id if the connection with server is successful. The dummy code for
+ * server is available in the branch dummy-server. Also note that we have to provide a bss wifi for
+ * new connection. eg: successful return will be something like <40,BSS1904>
+ * 
+ * @param pvParameters void
+ */
 void vRpcService(void *pvParameters){
     for(;;){
         if(Serial2.available()){
@@ -155,21 +176,39 @@ void vRpcService(void *pvParameters){
                 }
                 case 40:    //get bss id from bss and send it to master
                 {
-                    /**
-                     * take semaphore of wifi so wifi task cannot run
-                     * connect to new wifi
-                     * send request to server
-                     * get response of server
-                     * send the bss id data over serial channel to master
-                     */
                     xSemaphoreTake(semaWifi1,portMAX_DELAY);
                     WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
-                    vTaskDelay(1000);
-                    if(WiFi.isConnected() == WL_CONNECTED){
+                    vTaskDelay(10000);
+                    String ret = "<40,";
+                    if(WiFi.isConnected() == true){
                         //handle here
+                        WiFiClient client;
+                        if(client.connect("192.168.43.202",80)){
+                            log_d("client connected");
+                            client.print("client1711\n");
+                            long time_start = millis();
+                            long time_stop = millis();
+                            while(time_stop - time_start < 5000){
+                                if(client.available()){
+                                    ret += client.readStringUntil('\n');
+                                    log_d("response received");
+                                    break;
+                                }
+                                time_stop = millis();
+                                vTaskDelay(10);
+                            }
+                            client.stop();
+                            log_d("client disconnected");
+                        }
+                    }
+                    else{
+                        log_d("could not connect to bss wifi");
                     }
                     WiFi.disconnect(false,true);
                     xSemaphoreGive(semaWifi1);
+                    ret += ">";
+                    Serial2.println(ret);
+                    break;
                 }
                 default:
                     break;
@@ -203,10 +242,9 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        if(wf.check_connection())
+        if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
-            int counter = 0;
-            while((storage.get_unsent_data(getTime2()) > 500) && (counter < 5)){
+            for(int i=0; i<5; i++){
                 mqtt->loop();
                 vTaskDelay(10);  // <- fixes some issues with WiFi stability
                 if (!mqttClient->connected()) {
@@ -218,12 +256,10 @@ void vWifiTransfer( void *pvParameters ){
                         storage.mark_data(getTime2());
                     }
                 }
-                counter++;
             }
             xSemaphoreGive(semaWifi1);
         }
         else{
-            log_d("wifi cannot connect\r\n");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }
