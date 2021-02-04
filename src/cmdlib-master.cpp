@@ -83,7 +83,7 @@ int ID_parse(String message)
     }
     else
     {
-        Serial.println("ID exceeds set limit");
+        Serial.println("ID_parse() -> cmdlib-master.cpp -> ID exceeds set limit");
         ID = "";
         return 0;
     }
@@ -154,6 +154,9 @@ String parse_by_key(String message, int key)
  */
 bool command_3(String message)
 {
+    Serial.println("sommand_3() -> cmdlib-master.cpp -> the initial message is: " + message);
+    message = "<11" + message.substring(message.indexOf(','), message.indexOf('>') + 1);
+    Serial.println("sommand_3() -> cmdlib-master.cpp -> the final message is: " + message);
     cmdsend(message);
     return true;
     //return wf.create_new_connection(SSID.c_str(), Password.c_str());
@@ -232,11 +235,13 @@ bool command_bt()
 {
     String message = "";
     message = bt.check_bluetooth();
-    log_d("message received: %s \n", message);
+    
     if(message.length() > 0)
     {
+        log_d("command_bt() -> cmdlib_master -> message received: %s \n", message);
         int ID = (10 * ((uint8_t)message[1] - 48)) + ((uint8_t)message[2] - 48);
-        log_d("the authorization status is: %d \n", auth_flag);
+        log_d("command_bt() -> cmdlib_master -> the authorization status is: %d \n", auth_flag);
+        log_d("command_bt() -> cmdlib_master -> the the ID sent is: %d \n", ID);
         if(ID == 4)
         {
             return command_4(message, AUTH_CODE);
@@ -256,20 +261,19 @@ bool command_bt()
                     return command_6();
                 default:
                     auth_flag = false;
-                    log_e("invalid ID");
+                    log_e("command_bt() -> cmdlib_master -> invalid ID");
                     return false;
             }
         }
         else
         {
-            log_e("entered invalid ID or authorization not met");
+            log_e("command_bt() -> cmdlib_master -> entered invalid ID or authorization not met");
             return false;
         }
 
     }
     else
     {
-        log_e("invalid message");
         return false;
     }
 }

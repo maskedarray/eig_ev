@@ -27,6 +27,7 @@ String towrite, toread;
 TaskHandle_t dataTask, blTask1, blTask2;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
+void vBlCheck( void *pvParameters );
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1;
 void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , 
@@ -39,6 +40,7 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 
 void setup() {
     Serial.begin(115200); //Start Serial monitor
+    cmdinit();
     pinMode(LED_1, OUTPUT);
     bt.init();
     semaAqData1 = xSemaphoreCreateBinary();
@@ -46,6 +48,7 @@ void setup() {
     semaBlRx1 = xSemaphoreCreateBinary();
 
     xSemaphoreGive(semaAqData1);
+    xSemaphoreGive(semaBlRx1);
     
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 1);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask1, 0);
@@ -59,7 +62,7 @@ void loop() {
 }
 void vAcquireData( void *pvParameters ){
     TickType_t xLastWakeTime;
-    const TickType_t xPeriod = DATA_ACQUISITION_TIME;
+    const TickType_t xPeriod = 60*DATA_ACQUISITION_TIME; // increased period to one minute for testing purposes
     xLastWakeTime = xTaskGetTickCount();
 
     for(;;){    //infinite loop
@@ -108,6 +111,7 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
         {
             bt.send(towrite);
+            //Serial.println(F("vBlTransfer() -> main.cpp -> Data sent"));
         }
         xSemaphoreGive(semaAqData1);
         xSemaphoreGive(semaBlRx1);
@@ -123,6 +127,7 @@ void vBlCheck( void *pvParameters ){
     for(;;){
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
         {
+            //Serial.println(F("vBlCheck -> main.cpp -> checking for commands"));
             command_bt();
         }
         xSemaphoreGive(semaBlRx1);
