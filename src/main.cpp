@@ -146,6 +146,7 @@ void vRpcService(void *pvParameters){
                     int ret = WiFi.isConnected(); 
                     String ret_msg = "<" + String(10) + "," + String(ret) + ">";
                     Serial2.println(ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg);
                     break;
                 }
                 case 11:    //create new connection
@@ -157,6 +158,7 @@ void vRpcService(void *pvParameters){
                     ret = wf.create_new_connection(tempssid.c_str(),temppass.c_str());
                     String ret_msg =  "<" + String(11) + "," + String(ret) + ">";
                     Serial2.println(ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg);
                     break;
                 }
                 case 20:    //get string and upload to cloud
@@ -169,6 +171,7 @@ void vRpcService(void *pvParameters){
                     ret = true;
                     String ret_msg = "<" + String(20) + "," + String(ret) + ">";
                     Serial2.println(ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg);
                     break;
                 }
                 case 30:    //send time from rtc to master
@@ -176,6 +179,7 @@ void vRpcService(void *pvParameters){
                     String ret = unixTime();
                     String ret_msg = "<" + String(30) + "," + ret + ">";
                     Serial2.println(ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg);
                     break;
                 }
                 case 40:    //get bss id from bss and send it to master
@@ -212,6 +216,7 @@ void vRpcService(void *pvParameters){
                     xSemaphoreGive(semaWifi1);
                     ret += ">";
                     Serial2.println(ret);
+                    log_d("message sent to master: %s\r\n",ret);
                     break;
                 }
                 default:
