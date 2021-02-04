@@ -24,9 +24,6 @@ const char *location = "us-central1";
 const char *registry_id = "registry-esp32";
 const char *device_id = "device-esp32";
 
-// Configuration for NTP
-const char* ntp_primary = "pool.ntp.org";
-const char* ntp_secondary = "time.nist.gov";
 
 
 // To get the private key run (where private-key.pem is the ec private key
