@@ -179,7 +179,7 @@ void vRpcService(void *pvParameters){
                     String ret = unixTime();
                     String ret_msg = "<" + String(30) + "," + ret + ">";
                     Serial2.println(ret_msg);
-                    log_d("message sent to master: %s\r\n",ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg.c_str());
                     break;
                 }
                 case 40:    //get bss id from bss and send it to master
@@ -216,7 +216,7 @@ void vRpcService(void *pvParameters){
                     xSemaphoreGive(semaWifi1);
                     ret += ">";
                     Serial2.println(ret);
-                    log_d("message sent to master: %s\r\n",ret);
+                    log_d("message sent to master: %s\r\n",ret.c_str());
                     break;
                 }
                 default:
