@@ -64,32 +64,6 @@ int cmdreceive(){
 }
 
 /**
- * @brief This function takes the received message as a string and parses it to
- * retrieve the ID as an integer. The ID signifies the command to be carried out
- * and the following data is parsed accordingly. The ID can take a value between
- * 1 and 99.
- *
- * @param message the received string
- * @return int the ID converted to int 
- */
-int ID_parse(String message)
-{
-    message = message.substring(message.indexOf('<') + 1, message.indexOf('>'));
-    String ID = message.substring(0, message.indexOf(','));
-    if(ID.length() < 3)
-    {
-        Serial.println("ID: " + ID);
-        return ID.toInt();
-    }
-    else
-    {
-        Serial.println("ID_parse() -> cmdlib-master.cpp -> ID exceeds set limit");
-        ID = "";
-        return 0;
-    }
-};
-
-/**
  * @brief This is a generalized function used to parse the message (after the
  * ID) to return a value at a certain position (or key) in the message.
  *
