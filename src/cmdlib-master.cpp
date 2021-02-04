@@ -116,11 +116,11 @@ String parse_by_key(String message, int key)
         index++;
     }
     
-    log_d("parse_by_key() -> cmdlib.hpp -> The counter value is %d and there are %d commas in our code. \n", index, comma_count);
+    log_d("parse_by_key() -> cmdlib-master.cpp -> The counter value is %d and there are %d commas in our code. \n", index, comma_count);
     index = 0;
     if(key > comma_count)
     {
-        log_e("parse_by_key() -> cmdlib.hpp -> key exceeds number of entries");
+        log_e("parse_by_key() -> cmdlib-master.cpp -> key exceeds number of entries");
         return "";
     }
     
@@ -179,12 +179,12 @@ bool command_4(String message, String auth_code)
     if(entered_code == auth_code)
     {
         auth_flag = true;
-        log_d("command_4() -> cmdlib.hpp -> Authentication successful");
+        log_d("command_4() -> cmdlib-master.cpp -> Authentication successful");
         return true;
     }
     else
     {
-        log_e("command_4() -> cmdlib.hpp -> Authentication unsuccessfful");
+        log_e("command_4() -> cmdlib-master.cpp -> Authentication unsuccessfful");
         return false;
     }
 };
@@ -200,7 +200,7 @@ bool command_5()
 {
     cmdsend("<40>");
     initial_cycles = 3; 
-    log_d("command_5() -> cmdlib.hpp -> entered battery swap mode");
+    log_d("command_5() -> cmdlib-master.cpp -> entered battery swap mode");
     return true;
 };
 
@@ -218,10 +218,17 @@ bool command_6()
     String diff_str = (String)difference;
     initial_cycles = 0;
     final_cycles = 0;
-    log_d("command_6() -> cmdlib.hpp -> successful typecast %S \n", diff_str);
-    log_d("command_6() -> cmdlib.hpp -> exited battery swap mode");
+    log_d("command_6() -> cmdlib-master.cpp -> successful typecast %S \n", diff_str);
+    log_d("command_6() -> cmdlib-master.cpp -> exited battery swap mode");
     return bt.send(diff_str);
 };
+
+bool command_7()
+{
+    cmdsend("<10>");
+    log_d("command_7() -> cmmdlib-master.cpp -> wifi check request sent");
+    return true;
+}
 
 /**
  * @brief This is the main wrapper function that is called in a loop and checks
@@ -238,10 +245,10 @@ bool command_bt()
     
     if(message.length() > 0)
     {
-        log_d("command_bt() -> cmdlib_master -> message received: %s \n", message);
+        log_d("command_bt() -> cmdlib-master.cpp -> message received: %s \n", message);
         int ID = (10 * ((uint8_t)message[1] - 48)) + ((uint8_t)message[2] - 48);
-        log_d("command_bt() -> cmdlib_master -> the authorization status is: %d \n", auth_flag);
-        log_d("command_bt() -> cmdlib_master -> the the ID sent is: %d \n", ID);
+        log_d("command_bt() -> cmdlib-master.cpp -> the authorization status is: %d \n", auth_flag);
+        log_d("command_bt() -> cmdlib-master.cpp -> the the ID sent is: %d \n", ID);
         if(ID == 4)
         {
             return command_4(message, AUTH_CODE);
@@ -259,15 +266,18 @@ bool command_bt()
                 case 6:
                     auth_flag = false;
                     return command_6();
+                case 7:
+                    auth_flag = false;
+                    return command_7();
                 default:
                     auth_flag = false;
-                    log_e("command_bt() -> cmdlib_master -> invalid ID");
+                    log_e("command_bt() -> cmdlib-master.cpp -> invalid ID");
                     return false;
             }
         }
         else
         {
-            log_e("command_bt() -> cmdlib_master -> entered invalid ID or authorization not met");
+            log_e("command_bt() -> cmdlib-master.cpp -> entered invalid ID or authorization not met");
             return false;
         }
 

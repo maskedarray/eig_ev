@@ -24,10 +24,11 @@
 #include <cmdlib-master.h>
 
 String towrite, toread;
-TaskHandle_t dataTask, blTask1, blTask2;
+TaskHandle_t dataTask1, dataTask2, blTask1, blTask2;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
 void vBlCheck( void *pvParameters );
+void vDataTransfer ( void * pvParameters );
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1;
 void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , 
@@ -50,8 +51,9 @@ void setup() {
     xSemaphoreGive(semaAqData1);
     xSemaphoreGive(semaBlRx1);
     
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask, 1);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 1, &blTask1, 0);
+    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 2, &dataTask1, 1);
+    xTaskCreatePinnedToCore(vDataTransfer, "Data Transfer", 10000, NULL, 3, &dataTask2, 1);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 10000, NULL, 1, &blTask1, 0);
     log_d("created all tasks");
 }
@@ -62,7 +64,7 @@ void loop() {
 }
 void vAcquireData( void *pvParameters ){
     TickType_t xLastWakeTime;
-    const TickType_t xPeriod = 60*DATA_ACQUISITION_TIME; // increased period to one minute for testing purposes
+    const TickType_t xPeriod = 30*DATA_ACQUISITION_TIME; // increased period to one minute for testing purposes
     xLastWakeTime = xTaskGetTickCount();
 
     for(;;){    //infinite loop
@@ -132,5 +134,23 @@ void vBlCheck( void *pvParameters ){
         }
         xSemaphoreGive(semaBlRx1);
         vTaskDelayUntil(&xLastWakeTime_2, xPeriod_2);
+    }
+}
+
+void vDataTransfer( void *pvParameters ){
+    TickType_t xLastWakeTime_3;
+    TickType_t xPeriod_3 = 60*DATA_ACQUISITION_TIME;
+    xLastWakeTime_3 = xTaskGetTickCount();
+    String temp = "";
+
+    for(;;){
+        xSemaphoreTake(semaBlRx1, portMAX_DELAY);
+        {
+            temp = "<20" + towrite + '>';
+            cmdsend(temp);
+            temp = "";
+        }
+        xSemaphoreGive(semaBlRx1);
+        vTaskDelayUntil(&xLastWakeTime_3, xPeriod_3);
     }
 }
