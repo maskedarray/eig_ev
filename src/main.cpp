@@ -44,6 +44,7 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 void setup() {
     cmdinit();
     bt.init();
+    set_system_time();
     semaAqData1 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
     semaBlRx1 = xSemaphoreCreateBinary();
@@ -130,7 +131,7 @@ void vBlCheck( void *pvParameters ){
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
         {
             while(Serial2.read() >=0){} //flushing any data available in serial RX buffer
-            command_bt(towrite);
+            command_bt();
             //send data to slave for storage and uploading to cloud
             if(counter > 600){          //counter for 60 seconds since task execution period is 100ms
                 cmdsend("<20");
