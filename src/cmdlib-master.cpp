@@ -169,7 +169,7 @@ bool command_5_enterSwap()
  * @return true if sending is successful
  * @return false otherwise
  */
-bool command_6_exitSwap(String towrite)
+bool command_6_exitSwap()
 {
     log_d("exited battery swap mode\r\n");
     return true;
@@ -205,7 +205,7 @@ bool command_8_getTime()
  * @return true if command returns true
  * @return false otherwise
  */
-bool command_bt(String towrite)
+bool command_bt()
 {
     String message = "";
     message = bt.check_bluetooth();
@@ -232,7 +232,7 @@ bool command_bt(String towrite)
                     return command_5_enterSwap();
                 case 6: // exit battery swapping mode
                     auth_flag = false;
-                    return command_6_exitSwap(towrite);
+                    return command_6_exitSwap();
                 case 7: // check wifi
                     auth_flag = false;
                     return command_7_checkWifi();

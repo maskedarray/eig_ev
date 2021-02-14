@@ -46,14 +46,12 @@ bool ESP_BT::send(String tosend){
 String ESP_BT::bt_read() // TODO: take ID first and define various reads according to it
 {
     int32_t size = 0;
-    char start = '<';
-    char end = '>';
     char temp = '\0';
     String BTread = "";
     temp = SerialBT.read();
-    if(temp == start)
+    if(temp == '<')
     {
-        while(temp != end && size <= 90) // ID size will be fixed, needs to be addressed
+        while(temp != '>' && size <= 90) // ID size will be fixed, needs to be addressed
         {
             BTread += temp;
             temp = SerialBT.read();

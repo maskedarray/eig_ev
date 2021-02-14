@@ -26,11 +26,10 @@
 #include <cmdlib-master.h>
 
 String towrite;
-TaskHandle_t dataTask1, dataTask2, blTask1, blTask2;
+TaskHandle_t dataTask1, blTask1, blTask2;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
 void vBlCheck( void *pvParameters );
-void vDataSend ( void *pvParameters );
 
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1;
@@ -53,13 +52,11 @@ void setup() {
     xSemaphoreGive(semaBlRx1);
     
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 3, &dataTask1, 1);
-    xTaskCreatePinnedToCore(vDataSend, "Serial Data Send", 10000, NULL, 2, &dataTask2, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 10000, NULL, 1, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 2, &blTask2, 0);
     log_d("created all tasks\r\n");
 }
-unsigned long lastMillis = 0;
-String CloudData = "";
+
 void loop() {
     
 }
