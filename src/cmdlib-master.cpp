@@ -106,7 +106,7 @@ ESP32Time rtc;
 bool set_system_time(){
     cmdsend("<30>\r\n");
 
-    String ret = readStringUntilCustom('\n', 3000);
+    String ret = readStringUntilCustom('\n', 20000);
     if(ret.length() > 0){
         String unixtime = parse_by_key(ret, 1);
         rtc.setTime(unixtime.toDouble(), 0);

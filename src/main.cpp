@@ -44,7 +44,7 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 void setup() {
     cmdinit();
     bt.init();
-    set_system_time();
+    set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully //TODO: handle startup sync 
     semaAqData1 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
     semaBlRx1 = xSemaphoreCreateBinary();
