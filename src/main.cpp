@@ -61,6 +61,8 @@ void setup() {
     xTaskCreatePinnedToCore(vRpcService, "RPC Handler", 10000, NULL, 3, &rpcTask, 0);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 1);
+    pinMode(25,OUTPUT);
+    digitalWrite(25,HIGH);
     Serial.println("created all tasks");
 }
 
