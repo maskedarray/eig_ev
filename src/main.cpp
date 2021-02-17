@@ -12,8 +12,7 @@
 //TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
 //TODO: OPTIMIZATION: convert String to c string.
 //TODO: optimization of data that is to be saved and sent
-//TODO: combine the periodic bluetooth and serial transfer tasks into one.
-//TODO: 
+
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 #define LED_1   2
@@ -44,7 +43,12 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
 void setup() {
     cmdinit();
     bt.init();
-    set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully //TODO: handle startup sync 
+    pinMode(25, INPUT);
+    while(!digitalRead(25)){   
+        log_d("waiting for sync\r\n");
+        delay(100);
+    }
+    set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
     semaAqData1 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
     semaBlRx1 = xSemaphoreCreateBinary();
@@ -110,9 +114,13 @@ void vAcquireData( void *pvParameters ){
 void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
     for(;;){    //infinite loop
         xSemaphoreTake(semaBlTx1, portMAX_DELAY);
+        xSemaphoreTake(semaAqData1, portMAX_DELAY);
+        String towrite_cpy;
+        towrite_cpy = towrite;
+        xSemaphoreGive(semaAqData1);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
         {
-            bt.send(towrite);
+            bt.send(towrite_cpy);
         }
         xSemaphoreGive(semaBlRx1);
     }   //end for
@@ -135,7 +143,9 @@ void vBlCheck( void *pvParameters ){
             //send data to slave for storage and uploading to cloud
             if(counter > 600){          //counter for 60 seconds since task execution period is 100ms
                 cmdsend("<20");
+                xSemaphoreTake(semaAqData1, portMAX_DELAY);
                 cmdsend(towrite);
+                xSemaphoreGive(semaAqData1);
                 cmdsend(">\r\n");
                 counter = 0;
             }

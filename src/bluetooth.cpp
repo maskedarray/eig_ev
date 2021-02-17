@@ -43,7 +43,7 @@ bool ESP_BT::send(String tosend){
  *
  * @return String 
  */
-String ESP_BT::bt_read() // TODO: take ID first and define various reads according to it
+String ESP_BT::bt_read() 
 {
     int32_t size = 0;
     char temp = '\0';
