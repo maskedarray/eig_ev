@@ -1,7 +1,7 @@
 #include <bluetooth.h>
 
 
-char BT_incoming[32]; // array of characyters, to read incoming data
+char BT_incoming[32]; // array of characters, to read incoming data
 bool auth_flag1 = false;
 //TODO: return statements are dummy. handle the scenario when connection fails 
 //or sending of data fails
