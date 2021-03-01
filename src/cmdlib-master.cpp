@@ -1,47 +1,17 @@
 #include <cmdlib-master.h>
 
-
 #define AUTH_CODE "123456"
 #define ESP_ID "012501202101"
-#define INIT_CYCLES 4
-#define FIN_CYCLES 9
-
-// #define SEND_ACK_PIN 33
-// #define ACK_WAIT 50         //equal to 1 second
 
 bool auth_flag = false; // for authorization
-int initial_cycles = 0;
-int final_cycles = 0;
-
-
 
 void cmdinit(){
     Serial2.begin(115200);
-    Serial2.setTimeout(200);
 }
 
-// /**
-//  * @brief sends the command over serial2 and waits 1 second for acknowledgement
-//  * through the digital read of pin
-//  * 
-//  * @param tosend the string to send
-//  * @return true when the acknowledgement is received after string is sent
-//  * @return false when acknowledgement is not recieved after string is sent
-//  */
-// bool cmdsend_ack(String tosend){
-//     Serial2.println(tosend);
-//     bool ack = false;
-//     int counter = 0;
-//     while(!ack && counter < ACK_WAIT){
-//         ack = (bool)digitalRead(SEND_ACK_PIN);
-//         counter++;
-//         vTaskDelay(20);
-//     }
-//     return ack;
-// }
-
 bool cmdsend(String tosend){
-    Serial2.println(tosend);
+    Serial2.print(tosend);
+    log_d("the message sent to slave is: %s \r\n", tosend.c_str());
     return true;
 }
 
@@ -55,14 +25,14 @@ int timedReadCustom(unsigned long _timeout)
         if(c >= 0) {
             return c;
         }
-
+        vTaskDelay(10);
     } while(millis() - _startMillis < _timeout);
+    log_d("timed out!\r\n");
     return -1;     // -1 indicates timeout
 }
 
-String readStringUntilCustom(char terminator)
+String readStringUntilCustom(char terminator, int _timeout)
 {
-    int _timeout = 10000;
     String ret;
     int c = timedReadCustom(_timeout);
     while(c >= 0 && c != terminator) {
@@ -76,30 +46,6 @@ String readStringUntilCustom(char terminator)
     }
     return ret;
 }
-
-// /**
-//  * @brief this functions checks serial port for availability of command data
-//  * If there is data available it parses and returns a string
-//  * 
-//  * @return String is the response to be passed to the application via bluetooth
-//  */
-// String cmdreceive(){
-//     if(Serial2.available()){
-//         String received = Serial2.readStringUntil('\n');
-//         int cmdnum = (10 * ((uint8_t)received[0] - 48)) + ((uint8_t)received[1] - 48);
-//         switch(cmdnum){
-//             case 1:
-//                 break;
-//             case 2:
-//                 break;
-//             default:
-//                 break;
-//         }
-//     }
-//     else{
-//         return "";
-//     }
-// }
 
 /**
  * @brief This is a generalized function used to parse the message (after the
@@ -156,12 +102,20 @@ String parse_by_key(String message, int key)
 
 };
 
-bool send_battery_info(String bat_1_ID, String bat_2_ID, String bat_3_ID, String bat_4_ID, String bat_1_SOC, String bat_2_SOC, String bat_3_SOC, String bat_4_SOC)
-{
-    String temp = bat_1_ID + ", " + bat_1_SOC + " - "  + bat_2_ID + ", " + bat_2_SOC + " - " + bat_3_ID + ", " + bat_3_SOC + " - " + bat_4_ID + ", " + bat_4_SOC; 
-    bt.send(temp);
-    return true;
-};
+ESP32Time rtc;
+bool set_system_time(){
+    cmdsend("<30>\r\n");
+
+    String ret = readStringUntilCustom('\n', 20000);
+    if(ret.length() > 0){
+        String unixtime = parse_by_key(ret, 1);
+        rtc.setTime(unixtime.toDouble(), 0);
+        return true;
+    }
+    else{
+        return false;
+    }
+}
 
 /**
  * @brief This command is used to create a new connection for wifi and store it
@@ -173,12 +127,11 @@ bool send_battery_info(String bat_1_ID, String bat_2_ID, String bat_3_ID, String
  */
 bool command_3_newConn(String message)
 {
-    Serial.println("sommand_3_newConn() -> cmdlib-master.cpp -> the initial message is: " + message);
-    message = "<11" + message.substring(message.indexOf(','), message.indexOf('>') + 1);
-    Serial.println("sommand_3_newConn() -> cmdlib-master.cpp -> the final message is: " + message);
-    cmdsend(message);
+    cmdsend("<11");
+    cmdsend(message.substring(message.indexOf(','), message.indexOf('>') + 1));
+    cmdsend("\r\n");
 
-    String ret = readStringUntilCustom('\n');
+    String ret = readStringUntilCustom('\n', 15000);
     return ret.isEmpty()? bt.send("error") : bt.send(ret);
 };
 
@@ -199,12 +152,12 @@ bool command_4_auth(String message, String auth_code)
     if(entered_code == auth_code)
     {
         auth_flag = true;
-        log_d("command_4_auth() -> cmdlib-master.cpp -> Authentication successful");
+        log_d("Authentication successful\r\n");
         return true;
     }
     else
     {
-        log_e("command_4_auth() -> cmdlib-master.cpp -> Authentication unsuccessfful");
+        log_e("Authentication unsuccessfful\r\n");
         return false;
     }
 };
@@ -218,10 +171,9 @@ bool command_4_auth(String message, String auth_code)
  */
 bool command_5_enterSwap()
 {
-    cmdsend("<40>");
-    initial_cycles = 3;
-    log_d("command_5_enterSwap() -> cmdlib-master.cpp -> entered battery swap mode");
-    String ret = readStringUntilCustom('\n');
+    cmdsend("<40>\r\n");
+    log_d("entered battery swap mode. getting bss id from slave...\r\n");
+    String ret = readStringUntilCustom('\n', 20000);
     return ret.isEmpty()? bt.send("error") : bt.send(ret);
 };
 
@@ -232,16 +184,10 @@ bool command_5_enterSwap()
  * @return true if sending is successful
  * @return false otherwise
  */
-bool command_6_exitSwap(String towrite)
+bool command_6_exitSwap()
 {
-    final_cycles = 8;
-    int difference = final_cycles - initial_cycles;
-    String diff_str = (String)difference;
-    //initial_cycles = 0;
-    //final_cycles = 0;
-    log_d("command_6_exitSwap() -> cmdlib-master.cpp -> successful typecast %S \n", diff_str);
-    log_d("command_6_exitSwap() -> cmdlib-master.cpp -> exited battery swap mode");
-    return bt.send(towrite);
+    log_d("exited battery swap mode\r\n");
+    return true;
 };
 
 /**
@@ -252,17 +198,17 @@ bool command_6_exitSwap(String towrite)
  */
 bool command_7_checkWifi()
 {
-    cmdsend("<10>");
-    log_d("command_7_checkWifi() -> cmmdlib-master.cpp -> wifi check request sent");
-    String ret = readStringUntilCustom('\n');
+    cmdsend("<10>\r\n");
+    log_d("wifi check request sent. waiting for response...\r\n");
+    String ret = readStringUntilCustom('\n', 5000);
     return ret.isEmpty()? bt.send("error") : bt.send(ret);
 }
 
 bool command_8_getTime()
 {
-    cmdsend("<30>");
-    log_d("command_8_getTime() -> cmdlib-master.cpp -> time request sent");
-    String ret = readStringUntilCustom('\n');
+    cmdsend("<30>\r\n");
+    log_d("time request sent\r\n");
+    String ret = readStringUntilCustom('\n', 5000);
     return ret.isEmpty()? bt.send("error") : bt.send(ret);
 }
 
@@ -274,17 +220,17 @@ bool command_8_getTime()
  * @return true if command returns true
  * @return false otherwise
  */
-bool command_bt(String towrite)
+bool command_bt()
 {
     String message = "";
     message = bt.check_bluetooth();
     
     if(message.length() > 0)
     {
-        log_d("command_bt() -> cmdlib-master.cpp -> message received: %s \n", message);
+        log_d("message received: %s \r\n", message);
         int ID = (10 * ((uint8_t)message[1] - 48)) + ((uint8_t)message[2] - 48);
-        log_d("command_bt() -> cmdlib-master.cpp -> the authorization status is: %d \n", auth_flag);
-        log_d("command_bt() -> cmdlib-master.cpp -> the the ID sent is: %d \n", ID);
+        log_d("the authorization status is: %d \r\n", auth_flag);
+        log_d("the the ID sent is: %d \r\n", ID);
         if(ID == 4)
         {
             return command_4_auth(message, AUTH_CODE);
@@ -301,7 +247,7 @@ bool command_bt(String towrite)
                     return command_5_enterSwap();
                 case 6: // exit battery swapping mode
                     auth_flag = false;
-                    return command_6_exitSwap(towrite);
+                    return command_6_exitSwap();
                 case 7: // check wifi
                     auth_flag = false;
                     return command_7_checkWifi();
@@ -310,13 +256,13 @@ bool command_bt(String towrite)
                     return command_8_getTime();
                 default:
                     auth_flag = false;
-                    log_e("command_bt() -> cmdlib-master.cpp -> invalid ID");
+                    log_e("invalid ID\r\n");
                     return false;
             }
         }
         else
         {
-            log_e("command_bt() -> cmdlib-master.cpp -> entered invalid ID or authorization not met");
+            log_e("entered invalid ID or authorization not met\r\n");
             return false;
         }
 

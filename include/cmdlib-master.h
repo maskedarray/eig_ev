@@ -1,13 +1,14 @@
 #ifndef __CMDLIB_H__
 #define __CMDLIB_H__
 #include <bluetooth.h>
-#include <arduino.h>
+#include <Arduino.h>
 #include <FreeRTOS.h>
+#include <ESP32Time.h>
 
-bool command_bt(String towrite);
-// bool cmdsend_ack(String tosend);
+bool command_bt();
 bool cmdsend(String tosend);
 void cmdinit();
-String cmdreceive();
+bool set_system_time();
+
 
 #endif
