@@ -16,8 +16,8 @@
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 #define COMMAND_RECEIVE_TIMEOUT 1000    //millisecond
-#define DEFAULT_BSS_WIFI_SSID "h7BLH=U5f+qJCeG4"
-#define DEFAULT_BSS_WIFI_PASS "&_nJ}<pj&4w@3F}F"
+#define DEFAULT_BSS_WIFI_SSID "secure-ssid"
+#define DEFAULT_BSS_WIFI_PASS "secure-pswd"
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
