@@ -98,7 +98,7 @@ void vAcquireData( void *pvParameters ){
         }
         xSemaphoreGive(semaAqData1); 
         xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
-        vTaskDelayUntil(&xLastWakeTime, (TickType_t)30*DATA_ACQUISITION_TIME);    //defines the data acquisition rate
+        vTaskDelayUntil(&xLastWakeTime, 30*DATA_ACQUISITION_TIME);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
 
@@ -154,7 +154,7 @@ void vBlCheck( void *pvParameters ){
             }
         }
         xSemaphoreGive(semaBlRx1);
-        vTaskDelayUntil(&xLastWakeTime_2,(TickType_t) 0.1*DATA_ACQUISITION_TIME);
+        vTaskDelayUntil(&xLastWakeTime_2, 0.1*DATA_ACQUISITION_TIME);
     }
 }
 
