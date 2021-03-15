@@ -1,6 +1,6 @@
 #include <cmdlib-master.h>
 
-#define AUTH_CODE "abcdef"
+#define PAIRING_ID "abcdef"
 
 
 bool auth_flag = false; // for authorization
@@ -141,15 +141,15 @@ bool command_3_newConn(String message)
  * other command.
  *
  * @param message the received string
- * @param auth_code the authorizatrion code of this unit 
+ * @param PAIRING_ID the authorizatrion code of this unit 
  * @return true if authorization is successful
  * @return false otherwise
  */
-bool command_4_auth(String message, String auth_code)
+bool command_4_auth(String message)
 {
     String entered_code = parse_by_key(message, 1);
     
-    if(entered_code == auth_code)
+    if(entered_code == PAIRING_ID)
     {
         auth_flag = true;
         log_d("Authentication successful\r\n");
@@ -233,7 +233,7 @@ bool command_bt()
         log_d("the the ID sent is: %d \r\n", ID);
         if(ID == 4)
         {
-            return command_4_auth(message, AUTH_CODE);
+            return command_4_auth(message);
         }
         else if(ID > 0 && ID < 100 && auth_flag)
         {
