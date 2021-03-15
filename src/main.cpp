@@ -49,6 +49,7 @@ void setup() {
         log_d("waiting for sync\r\n");
         delay(100);
     }
+    delay(3000);
     set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
     semaAqData1 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
