@@ -16,6 +16,7 @@
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 #define LED_1   2
+#define EV_ID "LGA8977"
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -84,7 +85,7 @@ void vAcquireData( void *pvParameters ){
             //Dummy acquisition of data
             towrite = "";                               //empty the string
             towrite += String("18:50") + ",";           //time
-            towrite += String("VEC1715001") + ",";      //vehicle id
+            towrite += String(EV_ID) + ",";      //vehicle id
             towrite += String("3000") + ",";            //vehicle rpm
             towrite += String("5.019") + ",";           //MCU voltage
             towrite += String("0.234") + ",";           //MCU CURRENT

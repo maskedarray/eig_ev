@@ -1,7 +1,7 @@
 #include <cmdlib-master.h>
 
-#define AUTH_CODE "123456"
-#define ESP_ID "012501202101"
+#define AUTH_CODE "abcdef"
+
 
 bool auth_flag = false; // for authorization
 
