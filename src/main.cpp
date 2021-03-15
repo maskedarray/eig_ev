@@ -30,6 +30,7 @@ TaskHandle_t dataTask1, blTask1, blTask2;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
 void vBlCheck( void *pvParameters );
+int flag =0;
 
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1;
@@ -39,7 +40,9 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
             B_U_Cycles + "," + B_Temp + "," + B_SoC + "," + B_SoH + "," + B_RoC + "," + B_Vol + "," + B_Curr;
     return;
 }
-
+void IRAM_ATTR test(){
+    flag++;
+}
 
 void setup() {
     cmdinit();
@@ -51,6 +54,7 @@ void setup() {
     }
     delay(3000);
     set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
+    attachInterrupt(0, test, FALLING);
     semaAqData1 = xSemaphoreCreateBinary();
     semaBlTx1 = xSemaphoreCreateBinary();
     semaBlRx1 = xSemaphoreCreateBinary();
@@ -92,10 +96,24 @@ void vAcquireData( void *pvParameters ){
             towrite += String("0.234") + ",";           //MCU CURRENT
             towrite += String("34.36") + ",";           //MCU Temperature
             //          B_Slot, B_ID, B_Auth,  B_Age, B_Type , B_M_Cycles, B_U_Cycles , B_Temp, B_SoC, B_SoH, B_RoD, B_Vol , B_Curr
-            addSlotsData("01", "batt1", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("02", "BATT3", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("03", "BATT5", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
-            addSlotsData("04", "BATT7", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");//towrite += ",";
+            if(flag == 0){
+                addSlotsData("01", "batt1", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+                addSlotsData("02", "BATT3", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+                addSlotsData("03", "BATT5", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+                addSlotsData("04", "BATT7", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");//towrite += ",";
+            }
+            else if (flag == 1){
+                addSlotsData("01", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("02", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("03", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("04", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
+            }
+            else if (flag ==2){
+                addSlotsData("01", "BATT2", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+                addSlotsData("02", "BATT4", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+                addSlotsData("03", "BATT6", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "20.561");towrite += ",";
+                addSlotsData("04", "BATT8", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", "12.371", "26.561");//towrite += ",";
+            }
             //Now towrite string contains one valid string of CSV data chunk
         }
         xSemaphoreGive(semaAqData1); 
