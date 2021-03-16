@@ -108,11 +108,13 @@ bool set_system_time(){
 
     String ret = readStringUntilCustom('\n', 20000);
     if(ret.length() > 0){
+        log_i("received time from system: %s\r\n",ret.c_str());
         String unixtime = parse_by_key(ret, 1);
         rtc.setTime(unixtime.toDouble(), 0);
         return true;
     }
     else{
+        log_i("unable to set time\r\n");
         return false;
     }
 }
@@ -227,7 +229,7 @@ bool command_bt()
     
     if(message.length() > 0)
     {
-        log_d("message received: %s \r\n", message);
+        log_d("message received: %s \r\n", message.c_str());
         int ID = (10 * ((uint8_t)message[1] - 48)) + ((uint8_t)message[2] - 48);
         log_d("the authorization status is: %d \r\n", auth_flag);
         log_d("the the ID sent is: %d \r\n", ID);

@@ -15,7 +15,7 @@ bool auth_flag1 = false;
  */
 bool ESP_BT::init(){
     SerialBT.begin(BLUETOOTH_NAME); //Name of your Bluetooth Signal
-    log_d("Bluetooth Device is Ready to Pair");
+    log_i("Bluetooth Device is Ready to Pair\r\n");
     return true;
 }
 
@@ -59,7 +59,7 @@ String ESP_BT::bt_read()
         }
         if(size >= 90)
         {
-            log_d("Credentials exceed set limit");
+            log_d("Credentials exceed set limit\r\n");
             return "";
         }
         BTread += temp;
