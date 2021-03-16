@@ -51,8 +51,10 @@ void setup() {
             delay(1000);
         }
     }
-    wf.init();  
+    wf.init();
+    log_i("initialized wifi successfully\r\n");  
     setupCloudIoT();    //TODO: change this function and add wifi initialization
+    log_i("cloud iot setup complete\r\n");
     semaStorage1 = xSemaphoreCreateBinary();
     semaWifi1 = xSemaphoreCreateBinary();
     xSemaphoreGive(semaWifi1);
@@ -148,7 +150,7 @@ void vRpcService(void *pvParameters){
                     int ret = WiFi.isConnected(); 
                     String ret_msg = "<" + String(10) + "," + String(ret) + ">";
                     Serial2.println(ret_msg);
-                    log_d("message sent to master: %s\r\n",ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg.c_str());
                     break;
                 }
                 case 11:    //create new connection
@@ -160,7 +162,7 @@ void vRpcService(void *pvParameters){
                     ret = wf.create_new_connection(tempssid.c_str(),temppass.c_str());
                     String ret_msg =  "<" + String(11) + "," + String(ret) + ">";
                     Serial2.println(ret_msg);
-                    log_d("message sent to master: %s\r\n",ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg.c_str());
                     break;
                 }
                 case 20:    //get string and upload to cloud
@@ -173,7 +175,7 @@ void vRpcService(void *pvParameters){
                     ret = true;
                     String ret_msg = "<" + String(20) + "," + String(ret) + ">";
                     Serial2.println(ret_msg);
-                    log_d("message sent to master: %s\r\n",ret_msg);
+                    log_d("message sent to master: %s\r\n",ret_msg.c_str());
                     break;
                 }
                 case 30:    //send time from rtc to master
@@ -194,25 +196,25 @@ void vRpcService(void *pvParameters){
                         //handle here
                         WiFiClient client;
                         if(client.connect("192.168.43.202",80)){
-                            log_d("client connected");
+                            log_d("client connected\r\n");
                             client.print("client1711\n");
                             long time_start = millis();
                             long time_stop = millis();
                             while(time_stop - time_start < 5000){
                                 if(client.available()){
                                     ret += client.readStringUntil('\n');
-                                    log_d("response received");
+                                    log_d("response received\r\n");
                                     break;
                                 }
                                 time_stop = millis();
                                 vTaskDelay(10);
                             }
                             client.stop();
-                            log_d("client disconnected");
+                            log_d("client disconnected\r\n");
                         }
                     }
                     else{
-                        log_d("could not connect to bss wifi");
+                        log_d("could not connect to bss wifi\r\n");
                     }
                     WiFi.disconnect(false,true);
                     xSemaphoreGive(semaWifi1);
