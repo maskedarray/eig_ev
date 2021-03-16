@@ -195,7 +195,7 @@ void vRpcService(void *pvParameters){
                     if(WiFi.isConnected() == true){
                         //handle here
                         WiFiClient client;
-                        if(client.connect("192.168.43.202",80)){
+                        if(client.connect("192.168.0.107",80)){
                             log_d("client connected\r\n");
                             client.print("client1711\n");
                             long time_start = millis();
