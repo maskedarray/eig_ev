@@ -106,17 +106,17 @@ void vAcquireData( void *pvParameters ){
             }
             else if (flag == 1){
                 log_i("currently sending data %d\r\n",flag);
-                addSlotsData("01", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
-                addSlotsData("02", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
-                addSlotsData("03", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
-                addSlotsData("04", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
             }
             else if (flag ==2){
                 log_i("currently sending data %d\r\n",flag);
-                addSlotsData("01", "BATT2", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("02", "BATT4", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("03", "BATT6", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("04", "BATT8", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "26.561");//towrite += ",";
+                addSlotsData("01", "BATT2", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("02", "BATT4", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("03", "BATT6", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("04", "BATT8", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "26.561");//towrite += ",";
             }
             //Now towrite string contains one valid string of CSV data chunk
         }
