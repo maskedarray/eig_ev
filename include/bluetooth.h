@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <BluetoothSerial.h>
 
-#define BLUETOOTH_NAME "Test BT"
+#define BLUETOOTH_NAME "EV BT"
 
 /**
  * This library is made to optimize the functionality of the ESP32 bluetooth
