@@ -85,41 +85,9 @@ bool EVCan::receive_msg(void){
         Serial.println(this->id,HEX);
         switch (this->id)
         {
-            case 0x600:
-                this->soc = (float)data[1];
-                break;
-            case 0x610:
-                this->soc = (float)data[1];
-                this->hi_temp = (float)(data[2] - 40);
-                this->lo_temp = (float)(data[3] - 40);
-                this->voltage = (float)((data[5] << 8) | data[4]) * 0.1;
-                this->current = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
-                Serial.println(F("receive_msg() -> can.cpp -> Data read successful. Values updated"));
-                break;
-            case 0x620:
-                this->soc = (float)data[1];
-                this->hi_temp = (float)(data[2] - 40);
-                this->lo_temp = (float)(data[3] - 40);
-                this->voltage = (float)((data[5] << 8) | data[4]) * 0.1;
-                this->current = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
-                Serial.println(F("receive_msg() -> can.cpp -> Data read successful. Values updated"));
-                break;
-            case 0x630:
-                this->soc = (float)data[1];
-                this->hi_temp = (float)(data[2] - 40);
-                this->lo_temp = (float)(data[3] - 40);
-                this->voltage = (float)((data[5] << 8) | data[4]) * 0.1;
-                this->current = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
-                Serial.println(F("receive_msg() -> can.cpp -> Data read successful. Values updated"));
-                break;
-            case 0x640:
-                this->soc = (float)data[1];
-                this->hi_temp = (float)(data[2] - 40);
-                this->lo_temp = (float)(data[3] - 40);
-                this->voltage = (float)((data[5] << 8) | data[4]) * 0.1;
-                this->current = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
-                Serial.println(F("receive_msg() -> can.cpp -> Data read successful. Values updated"));
-                break;
+            case 0x190:
+                mcu_message(data);
+            case 
             default:
                 Serial.println(F("receive_msg() -> can.cpp -> Invalid ID!"));
                 read_success = false;
@@ -129,6 +97,24 @@ bool EVCan::receive_msg(void){
     return read_success;
 }
 
+void EVCan::mcu_message(byte data[8]){
+    switch(data[0]){
+        case 0x80:
+            this->evdata.mcu_rpm = (int)((data[3] << 8) | data[2]);
+            break;
+        case 0x08:
+            this->evdata.mcu_voltage = (int)((data[5] << 8) | data[4]);
+            this->evdata.mcu_cur = (int)((data[7] << 8) | data[6]);
+            break;
+        case 0x40:
+            this->evdata.mcu_temp = (int)((data[5] << 8) | data[4]) * 0.1;
+            break;
+    }
+}
+
+void EVCan::bms_message(byte data[8]){
+
+}
 /**
  * Only single module of CAN will be attached to the system. So only one
  * object is created.
