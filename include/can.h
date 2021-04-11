@@ -21,7 +21,9 @@ struct BmsData{
 class EVCan {
 private:
     void mcu_message(byte data[8]);
-    void bms_message(byte data[8]);
+    void ucycle_message(uint16_t id, byte data[8]);
+    void cvts_message(uint16_t id,byte data[8]);
+    void soh_message(uint16_t id,byte data[8]);
 public:
     EvData evdata;
     BmsData bmsdata[16];

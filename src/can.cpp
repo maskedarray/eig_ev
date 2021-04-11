@@ -83,15 +83,17 @@ bool EVCan::receive_msg(void){
         this->id = mcp_can.getCanId();
         log_d("receive_msg() -> can.cpp -> ID: ");
         Serial.println(this->id,HEX);
-        switch (this->id)
-        {
-            case 0x190:
-                mcu_message(data);
-            case 
-            default:
-                Serial.println(F("receive_msg() -> can.cpp -> Invalid ID!"));
-                read_success = false;
-                break;
+        if (this->id == 0x190){
+            mcu_message(data);
+        }   else if (this->id >= 0x6C0 && this->id <= 0x6CF){   //accumulated utilized cycles
+
+        }   else if (this->id >= 0x610 && this->id <= 0x61F){   //current, voltage, temp, soc
+
+        }   else if (this->id >= 0x620 && this->id <= 0x62F){   //soh
+
+        }   else{
+            Serial.println(F("receive_msg() -> can.cpp -> Invalid ID!"));
+            read_success = false;
         }
     }
     return read_success;
@@ -112,8 +114,215 @@ void EVCan::mcu_message(byte data[8]){
     }
 }
 
-void EVCan::bms_message(byte data[8]){
-
+void EVCan::ucycle_message(uint16_t id, byte data[8]){
+    switch(id){
+        case 0x6C0:
+            bmsdata[0].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C1:
+            bmsdata[1].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C2:
+            bmsdata[2].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C3:
+            bmsdata[3].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C4:
+            bmsdata[4].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C5:
+            bmsdata[5].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C6:
+            bmsdata[6].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C7:
+            bmsdata[7].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C8:
+            bmsdata[8].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6C9:
+            bmsdata[9].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6CA:
+            bmsdata[10].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6CB:
+            bmsdata[11].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6CC:
+            bmsdata[12].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6CD:
+            bmsdata[13].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6CE:
+            bmsdata[14].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        case 0x6CF:
+            bmsdata[15].ucycles = (int)((data[1] << 8) | data[0]);
+            break;
+        default:
+            break;
+    }
+}
+void EVCan::cvts_message(uint16_t id, byte data[8]){
+    switch(id){
+        case 0x610:
+            bmsdata[0].soc = (int)data[1];
+            bmsdata[0].temp = (int)(data[2] - 40);
+            bmsdata[0].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[0].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x611:
+            bmsdata[1].soc = (int)data[1];
+            bmsdata[1].temp = (int)(data[2] - 40);
+            bmsdata[1].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[1].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x612:
+            bmsdata[2].soc = (int)data[1];
+            bmsdata[2].temp = (int)(data[2] - 40);
+            bmsdata[2].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[2].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x613:
+            bmsdata[3].soc = (int)data[1];
+            bmsdata[3].temp = (int)(data[2] - 40);
+            bmsdata[3].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[3].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x614:
+            bmsdata[4].soc = (int)data[1];
+            bmsdata[4].temp = (int)(data[2] - 40);
+            bmsdata[4].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[4].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x615:
+            bmsdata[5].soc = (int)data[1];
+            bmsdata[5].temp = (int)(data[2] - 40);
+            bmsdata[5].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[5].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x616:
+            bmsdata[6].soc = (int)data[1];
+            bmsdata[6].temp = (int)(data[2] - 40);
+            bmsdata[6].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[6].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x617:
+            bmsdata[7].soc = (int)data[1];
+            bmsdata[7].temp = (int)(data[2] - 40);
+            bmsdata[7].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[7].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x618:
+            bmsdata[8].soc = (int)data[1];
+            bmsdata[8].temp = (int)(data[2] - 40);
+            bmsdata[8].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[8].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x619:
+            bmsdata[9].soc = (int)data[1];
+            bmsdata[9].temp = (int)(data[2] - 40);
+            bmsdata[9].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[9].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x61A:
+            bmsdata[10].soc = (int)data[1];
+            bmsdata[10].temp = (int)(data[2] - 40);
+            bmsdata[10].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[10].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x61B:
+            bmsdata[11].soc = (int)data[1];
+            bmsdata[11].temp = (int)(data[2] - 40);
+            bmsdata[11].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[11].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x61C:
+            bmsdata[12].soc = (int)data[1];
+            bmsdata[12].temp = (int)(data[2] - 40);
+            bmsdata[12].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[12].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x61D:
+            bmsdata[13].soc = (int)data[1];
+            bmsdata[13].temp = (int)(data[2] - 40);
+            bmsdata[13].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[13].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x61E:
+            bmsdata[14].soc = (int)data[1];
+            bmsdata[14].temp = (int)(data[2] - 40);
+            bmsdata[14].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[14].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        case 0x61F:
+            bmsdata[15].soc = (int)data[1];
+            bmsdata[15].temp = (int)(data[2] - 40);
+            bmsdata[15].vol = (float)((data[5] << 8) | data[4]) * 0.1;
+            bmsdata[15].cur = ((float)((data[7] << 8) | data[6]) * 0.1) - 1000;
+            break;
+        default:
+            break;
+    }
+}
+void EVCan::soh_message(uint16_t id, byte data[8]){
+    switch(id){
+        case 0x620:
+            bmsdata[0].soh = (int)data[5];
+            break;
+        case 0x621:
+            bmsdata[1].soh = (int)data[5];
+            break;
+        case 0x622:
+            bmsdata[2].soh = (int)data[5];
+            break;
+        case 0x623:
+            bmsdata[3].soh = (int)data[5];
+            break;
+        case 0x624:
+            bmsdata[4].soh = (int)data[5];
+            break;
+        case 0x625:
+            bmsdata[5].soh = (int)data[5];
+            break;
+        case 0x626:
+            bmsdata[6].soh = (int)data[5];
+            break;
+        case 0x627:
+            bmsdata[7].soh = (int)data[5];
+            break;
+        case 0x628:
+            bmsdata[8].soh = (int)data[5];
+            break;
+        case 0x629:
+            bmsdata[9].soh = (int)data[5];
+            break;
+        case 0x62A:
+            bmsdata[10].soh = (int)data[5];
+            break;
+        case 0x62B:
+            bmsdata[11].soh = (int)data[5];
+            break;
+        case 0x62C:
+            bmsdata[12].soh = (int)data[5];
+            break;
+        case 0x62D:
+            bmsdata[13].soh = (int)data[5];
+            break;
+        case 0x62E:
+            bmsdata[14].soh = (int)data[5];
+            break;
+        case 0x62F:
+            bmsdata[15].soh = (int)data[5];
+            break;
+        default:
+            break;
+    }
 }
 /**
  * Only single module of CAN will be attached to the system. So only one
