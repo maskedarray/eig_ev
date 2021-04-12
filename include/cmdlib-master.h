@@ -4,11 +4,12 @@
 #include <Arduino.h>
 #include <FreeRTOS.h>
 #include <ESP32Time.h>
+#include <ESPWiFi.h>
 
 bool command_bt();
 bool cmdsend(String tosend);
 void cmdinit();
-bool set_system_time();
+//bool set_system_time();
 
 
 #endif
