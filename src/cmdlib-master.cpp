@@ -5,7 +5,11 @@
 
 bool auth_flag = false; // for authorization
 
-void cmdinit(){
+/**
+ * NOTE: Serial sending and receiving functions have been removed 
+ */
+
+/* void cmdinit(){
     Serial2.begin(115200);
 }
 
@@ -45,7 +49,7 @@ String readStringUntilCustom(char terminator, int _timeout)
         return "";
     }
     return ret;
-}
+} */
 
 /**
  * @brief This is a generalized function used to parse the message (after the
@@ -102,7 +106,11 @@ String parse_by_key(String message, int key)
 
 };
 
-ESP32Time rtc;
+/**
+ * TODO: Set the system time in this microcontroller later
+ */
+
+/* ESP32Time rtc;
 bool set_system_time(){
     cmdsend("<30>\r\n");
 
@@ -117,7 +125,16 @@ bool set_system_time(){
         log_i("unable to set time\r\n");
         return false;
     }
-}
+} */
+
+/**
+ * NOTE: Due to the new setup serial communication will not be required for two
+ * microcontrollers.
+ */
+
+/**
+ * TODO: Fix all these commands later
+ */
 
 /**
  * @brief This command is used to create a new connection for wifi and store it
@@ -129,12 +146,21 @@ bool set_system_time(){
  */
 bool command_3_newConn(String message)
 {
-    cmdsend("<11");
+    /*cmdsend("<11");
     cmdsend(message.substring(message.indexOf(','), message.indexOf('>') + 1));
     cmdsend("\r\n");
 
     String ret = readStringUntilCustom('\n', 15000);
-    return ret.isEmpty()? bt.send("error") : bt.send(ret);
+    return ret.isEmpty()? bt.send("error") : bt.send(ret);*/
+    bool ret = false;
+    //parse string and create new connection
+    String tempssid = parse_by_key(message, 1);
+    String temppass = parse_by_key(message, 2);
+    ret = wf.create_new_connection(tempssid.c_str(),temppass.c_str());
+    return ret;
+    // String ret_msg =  "<" + String(11) + "," + String(ret) + ">";
+    // Serial2.println(ret_msg);
+    // log_d("message sent to master: %s\r\n",ret_msg.c_str());
 };
 
 /**
@@ -147,7 +173,7 @@ bool command_3_newConn(String message)
  * @return true if authorization is successful
  * @return false otherwise
  */
-bool command_4_auth(String message)
+/*bool command_4_auth(String message)
 {
     String entered_code = parse_by_key(message, 1);
     
@@ -162,7 +188,7 @@ bool command_4_auth(String message)
         log_e("Authentication unsuccessfful\r\n");
         return false;
     }
-};
+};*/
 
 /**
  * @brief This command initiates battery swap mode and saves the initial cycles
@@ -173,10 +199,42 @@ bool command_4_auth(String message)
  */
 bool command_5_enterSwap()
 {
-    cmdsend("<40>\r\n");
-    log_d("entered battery swap mode. getting bss id from slave...\r\n");
-    String ret = readStringUntilCustom('\n', 20000);
-    return ret.isEmpty()? bt.send("error") : bt.send(ret);
+    /**
+     * NOTE: need to figure a new methor of implementation for this
+     */
+    /* xSemaphoreTake(semaWifi1,portMAX_DELAY);
+    WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
+    vTaskDelay(10000);
+    String ret = "<40,";
+    if(WiFi.isConnected() == true){
+        //handle here
+        WiFiClient client;
+        if(client.connect("192.168.0.107",80)){
+            log_d("client connected\r\n");
+            client.print("client1711\n");
+            long time_start = millis();
+            long time_stop = millis();
+            while(time_stop - time_start < 5000){
+                if(client.available()){
+                    ret += client.readStringUntil('\n');
+                    log_d("response received\r\n");
+                    break;
+                }
+                time_stop = millis();
+                vTaskDelay(10);
+            }
+            client.stop();
+            log_d("client disconnected\r\n");
+        }
+    }
+    else{
+        log_d("could not connect to bss wifi\r\n");
+    }
+    WiFi.disconnect(false,true);
+    xSemaphoreGive(semaWifi1);
+    ret += ">";
+    Serial2.println(ret);
+    log_d("message sent to master: %s\r\n",ret.c_str()); */
 };
 
 /**
@@ -200,18 +258,21 @@ bool command_6_exitSwap()
  */
 bool command_7_checkWifi()
 {
-    cmdsend("<10>\r\n");
+    /* cmdsend("<10>\r\n");
     log_d("wifi check request sent. waiting for response...\r\n");
     String ret = readStringUntilCustom('\n', 5000);
-    return ret.isEmpty()? bt.send("error") : bt.send(ret);
+    return ret.isEmpty()? bt.send("error") : bt.send(ret); */
+    bool ret = WiFi.isConnected();
+    log_i("the connection status is: %d\n\r", ret);
+    return ret;
 }
 
 bool command_8_getTime()
 {
-    cmdsend("<30>\r\n");
+    /* cmdsend("<30>\r\n");
     log_d("time request sent\r\n");
     String ret = readStringUntilCustom('\n', 5000);
-    return ret.isEmpty()? bt.send("error") : bt.send(ret);
+    return ret.isEmpty()? bt.send("error") : bt.send(ret); */
 }
 
 /**
@@ -231,13 +292,9 @@ bool command_bt()
     {
         log_d("message received: %s \r\n", message.c_str());
         int ID = (10 * ((uint8_t)message[1] - 48)) + ((uint8_t)message[2] - 48);
-        log_d("the authorization status is: %d \r\n", auth_flag);
+        // log_d("the authorization status is: %d \r\n", auth_flag);
         log_d("the the ID sent is: %d \r\n", ID);
-        if(ID == 4)
-        {
-            return command_4_auth(message);
-        }
-        else if(ID > 0 && ID < 100 && auth_flag)
+        if(ID > 0 && ID < 100)
         {
             switch(ID)
             {
@@ -264,7 +321,7 @@ bool command_bt()
         }
         else
         {
-            log_e("entered invalid ID or authorization not met\r\n");
+            log_e("entered invalid ID \r\n");
             return false;
         }
 
