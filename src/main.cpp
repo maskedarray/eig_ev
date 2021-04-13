@@ -186,7 +186,7 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
  */
 void vBlCheck( void *pvParameters ){
     TickType_t xLastWakeTime_2 = xTaskGetTickCount();
-    int counter = 0;
+    // int counter = 0;
     for(;;){
         xSemaphoreTake(semaWifi1, portMAX_DELAY);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
@@ -246,7 +246,7 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        if(wf.check_connection() /*&& (storage.get_unsent_data(getTime2()) > 500)*/)
+        if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
             for(int i=0; i<5; i++){
                 mqtt->loop();
@@ -256,8 +256,8 @@ void vWifiTransfer( void *pvParameters ){
                 }
                 if (mqttClient->connected()) {
                     String toread; 
-                    // toread = storage.read_data();
-                    toread = "dummy string";
+                    toread = storage.read_data();
+                    // toread = "dummy string";
                     if (toread != "" && publishTelemetry(toread)){
                         log_d("vWifiTransfer -> main.cpp -> sending data to cloud");
                         //storage.mark_data(getTime2());
