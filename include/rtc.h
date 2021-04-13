@@ -5,6 +5,7 @@
 void initRTC();
 String getTime();
 String getTime2();
+String unixTime();
 String getNextDay(int,int,int);
 
 #endif

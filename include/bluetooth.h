@@ -1,9 +1,9 @@
 #ifndef __BLUETOOTH_H__
 #define __BLUETOOTH_H__
 #include <Arduino.h>
-#include <BluetoothSerial.h>
+// #include <BluetoothSerial.h>
 
-#define BLUETOOTH_NAME "EiG BT"
+#define BLUETOOTH_NAME "EV BT"
 
 /**
  * This library is made to optimize the functionality of the ESP32 bluetooth
@@ -14,14 +14,14 @@
 
 class ESP_BT {
 private:
-    bool got_credentials;
+    //bool got_credentials;
     String bt_read();
+    bool isConnected;
 
 public:
-    BluetoothSerial SerialBT;
+    //BluetoothSerial SerialBT;
     bool init();
     bool send(String tosend);
-    void display(String ID, String Username, String Password);
     String check_bluetooth();
 };
 
