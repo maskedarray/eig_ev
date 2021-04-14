@@ -3,53 +3,6 @@
 #define PAIRING_ID "abcdef"
 
 
-bool auth_flag = false; // for authorization
-
-/**
- * NOTE: Serial sending and receiving functions have been removed 
- */
-
-/* void cmdinit(){
-    Serial2.begin(115200);
-}
-
-bool cmdsend(String tosend){
-    Serial2.print(tosend);
-    log_d("the message sent to slave is: %s \r\n", tosend.c_str());
-    return true;
-}
-
-int timedReadCustom(unsigned long _timeout)
-{
-    unsigned long _startMillis;  // used for timeout measurement
-    int c;
-    _startMillis = millis();
-    do {
-        c = Serial2.read();
-        if(c >= 0) {
-            return c;
-        }
-        vTaskDelay(10);
-    } while(millis() - _startMillis < _timeout);
-    log_d("timed out!\r\n");
-    return -1;     // -1 indicates timeout
-}
-
-String readStringUntilCustom(char terminator, int _timeout)
-{
-    String ret;
-    int c = timedReadCustom(_timeout);
-    while(c >= 0 && c != terminator) {
-        ret += (char) c;
-        c = timedReadCustom(_timeout);
-    }
-    if(c < 0)
-    {
-        log_e("readStringUntilCustom() -> cmdlib-master.cpp -> timout occurred \r\n");
-        return "";
-    }
-    return ret;
-} */
 
 /**
  * @brief This is a generalized function used to parse the message (after the
@@ -106,39 +59,10 @@ String parse_by_key(String message, int key)
 
 };
 
-/**
- * TODO: Set the system time in this microcontroller later
- */
-
-/* ESP32Time rtc;
-bool set_system_time(){
-    cmdsend("<30>\r\n");
-
-    String ret = readStringUntilCustom('\n', 20000);
-    if(ret.length() > 0){
-        log_i("received time from system: %s\r\n",ret.c_str());
-        String unixtime = parse_by_key(ret, 1);
-        rtc.setTime(unixtime.toDouble(), 0);
-        return true;
-    }
-    else{
-        log_i("unable to set time\r\n");
-        return false;
-    }
-} */
-
-/**
- * NOTE: Due to the new setup serial communication will not be required for two
- * microcontrollers.
- */
-
-/**
- * TODO: Fix all these commands later
- */
 
 /**
  * @brief This command is used to create a new connection for wifi and store it
- * in the list of APs. It requires authentication first (command 4)
+ * in the list of APs.
  *
  * @param message the received string
  * @return true if connection instruction is sent
@@ -146,49 +70,12 @@ bool set_system_time(){
  */
 bool command_3_newConn(String message)
 {
-    /*cmdsend("<11");
-    cmdsend(message.substring(message.indexOf(','), message.indexOf('>') + 1));
-    cmdsend("\r\n");
-
-    String ret = readStringUntilCustom('\n', 15000);
-    return ret.isEmpty()? bt.send("error") : bt.send(ret);*/
     bool ret = false;
-    //parse string and create new connection
     String tempssid = parse_by_key(message, 1);
     String temppass = parse_by_key(message, 2);
     ret = wf.create_new_connection(tempssid.c_str(),temppass.c_str());
     return ret;
-    // String ret_msg =  "<" + String(11) + "," + String(ret) + ">";
-    // Serial2.println(ret_msg);
-    // log_d("message sent to master: %s\r\n",ret_msg.c_str());
 };
-
-/**
- * @brief This command compares the recieved string to the authorization code of
- * this unit to allow or restrict usage of commands. Must be called before any
- * other command.
- *
- * @param message the received string
- * @param PAIRING_ID the authorizatrion code of this unit 
- * @return true if authorization is successful
- * @return false otherwise
- */
-/*bool command_4_auth(String message)
-{
-    String entered_code = parse_by_key(message, 1);
-    
-    if(entered_code == PAIRING_ID)
-    {
-        auth_flag = true;
-        log_d("Authentication successful\r\n");
-        return true;
-    }
-    else
-    {
-        log_e("Authentication unsuccessfful\r\n");
-        return false;
-    }
-};*/
 
 /**
  * @brief This command initiates battery swap mode and saves the initial cycles
@@ -199,14 +86,9 @@ bool command_3_newConn(String message)
  */
 bool command_5_enterSwap()
 {
-    /**
-     * NOTE: need to figure a new methor of implementation for this
-     */
-    // xSemaphoreTake(semaWifi1,portMAX_DELAY);
     WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
     vTaskDelay(10000);
     String ret = "<40,";
-    // String ret;
     if(WiFi.isConnected() == true){
         //handle here
         WiFiClient client;
@@ -232,9 +114,7 @@ bool command_5_enterSwap()
         log_d("could not connect to bss wifi\r\n");
     }
     WiFi.disconnect(false,true);
-    // xSemaphoreGive(semaWifi1);
     ret += ">";
-    // Serial2.println(ret);
     bt.send(ret);
     log_d("message sent to master: %s\r\n",ret.c_str());
     return true;
@@ -254,28 +134,27 @@ bool command_6_exitSwap()
 };
 
 /**
- * @brief this command tells the slave to check the wifi connection and send the status back to the master
- * 
+ * @brief this command tells the slave to check the wifi connection and send the
+ * status back to the master
+ *
  * @return true if command has been sent
  * @return false if command could not be sent
  */
 bool command_7_checkWifi()
 {
-    /* cmdsend("<10>\r\n");
-    log_d("wifi check request sent. waiting for response...\r\n");
-    String ret = readStringUntilCustom('\n', 5000);
-    return ret.isEmpty()? bt.send("error") : bt.send(ret); */
     bool ret = WiFi.isConnected();
     log_i("the connection status is: %d\n\r", ret);
     return ret;
 }
 
+/**
+ * @brief This command returns the unix time
+ * 
+ * @return true if command returns successful
+ * @return false otherwise
+ */
 bool command_8_getTime()
 {
-    /* cmdsend("<30>\r\n");
-    log_d("time request sent\r\n");
-    String ret = readStringUntilCustom('\n', 5000);
-    return ret.isEmpty()? bt.send("error") : bt.send(ret); */
     String ret = unixTime();
     bt.send(ret);
     return true;
@@ -305,22 +184,16 @@ bool command_bt()
             switch(ID)
             {
                 case 3: // connect to new credentials
-                    auth_flag = false;
                     return command_3_newConn(message);
                 case 5: // enter battery swapping mode
-                    auth_flag = false;
                     return command_5_enterSwap();
                 case 6: // exit battery swapping mode
-                    auth_flag = false;
                     return command_6_exitSwap();
                 case 7: // check wifi
-                    auth_flag = false;
                     return command_7_checkWifi();
                 case 8: // check time
-                    auth_flag = false;
                     return command_8_getTime();
                 default:
-                    auth_flag = false;
                     log_e("invalid ID\r\n");
                     return false;
             }

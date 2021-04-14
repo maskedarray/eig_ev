@@ -11,9 +11,6 @@
 #define DEFAULT_BSS_WIFI_PASS "12344321"
 
 bool command_bt();
-bool cmdsend(String tosend);
-void cmdinit();
-//bool set_system_time();
 
 
 #endif
