@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #define MCP2515_CSPIN 32
+#define INIT_REQ_TIMEOUT 1000   //milliseconds
 
 struct EvData{
     int mcu_rpm;
@@ -17,6 +18,7 @@ struct BmsData{
     int ucycles;
     float vol;
     float cur;
+    byte id[21];
 };
 class EVCan {
 private:
@@ -24,6 +26,7 @@ private:
     void ucycle_message(uint16_t id, byte data[8]);
     void cvts_message(uint16_t id,byte data[8]);
     void soh_message(uint16_t id,byte data[8]);
+    void bid_message(uint16_t id, byte data[8]);
 public:
     EvData evdata;
     BmsData bmsdata[16];
