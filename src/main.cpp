@@ -17,8 +17,6 @@
 #define DATA_MAX_LEN 1200   //bytes
 #define LED_1   2
 #define EV_ID "LGA8977"
-#define DEFAULT_BSS_WIFI_SSID "EiG"
-#define DEFAULT_BSS_WIFI_PASS "12344321"
 
 #include <Arduino.h>
 #include <FreeRTOS.h>

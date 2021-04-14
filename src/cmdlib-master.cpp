@@ -202,10 +202,11 @@ bool command_5_enterSwap()
     /**
      * NOTE: need to figure a new methor of implementation for this
      */
-    /* xSemaphoreTake(semaWifi1,portMAX_DELAY);
+    // xSemaphoreTake(semaWifi1,portMAX_DELAY);
     WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
     vTaskDelay(10000);
     String ret = "<40,";
+    // String ret;
     if(WiFi.isConnected() == true){
         //handle here
         WiFiClient client;
@@ -231,10 +232,11 @@ bool command_5_enterSwap()
         log_d("could not connect to bss wifi\r\n");
     }
     WiFi.disconnect(false,true);
-    xSemaphoreGive(semaWifi1);
+    // xSemaphoreGive(semaWifi1);
     ret += ">";
-    Serial2.println(ret);
-    log_d("message sent to master: %s\r\n",ret.c_str()); */
+    // Serial2.println(ret);
+    bt.send(ret);
+    log_d("message sent to master: %s\r\n",ret.c_str());
     return true;
 };
 
@@ -274,6 +276,8 @@ bool command_8_getTime()
     log_d("time request sent\r\n");
     String ret = readStringUntilCustom('\n', 5000);
     return ret.isEmpty()? bt.send("error") : bt.send(ret); */
+    String ret = unixTime();
+    bt.send(ret);
     return true;
 }
 
