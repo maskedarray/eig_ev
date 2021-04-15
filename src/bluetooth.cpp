@@ -197,6 +197,13 @@ String ESP_BT::bt_read()
             }
             BTread += temp;
         }
+        else // we got some other message in AT format
+        {
+            
+            BTread = temp + Serial2.readString();
+            log_d("%s", BTread);
+            return BTread;
+        }
         // log_d("%s", BTread);
         Serial.println(BTread);
         return BTread;
@@ -208,10 +215,10 @@ String ESP_BT::bt_read()
     else
     {
         // Read message without checking for message conventions
-        String temp = Serial2.readString();
-        log_d("%s", temp);
+        String BTread = Serial2.readString();
+        log_d("%s", BTread);
         // Serial.println(temp);
-        return temp;
+        return BTread;
     }
 }
 
@@ -232,7 +239,7 @@ String ESP_BT::check_bluetooth()
     if (Serial2.available())
     {
         msg = this->bt_read();
-        log_d("the message recieved is %s\n\r", msg.c_str());
+        log_i("the message recieved is %s\n\r", msg.c_str());
         // Check for connection
         if(msg == "OK+CONN")
         {

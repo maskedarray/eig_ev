@@ -235,6 +235,7 @@ bool command_5_enterSwap()
     ret += ">";
     Serial2.println(ret);
     log_d("message sent to master: %s\r\n",ret.c_str()); */
+    return true;
 };
 
 /**
@@ -273,6 +274,7 @@ bool command_8_getTime()
     log_d("time request sent\r\n");
     String ret = readStringUntilCustom('\n', 5000);
     return ret.isEmpty()? bt.send("error") : bt.send(ret); */
+    return true;
 }
 
 /**
