@@ -2,6 +2,7 @@
 #include <mcp_can.h>
 
 MCP_CAN mcp_can(MCP2515_CSPIN);
+int cur_batt;
 
 /**
  * Initializes CAN module. The speed of CAN and other parameters are decided by 
@@ -20,6 +21,25 @@ bool EVCan::init_can(){
             return true;
         }
         delay(500);
+    }
+    byte data[8];
+    data[0] = 0x02;
+    data[1] = 0x00;
+    data[2] = 0x03;
+    data[4] = 0x00;
+    data[5] = 0x00;
+    data[6] = 0x55;
+    data[7] = 0xAA;
+    for (int i= 0; i<16; i++){
+        cur_batt = i;
+        data[3] = i;
+        mcp_can.sendMsgBuf(0x6E0, 0, 8, data);
+        int stime = millis();
+        int ntime = millis();
+        while((ntime - stime) < INIT_REQ_TIMEOUT){
+            receive_msg();
+            ntime = millis();
+        }
     }
     return false;
 }
@@ -86,11 +106,13 @@ bool EVCan::receive_msg(void){
         if (this->id == 0x190){
             mcu_message(data);
         }   else if (this->id >= 0x6C0 && this->id <= 0x6CF){   //accumulated utilized cycles
-
+            ucycle_message(id, data);
         }   else if (this->id >= 0x610 && this->id <= 0x61F){   //current, voltage, temp, soc
-
+            mcu_message(data);
         }   else if (this->id >= 0x620 && this->id <= 0x62F){   //soh
-
+            soh_message(id, data);
+        }   else if(this->id >= 0x6F0 && this->id <= 0x6F4){
+            bid_message(id, data);
         }   else{
             Serial.println(F("receive_msg() -> can.cpp -> Invalid ID!"));
             read_success = false;
@@ -323,6 +345,38 @@ void EVCan::soh_message(uint16_t id, byte data[8]){
         default:
             break;
     }
+}
+void EVCan::bid_message(uint16_t id, byte data[8]){
+    switch(id){
+        case 0x6F1:
+            bmsdata[cur_batt].id[0] = data[1];
+            bmsdata[cur_batt].id[1] = data[2];
+            bmsdata[cur_batt].id[2] = data[3];
+            bmsdata[cur_batt].id[3] = data[4];
+            bmsdata[cur_batt].id[4] = data[5];
+            bmsdata[cur_batt].id[5] = data[6];
+            bmsdata[cur_batt].id[6] = data[7];
+            break;
+        case 0x6F2:
+            bmsdata[cur_batt].id[7] = data[1];
+            bmsdata[cur_batt].id[8] = data[2];
+            bmsdata[cur_batt].id[9] = data[3];
+            bmsdata[cur_batt].id[10] = data[4];
+            bmsdata[cur_batt].id[11] = data[5];
+            bmsdata[cur_batt].id[12] = data[6];
+            bmsdata[cur_batt].id[13] = data[7];
+            break;
+        case 0x6F3:
+            bmsdata[cur_batt].id[14] = data[1];
+            bmsdata[cur_batt].id[15] = data[2];
+            bmsdata[cur_batt].id[16] = data[3];
+            bmsdata[cur_batt].id[17] = data[4];
+            bmsdata[cur_batt].id[18] = data[5];
+            bmsdata[cur_batt].id[19] = data[6];
+            bmsdata[cur_batt].id[20] = data[7];
+            break;
+        default:
+
 }
 /**
  * Only single module of CAN will be attached to the system. So only one
