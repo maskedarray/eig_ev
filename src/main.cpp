@@ -87,7 +87,7 @@ void setup() {
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 10000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 3, &blTask2, 0);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 0);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 100000, NULL, 1, &wifiTask, 0);
     log_i("created all tasks\r\n");
 }
 
@@ -244,8 +244,10 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
+        Serial.println("vWifiTransfer() -> main.cpp -> entering if condition");
         if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
+            //log_i("vWifiTransfer() -> main.cpp -> if condition fulfilled");
             for(int i=0; i<5; i++){
                 mqtt->loop();
                 vTaskDelay(10);  // <- fixes some issues with WiFi stability
@@ -266,6 +268,7 @@ void vWifiTransfer( void *pvParameters ){
             vTaskDelay(1000);
         }
         else{
+            //log_i("vWifiTransfer() -> main.cpp -> else condition fulfilled");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }

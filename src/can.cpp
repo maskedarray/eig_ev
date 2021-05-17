@@ -376,7 +376,8 @@ void EVCan::bid_message(uint16_t id, byte data[8]){
             bmsdata[cur_batt].id[20] = data[7];
             break;
         default:
-
+            break;
+    }
 }
 /**
  * Only single module of CAN will be attached to the system. So only one
