@@ -49,7 +49,7 @@ bool ESP_BT::init(){
         // Add rest of the AT based code here
         
         // Set Device Name
-        String name = "AT+NAME" + BT_NAME;
+        String name = "AT+NAME" + this->bluetooth_name;
         Serial2.write(name.c_str());
         delay(50);
         if(Serial2.available())
@@ -63,7 +63,7 @@ bool ESP_BT::init(){
         }
         
         // Set Device Password
-        String pass = "AT+PASS" + BT_PASS;
+        String pass = "AT+PASS" + this->bluetooth_password;
         Serial2.write(pass.c_str());
         delay(50);
         if(Serial2.available())

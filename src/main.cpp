@@ -21,8 +21,8 @@
 #define STORAGE_LED 26
 #define CAN_LED 25
 #define WIFI_LED 33
-#define FIREBASE_HOST "https://esp32andfirebase.firebaseio.com/"
-#define FIREBASE_AUTH "gga1JXWY5rgyBHk56RSXLn3FPpajWfcq6itIM3nI"
+#define FIREBASE_HOST "airqcontrol-dbc92-default-rtdb.firebaseio.com" 
+#define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -65,37 +65,6 @@ void IRAM_ATTR test(){
 void setup() {
     // cmdinit();
     Serial.begin(115200);
-    while(1){
-        settings__.begin("ev-app", false);
-        EV_ID = settings__.getInt("ev-id", 0);
-        registry_id = settings__.getString("reg-id","").c_str();
-        device_id = settings__.getString("dev-id","").c_str();
-        BT_NAME = settings__.getString("bt-name", "");
-        BT_PASS = settings__.getString("bt-pass","");
-        if(EV_ID != 0 && registry_id != "" && device_id != "" && BT_NAME != "" && BT_PASS != ""){                             //settings saved previously
-            
-        }
-        else{                                       //saved settings not found
-            Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
-            Firebase.reconnectWiFi(true);
-            Firebase.setReadTimeout(firebaseData, 1000 * 60);
-            Firebase.setwriteSizeLimit(firebaseData, "tiny");
-            String mac = WiFi.macAddress();
-            String tmpregid, tmpdevid, tmpbtname, tmpbtpass;
-            if(Firebase.getInt(firebaseData, mac + String("/ev-id"), EV_ID))
-                settings__.putInt("ev-id", EV_ID);
-            if(Firebase.getString(firebaseData, mac + String("/bluetooth-name"), tmpbtname))
-                settings__.putString("bt-name", tmpbtname);
-            if(Firebase.getString(firebaseData, mac + String("/bluetooth-pass"), tmpbtpass))
-                settings__.putString("bt-pass", tmpbtpass);
-            if(Firebase.getString(firebaseData, mac + String("/gc-device-id"), tmpdevid))
-                settings__.putString("dev-id", tmpdevid);
-            if(Firebase.getString(firebaseData, mac + String("/gc-registry-id"), tmpregid))
-                settings__.putString("reg-id", tmpregid);
-            settings__.end();
-            ESP.restart();
-        }
-    }
     pinMode(CAN_LED,OUTPUT);
     pinMode(WIFI_LED,OUTPUT);
     pinMode(STORAGE_LED,OUTPUT);
@@ -106,7 +75,7 @@ void setup() {
     digitalWrite(BT_LED, LOW);
     digitalWrite(WIFI_LED, LOW);
     digitalWrite(STORAGE_LED, LOW);
-    bt.init();
+    
     if(can.init_can()){
         digitalWrite(CAN_LED, HIGH);
     }
@@ -125,6 +94,52 @@ void setup() {
     }
     wf.init();
     log_i("initialized wifi successfully\r\n");  
+    {
+        wf.check_connection();
+        settings__.begin("ev-app", false);
+        EV_ID = settings__.getInt("ev-id", 0);
+        registry_id = settings__.getString("reg-id","").c_str();
+        device_id = settings__.getString("dev-id","").c_str();
+        bt.bluetooth_name = settings__.getString("bt-name", "");
+        bt.bluetooth_password = settings__.getString("bt-pass","");
+        Serial.println(WiFi.macAddress());
+        Serial.println(EV_ID);
+        Serial.println(registry_id);
+        Serial.println(device_id);
+        Serial.println(bt.bluetooth_name);
+        Serial.println(bt.bluetooth_password);
+        if(EV_ID != 0 && String(registry_id) != "" && String(device_id) != "" && bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
+            
+        }
+        else{                                       //saved settings not found
+            Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+            Firebase.reconnectWiFi(true);
+            Firebase.setReadTimeout(firebaseData, 1000 * 60);
+            Firebase.setwriteSizeLimit(firebaseData, "small");
+            String mac = WiFi.macAddress();
+            String tmpregid, tmpdevid, tmpbtname, tmpbtpass;
+            if(Firebase.getInt(firebaseData,"/" + mac + "/ev-id", EV_ID))
+                settings__.putInt("ev-id", EV_ID);
+            if(Firebase.getString(firebaseData,"/" + mac + "/bluetooth-name", tmpbtname))
+                settings__.putString("bt-name", tmpbtname); 
+            if(Firebase.getString(firebaseData, "/" + mac + "/bluetooth-pass", tmpbtpass))
+                settings__.putString("bt-pass", tmpbtpass);
+            if(Firebase.getString(firebaseData, "/" + mac + "/gc-device-id", tmpdevid))
+                settings__.putString("dev-id", tmpdevid);
+            if(Firebase.getString(firebaseData, "/" + mac + "/gc-registry-id", tmpregid))
+                settings__.putString("reg-id", tmpregid);
+            Serial.println(EV_ID);
+            Serial.println(tmpbtname);
+            Serial.println(tmpbtpass);
+            Serial.println(tmpdevid);
+            Serial.println(tmpregid);
+
+            settings__.end();
+            Serial.println("restarting");
+            ESP.restart();
+        }
+    }
+    bt.init();
     setupCloudIoT();    //TODO: change this function and add wifi initialization
     log_i("cloud iot setup complete\r\n");
 
