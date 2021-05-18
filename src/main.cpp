@@ -30,12 +30,13 @@
 // #include <sys/time.h>
 
 String towrite;
-TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask;
+TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
 void vBlCheck( void *pvParameters );
 void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
+void vStatusLed( void * pvParameters);
 int flag =0;
 
 
@@ -88,6 +89,7 @@ void setup() {
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 50000, NULL, 1, &wifiTask, 0);
+    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 0);
     log_i("created all tasks\r\n");
 }
 
