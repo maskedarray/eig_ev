@@ -80,6 +80,19 @@ void setup() {
             Firebase.reconnectWiFi(true);
             Firebase.setReadTimeout(firebaseData, 1000 * 60);
             Firebase.setwriteSizeLimit(firebaseData, "tiny");
+            String mac = WiFi.macAddress();
+            String tmpregid, tmpdevid, tmpbtname, tmpbtpass;
+            if(Firebase.getInt(firebaseData, mac + String("/ev-id"), EV_ID))
+                settings__.putInt("ev-id", EV_ID);
+            if(Firebase.getString(firebaseData, mac + String("/bluetooth-name"), tmpbtname))
+                settings__.putString("bt-name", tmpbtname);
+            if(Firebase.getString(firebaseData, mac + String("/bluetooth-pass"), tmpbtpass))
+                settings__.putString("bt-pass", tmpbtpass);
+            if(Firebase.getString(firebaseData, mac + String("/gc-device-id"), tmpdevid))
+                settings__.putString("dev-id", tmpdevid);
+            if(Firebase.getString(firebaseData, mac + String("/gc-registry-id"), tmpregid))
+                settings__.putString("reg-id", tmpregid);
+            settings__.end();
             ESP.restart();
         }
     }
