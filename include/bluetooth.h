@@ -2,8 +2,8 @@
 #define __BLUETOOTH_H__
 #include <Arduino.h>
 // #include <BluetoothSerial.h>
-
-#define BLUETOOTH_NAME "EV BT"
+String BT_NAME;
+String BT_PASS;
 
 /**
  * This library is made to optimize the functionality of the ESP32 bluetooth

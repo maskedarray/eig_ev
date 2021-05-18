@@ -49,7 +49,8 @@ bool ESP_BT::init(){
         // Add rest of the AT based code here
         
         // Set Device Name
-        Serial2.write("AT+NAMELGAadd");
+        String name = "AT+NAME" + BT_NAME;
+        Serial2.write(name.c_str());
         delay(50);
         if(Serial2.available())
         {
@@ -62,7 +63,8 @@ bool ESP_BT::init(){
         }
         
         // Set Device Password
-        Serial2.write("AT+PASS112233");
+        String pass = "AT+PASS" + BT_PASS;
+        Serial2.write(pass.c_str());
         delay(50);
         if(Serial2.available())
         {

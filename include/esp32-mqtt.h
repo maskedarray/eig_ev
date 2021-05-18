@@ -22,6 +22,7 @@
 #include <CloudIoTCore.h>
 #include <CloudIoTCoreMqtt.h>
 #include "ciotc_config.h" // Update this file with your configuration
+#include "defines.h"
 
 // !!REPLACEME!!
 // The MQTT callback function for commands and configuration updates

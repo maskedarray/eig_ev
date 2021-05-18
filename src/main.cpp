@@ -16,12 +16,13 @@
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 #define LED_1   2
-#define EV_ID "LGA8977"
 #define RTC_LED 14
 #define BT_LED 27
 #define STORAGE_LED 26
 #define CAN_LED 25
 #define WIFI_LED 33
+#define FIREBASE_HOST "https://esp32andfirebase.firebaseio.com/"
+#define FIREBASE_AUTH "gga1JXWY5rgyBHk56RSXLn3FPpajWfcq6itIM3nI"
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -32,8 +33,12 @@
 #include <Storage.h>
 #include "ESPWiFi.h"
 #include "esp32-mqtt.h"
-// #include <sys/time.h>
+#include "Preferences.h"
+#include "defines.h"
+#include "FirebaseESP32.h"
 
+Preferences settings__;
+int EV_ID;
 String towrite;
 TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask;
 void vAcquireData( void *pvParameters );
@@ -43,6 +48,7 @@ void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
 int flag =0;
+FirebaseData firebaseData;
 
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1, semaStorage1, semaWifi1;
@@ -59,6 +65,24 @@ void IRAM_ATTR test(){
 void setup() {
     // cmdinit();
     Serial.begin(115200);
+    while(1){
+        settings__.begin("ev-app", false);
+        EV_ID = settings__.getInt("ev-id", 0);
+        registry_id = settings__.getString("reg-id","").c_str();
+        device_id = settings__.getString("dev-id","").c_str();
+        BT_NAME = settings__.getString("bt-name", "");
+        BT_PASS = settings__.getString("bt-pass","");
+        if(EV_ID != 0 && registry_id != "" && device_id != "" && BT_NAME != "" && BT_PASS != ""){                             //settings saved previously
+            
+        }
+        else{                                       //saved settings not found
+            Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+            Firebase.reconnectWiFi(true);
+            Firebase.setReadTimeout(firebaseData, 1000 * 60);
+            Firebase.setwriteSizeLimit(firebaseData, "tiny");
+            ESP.restart();
+        }
+    }
     pinMode(CAN_LED,OUTPUT);
     pinMode(WIFI_LED,OUTPUT);
     pinMode(STORAGE_LED,OUTPUT);
