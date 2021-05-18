@@ -89,7 +89,7 @@ void setup() {
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 50000, NULL, 1, &wifiTask, 0);
-    // xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 0);
+    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 0);
     log_i("created all tasks\r\n");
 }
 
@@ -171,11 +171,11 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         towrite_cpy = towrite;
         xSemaphoreGive(semaAqData1);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-        log_d("sending data over bluetooth");
+        log_d("sending data over bluetooth \r\n");
         bt.send(towrite_cpy);
         xSemaphoreGive(semaBlRx1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of bltransfer Task: %d\r\n",(int)uxHighWaterMark);
+        log_v("Stack usage of bltransfer Task: %d\r\n", (int)uxHighWaterMark);
     }   //end for
 }   //end vBlTransfer task
 
@@ -223,7 +223,7 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        log_v("entering wifi task");
+        log_v("entering wifi task \r\n");
         if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
             for(int i=0; i<5; i++){
@@ -237,7 +237,7 @@ void vWifiTransfer( void *pvParameters ){
                     toread = storage.read_data();
                     // toread = "dummy string";
                     if (toread != "" && publishTelemetry(toread)){
-                        log_d("sent data to cloud");
+                        log_d("sent data to cloud \r\n");
                         storage.mark_data(getTime2());
                     }
                 }
@@ -246,7 +246,7 @@ void vWifiTransfer( void *pvParameters ){
             vTaskDelay(1000);
         }
         else{
-            log_d("Wifi disconnected or no data to be sent!");
+            log_d("Wifi disconnected or no data to be sent! \r\n");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }

@@ -10,13 +10,13 @@ RTC_DS3231 rtc;
 void initRTC(){
     if(rtc.begin()){
         if (rtc.lostPower()) {
-            log_d("Readjusting RTC date and time\r\n");
+            log_d("Readjusting RTC date and time \r\n");
             rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); // sets the clock to time when code was burned 
         }
-        log_d("RTC initialization successful\r\n");
+        log_d("RTC initialization successful \r\n");
     }
     else{
-        log_d("RTC initialization failed\r\n");
+        log_d("RTC initialization failed \r\n");
     }
 }
 

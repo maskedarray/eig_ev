@@ -7,7 +7,7 @@
  */
 bool ESP_WiFi::init()
 {
-    log_d("updating AP list from SD card");
+    log_i("updating AP list from SD card \r\n");
     this -> update_APs();
     return true;
 }
@@ -26,9 +26,9 @@ void ESP_WiFi::update_APs()
     while(!SSID_List[i].isEmpty() && i < 10)
     {
         access_points->addAP(SSID_List[i].c_str(), Password_List[i].c_str());
-        log_v("Added AP");
-        log_v("SSID: %s",SSID_List[i].c_str());
-        log_v("Password: %s", Password_List[i].c_str());
+        log_v("Added AP \r\n");
+        log_v("SSID: %s \r\n",SSID_List[i].c_str());
+        log_v("Password: %s \r\n", Password_List[i].c_str());
         i++;
     }
     credential_length = i;
@@ -43,7 +43,7 @@ void ESP_WiFi::update_APs()
  */
 bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
 {
-    log_d("create_new_connection() -> ESP_WiFi.cpp -> connecting to new AP");
+    log_d("connecting to new AP");
     WiFi.begin(SSID, Password);
 
     int32_t timer = 0;
@@ -51,7 +51,7 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
     {
         if(timer > 15) // Timeout
         {
-            Serial.println("create_new_connection() -> ESP_WiFi.cpp -> Failed to connect. Please check SSID and Password");
+            log_e("Failed to connect. Please check SSID and Password");
             return false;
         }
         digitalWrite(LED_BUILTIN, HIGH);
@@ -67,7 +67,7 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
     {
         // clear all data and write single AP along with default
         int i = 0;
-        log_v("recreating AP data");
+        log_v("recreating AP data \r\n");
         while(!SSID_List[i].isEmpty() || !Password_List[i].isEmpty())
         {
             SSID_List[i].clear();
@@ -86,7 +86,7 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
         }
         else
         {
-            log_e("");
+            log_e("Failed to rewrite storage APs or remake access points \r\n");
             return false;
         }
     }
@@ -100,15 +100,15 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
         Serial.println(SSID_List[i]);
         if((String) SSID == SSID_List[i])
         {
-            log_d("SSID match found");
+            log_d("SSID match found \r\n");
             if((String) Password == Password_List[i]) // Same credentials were entered
             {
-                log_e("Credentials already exist");
+                log_e("Credentials already exist \r\n");
                 return false;
             }
             else // Password was different
             {
-                log_w("Updating Password Only");
+                log_i("Updating Password Only \r\n");
                 // add code to update all lists within if condition (must be
                 // type bool)
                 Password_List[i] = (String) Password;
@@ -117,10 +117,10 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
                     if(storage.rewrite_storage_APs(SSID_List, Password_List))
                         return true;
                     else
-                        log_e("Error in rewriting storage APs");
+                        log_e("Error in rewriting storage APs \r\n");
                 }
                 else
-                    log_e("error in remaking access points");
+                    log_e("error in remaking access points \r\n");
             }
         }
     }
@@ -157,11 +157,11 @@ bool ESP_WiFi::remake_access_points()
 bool ESP_WiFi::connect_to_nearest()
 {
     if(access_points->run() == WL_CONNECTED){
-        log_i("Connection established");
+        log_i("Connection established \r\n");
         return true;
     }
     else{
-        log_e("Connection timed out");
+        log_e("Connection timed out \r\n");
         return false;
     }
 }
@@ -182,7 +182,7 @@ bool ESP_WiFi::check_connection()
     }
     else
     {
-        log_e("WiFi not connected. Establishing connection");
+        log_e("WiFi not connected. Establishing connection \r\n");
         if(this->connect_to_nearest()){
             return true;
         } else {
