@@ -83,11 +83,11 @@ void setup() {
     xSemaphoreGive(semaBlRx1);
     xSemaphoreGive(semaWifi1);
     
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 10000, NULL, 3, &dataTask1, 1);
-    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 10000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 10000, NULL, 2, &blTask1, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 10000, NULL, 3, &blTask2, 0);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 100000, NULL, 1, &wifiTask, 0);
+    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
+    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
+    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 50000, NULL, 1, &wifiTask, 0);
     log_i("created all tasks\r\n");
 }
 
@@ -142,11 +142,12 @@ void vAcquireData( void *pvParameters ){
                 addSlotsData("04", "BATT8", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "26.561");//towrite += ",";
             }
             //Now towrite string contains one valid string of CSV data chunk
-            //Serial.println(getTime());
         }
         xSemaphoreGive(semaAqData1); 
         xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
         xSemaphoreGive(semaStorage1);
+        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+        log_v("Stack usage of acquiredata Task: %d\r\n",(int)uxHighWaterMark);
         vTaskDelayUntil(&xLastWakeTime, DATA_ACQUISITION_TIME);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
@@ -162,17 +163,17 @@ void vAcquireData( void *pvParameters ){
  */
 void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
     for(;;){    //infinite loop
-        xSemaphoreTake(semaBlTx1, portMAX_DELAY);
-        xSemaphoreTake(semaAqData1, portMAX_DELAY);
+        xSemaphoreTake(semaBlTx1, portMAX_DELAY);   //for task sync with acquire data
+        xSemaphoreTake(semaAqData1, portMAX_DELAY); //for copying towrite string
         String towrite_cpy;
         towrite_cpy = towrite;
         xSemaphoreGive(semaAqData1);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-        {
-            bt.send(towrite_cpy);
-            // log_d("sending data: %s\n\r", towrite_cpy.c_str());
-        }
+        log_d("sending data over bluetooth");
+        bt.send(towrite_cpy);
         xSemaphoreGive(semaBlRx1);
+        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+        log_v("Stack usage of bltransfer Task: %d\r\n",(int)uxHighWaterMark);
     }   //end for
 }   //end vBlTransfer task
 
@@ -184,70 +185,45 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
  */
 void vBlCheck( void *pvParameters ){
     TickType_t xLastWakeTime_2 = xTaskGetTickCount();
-    // int counter = 0;
     for(;;){
         xSemaphoreTake(semaWifi1, portMAX_DELAY);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
         {
-            //while(Serial2.read() >=0){} //flushing any data available in serial RX buffer
             command_bt();
-            // log_d("commands executed");
-            // send data to slave for storage and uploading to cloud
-            /**
-             * NOTE: Slave logic needs to be put here
-             */
-
-             /*if(counter > 600){          //counter for 60 seconds since task execution period is 100ms
-                log_i("sending periodic blutooth data to slave\r\n");
-
-
-                //cmdsend("<20");
-                //xSemaphoreTake(semaAqData1, portMAX_DELAY);
-                //cmdsend(towrite);
-                //xSemaphoreGive(semaAqData1);
-                //cmdsend(">\r\n");
-                counter = 0;
-            }
-            else{
-                counter++;
-            }*/
         }
         xSemaphoreGive(semaBlRx1);
         xSemaphoreGive(semaWifi1);
+        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+        log_v("Stack usage of blcheck Task: %d\r\n",(int)uxHighWaterMark);
         vTaskDelayUntil(&xLastWakeTime_2, 0.1*DATA_ACQUISITION_TIME);
     }
 } // end vBlCheck
 
 void vStorage( void *pvParameters ){
-    UBaseType_t uxHighWaterMark;
-    uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
     for(;;){    //infinite loop
+        xSemaphoreTake(semaStorage1,portMAX_DELAY); //for syncing task with acquire
         xSemaphoreTake(semaAqData1, portMAX_DELAY); // make copy of data and stop data acquisition
         String towrite_cpy;
         towrite_cpy = towrite;
         xSemaphoreGive(semaAqData1);
-        xSemaphoreTake(semaStorage1,portMAX_DELAY);
         xSemaphoreTake(semaWifi1,portMAX_DELAY);    //wait for wifi transfer task to finish
         {
             storage.write_data(getTime2(), towrite_cpy);
         }
         xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
-        uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        Serial.printf("Stack usage of Storage Task: %d\r\n",(int)uxHighWaterMark);
+        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+        log_v("Stack usage of Storage Task: %d\r\n",(int)uxHighWaterMark);
     }   //end for
 }   //end vStorage task
 
 void vWifiTransfer( void *pvParameters ){
-    UBaseType_t uxHighWaterMark;
-    uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
     for(;;){    //infinite loop
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        Serial.println("vWifiTransfer() -> main.cpp -> entering if condition");
+        log_v("entering wifi task");
         if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
-            //log_i("vWifiTransfer() -> main.cpp -> if condition fulfilled");
             for(int i=0; i<5; i++){
                 mqtt->loop();
                 vTaskDelay(10);  // <- fixes some issues with WiFi stability
@@ -259,8 +235,8 @@ void vWifiTransfer( void *pvParameters ){
                     toread = storage.read_data();
                     // toread = "dummy string";
                     if (toread != "" && publishTelemetry(toread)){
-                        log_d("vWifiTransfer -> main.cpp -> sending data to cloud");
-                        //storage.mark_data(getTime2());
+                        log_d("sent data to cloud");
+                        storage.mark_data(getTime2());
                     }
                 }
             }
@@ -268,12 +244,12 @@ void vWifiTransfer( void *pvParameters ){
             vTaskDelay(1000);
         }
         else{
-            //log_i("vWifiTransfer() -> main.cpp -> else condition fulfilled");
+            log_d("Wifi disconnected or no data to be sent!");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }
-        uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        Serial.printf("Stack usage of Wifi Task: %d\r\n",(int)uxHighWaterMark);
+        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+        log_v("Stack usage of Wifi Task: %d\r\n",(int)uxHighWaterMark);
         vTaskDelay(10);
     }   //end for
 }   //end vWifiTransfer task

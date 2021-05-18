@@ -31,11 +31,10 @@ String parse_by_key(String message, int key)
         index++;
     }
     
-    log_d("parse_by_key() -> cmdlib-master.cpp -> The counter value is %d and there are %d commas in our code. \n", index, comma_count);
     index = 0;
     if(key > comma_count)
     {
-        log_e("parse_by_key() -> cmdlib-master.cpp -> key exceeds number of entries");
+        log_e("key exceeds number of entries");
         return "";
     }
     
@@ -54,7 +53,6 @@ String parse_by_key(String message, int key)
         key_value += temp;
         index++;
     }
-    log_d("the value of the given key is %s \n", key_value.c_str());
     return key_value;
 
 };
