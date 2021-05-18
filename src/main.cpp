@@ -17,6 +17,11 @@
 #define DATA_MAX_LEN 1200   //bytes
 #define LED_1   2
 #define EV_ID "LGA8977"
+#define RTC_LED 14
+#define BT_LED 27
+#define STORAGE_LED 26
+#define CAN_LED 25
+#define WIFI_LED 33
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -54,10 +59,21 @@ void IRAM_ATTR test(){
 void setup() {
     // cmdinit();
     Serial.begin(115200);
+    digitalWrite(CAN_LED, LOW);
+    digitalWrite(RTC_LED, LOW);
+    digitalWrite(BT_LED, LOW);
+    digitalWrite(WIFI_LED, LOW);
+    digitalWrite(STORAGE_LED, LOW);
     bt.init();
-    initRTC();
+    if(can.init_can()){
+        digitalWrite(CAN_LED, HIGH);
+    }
+    if(initRTC()){
+        digitalWrite(RTC_LED, HIGH);
+    }
     if(storage.init_storage()){
         log_d("storage initialization success!\r\n");
+        digitalWrite(STORAGE_LED, HIGH);
     }
     else{   //TODO: handle when storage connection fails
         while(1){
@@ -84,12 +100,13 @@ void setup() {
     xSemaphoreGive(semaBlRx1);
     xSemaphoreGive(semaWifi1);
     
+    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 50000, NULL, 1, &wifiTask, 0);
-    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 0);
+    
     log_i("created all tasks\r\n");
 }
 
@@ -256,3 +273,20 @@ void vWifiTransfer( void *pvParameters ){
     }   //end for
 }   //end vWifiTransfer task
 
+void vStatusLed( void * pvParameters){
+    for(;;){    //infinite loop
+        if(bt.isConnected){
+            digitalWrite(BT_LED,HIGH);
+        }  
+        else{
+            digitalWrite(BT_LED,LOW);
+        }
+        if(WiFi.isConnected()){
+            digitalWrite(WIFI_LED, HIGH);
+        }
+        else{
+            digitalWrite(WIFI_LED,LOW);
+        }
+
+    }
+}

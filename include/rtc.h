@@ -2,7 +2,7 @@
 #define _RTC_H_
 #include <Arduino.h>    //for using arduino String
 
-void initRTC();
+bool initRTC();
 String getTime();
 String getTime2();
 String unixTime();

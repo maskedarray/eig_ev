@@ -7,16 +7,18 @@ RTC_DS3231 rtc;
  * Function initRTC initializes RTC and adjusts date and time in case of power loss
  * TODO: Handle error in case RTC initialization fails
  */
-void initRTC(){
+bool initRTC(){
     if(rtc.begin()){
         if (rtc.lostPower()) {
             log_d("Readjusting RTC date and time\r\n");
             rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); // sets the clock to time when code was burned 
         }
         log_d("RTC initialization successful\r\n");
+        return true;
     }
     else{
         log_d("RTC initialization failed\r\n");
+        return false;
     }
 }
 
