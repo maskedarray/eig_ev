@@ -14,10 +14,12 @@
 
 class ESP_BT {
 private:
+    //bool got_credentials;
     String bt_read();
     
 
 public:
+    //BluetoothSerial SerialBT;
     bool init();
     bool send(String tosend);
     String check_bluetooth();

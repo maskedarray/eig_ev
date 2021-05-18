@@ -193,11 +193,11 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         towrite_cpy = towrite;
         xSemaphoreGive(semaAqData1);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-        log_d("sending data over bluetooth \r\n");
+        log_d("sending data over bluetooth");
         bt.send(towrite_cpy);
         xSemaphoreGive(semaBlRx1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of bltransfer Task: %d\r\n", (int)uxHighWaterMark);
+        log_v("Stack usage of bltransfer Task: %d\r\n",(int)uxHighWaterMark);
     }   //end for
 }   //end vBlTransfer task
 
@@ -245,7 +245,7 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        log_v("entering wifi task \r\n");
+        log_v("entering wifi task");
         if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
             for(int i=0; i<5; i++){
@@ -259,7 +259,7 @@ void vWifiTransfer( void *pvParameters ){
                     toread = storage.read_data();
                     // toread = "dummy string";
                     if (toread != "" && publishTelemetry(toread)){
-                        log_d("sent data to cloud \r\n");
+                        log_d("sent data to cloud");
                         storage.mark_data(getTime2());
                     }
                 }
@@ -268,7 +268,7 @@ void vWifiTransfer( void *pvParameters ){
             vTaskDelay(1000);
         }
         else{
-            log_d("Wifi disconnected or no data to be sent! \r\n");
+            log_d("Wifi disconnected or no data to be sent!");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }

@@ -15,9 +15,9 @@ bool EVCan::init_can(){
 
     for(int i = 0; i < 5; i++){
         if(CAN_OK != mcp_can.begin(CAN_500KBPS))
-            log_e("CAN bus init failed! \r\n");
+            log_e("init_can() -> can.cpp -> CAN bus init failed!");
         else{
-            log_i("CAN bus initialized! \r\n");
+            log_d("init_can() -> can.cpp -> CAN bus initialized!");
             return true;
         }
         delay(500);
@@ -62,23 +62,23 @@ bool EVCan::init_can(){
 void EVCan::send_msg(uint16_t id, float soc, float hi_temp, float lo_temp, float voltage, float current){
     switch (id)
     {
-        case 0x610:
-            byte data[8];
-            data[0] = 7;
-            data[1] = (byte)((int)soc);
-            data[2] = (byte)((int)(hi_temp + 40));
-            data[3] = (byte)((int)(lo_temp + 40));
-            data[4] = (byte)((int)(voltage * 10));
-            data[5] = (byte)(((int)(voltage * 10)) >> 8);
-            data[6] = (byte)((int)((current + 1000) * 10));
-            data[7] = (byte)(((int)((current + 1000) * 10)) >> 8);
-            mcp_can.sendMsgBuf(id, 0, 8, data);
-            log_d("Data sent! \r\n");
-            break;
-        
-        default:
-            log_e("Invalid ID! \r\n");
-            break;
+    case 0x610:
+        byte data[8];
+        data[0] = 7;
+        data[1] = (byte)((int)soc);
+        data[2] = (byte)((int)(hi_temp + 40));
+        data[3] = (byte)((int)(lo_temp + 40));
+        data[4] = (byte)((int)(voltage * 10));
+        data[5] = (byte)(((int)(voltage * 10)) >> 8);
+        data[6] = (byte)((int)((current + 1000) * 10));
+        data[7] = (byte)(((int)((current + 1000) * 10)) >> 8);
+        mcp_can.sendMsgBuf(id, 0, 8, data);
+        log_d("send_msg() -> can.cpp -> Data sent!");
+        break;
+    
+    default:
+        log_e("send_msg() -> can.cpp -> Invalid ID!");
+        break;
     }
 }
 
@@ -96,12 +96,13 @@ bool EVCan::receive_msg(void){
     bool read_success = false;
     byte data[8];
     if(CAN_MSGAVAIL == mcp_can.checkReceive()){
-        log_d("Data found on CAN bus. Reading.. \r\n");
+        log_d("receive_msg() -> can.cpp -> Data found on CAN bus. Reading..");
         read_success = true;
         unsigned char len = 0;
         mcp_can.readMsgBuf(&len, data);
         this->id = mcp_can.getCanId();
-        log_d("ID: %d\r\n", this->id);
+        log_d("receive_msg() -> can.cpp -> ID: ");
+        Serial.println(this->id,HEX);
         if (this->id == 0x190){
             mcu_message(data);
         }   else if (this->id >= 0x6C0 && this->id <= 0x6CF){   //accumulated utilized cycles
@@ -113,7 +114,7 @@ bool EVCan::receive_msg(void){
         }   else if(this->id >= 0x6F0 && this->id <= 0x6F4){
             bid_message(id, data);
         }   else{
-            log_e("Invalid ID! \r\n");
+            Serial.println(F("receive_msg() -> can.cpp -> Invalid ID!"));
             read_success = false;
         }
     }
