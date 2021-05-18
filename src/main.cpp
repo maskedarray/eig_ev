@@ -59,6 +59,11 @@ void IRAM_ATTR test(){
 void setup() {
     // cmdinit();
     Serial.begin(115200);
+    pinMode(CAN_LED,OUTPUT);
+    pinMode(WIFI_LED,OUTPUT);
+    pinMode(STORAGE_LED,OUTPUT);
+    pinMode(RTC_LED,OUTPUT);
+    pinMode(BT_LED,OUTPUT);
     digitalWrite(CAN_LED, LOW);
     digitalWrite(RTC_LED, LOW);
     digitalWrite(BT_LED, LOW);
@@ -287,6 +292,6 @@ void vStatusLed( void * pvParameters){
         else{
             digitalWrite(WIFI_LED,LOW);
         }
-
+        vTaskDelay(50);
     }
 }

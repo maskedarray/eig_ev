@@ -49,7 +49,7 @@ bool ESP_BT::init(){
         // Add rest of the AT based code here
         
         // Set Device Name
-        Serial2.write("AT+NAMELGA8977");
+        Serial2.write("AT+NAMELGAadd");
         delay(50);
         if(Serial2.available())
         {
