@@ -15,9 +15,9 @@ bool EVCan::init_can(){
 
     for(int i = 0; i < 5; i++){
         if(CAN_OK != mcp_can.begin(CAN_500KBPS))
-            log_e("CAN bus init failed! \r\n");
+            log_e("CAN bus init failed! ");
         else{
-            log_i("CAN bus initialized! \r\n");
+            log_i("CAN bus initialized! ");
             return true;
         }
         delay(500);
@@ -73,11 +73,11 @@ void EVCan::send_msg(uint16_t id, float soc, float hi_temp, float lo_temp, float
             data[6] = (byte)((int)((current + 1000) * 10));
             data[7] = (byte)(((int)((current + 1000) * 10)) >> 8);
             mcp_can.sendMsgBuf(id, 0, 8, data);
-            log_d("Data sent! \r\n");
+            log_d("Data sent! ");
             break;
         
         default:
-            log_e("Invalid ID! \r\n");
+            log_e("Invalid ID! ");
             break;
     }
 }
@@ -96,12 +96,12 @@ bool EVCan::receive_msg(void){
     bool read_success = false;
     byte data[8];
     if(CAN_MSGAVAIL == mcp_can.checkReceive()){
-        log_d("Data found on CAN bus. Reading.. \r\n");
+        log_d("Data found on CAN bus. Reading.. ");
         read_success = true;
         unsigned char len = 0;
         mcp_can.readMsgBuf(&len, data);
         this->id = mcp_can.getCanId();
-        log_d("ID: %d\r\n", this->id);
+        log_d("ID: %d", this->id);
         if (this->id == 0x190){
             mcu_message(data);
         }   else if (this->id >= 0x6C0 && this->id <= 0x6CF){   //accumulated utilized cycles
@@ -113,7 +113,7 @@ bool EVCan::receive_msg(void){
         }   else if(this->id >= 0x6F0 && this->id <= 0x6F4){
             bid_message(id, data);
         }   else{
-            log_e("Invalid ID! \r\n");
+            log_e("Invalid ID! ");
             read_success = false;
         }
     }

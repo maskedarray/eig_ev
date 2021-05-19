@@ -34,7 +34,7 @@ String parse_by_key(String message, int key)
     index = 0;
     if(key > comma_count)
     {
-        log_e("key exceeds number of entries \r\n");
+        log_e("key exceeds number of entries ");
         return "";
     }
     
@@ -91,30 +91,30 @@ bool command_5_enterSwap()
         //handle here
         WiFiClient client;
         if(client.connect("192.168.0.107",80)){
-            log_d("client connected \r\n");
+            log_d("client connected ");
             client.print("client1711\n");
             long time_start = millis();
             long time_stop = millis();
             while(time_stop - time_start < 5000){
                 if(client.available()){
                     ret += client.readStringUntil('\n');
-                    log_d("response received \r\n");
+                    log_d("response received ");
                     break;
                 }
                 time_stop = millis();
                 vTaskDelay(10);
             }
             client.stop();
-            log_d("client disconnected \r\n");
+            log_d("client disconnected ");
         }
     }
     else{
-        log_e("could not connect to bss wifi \r\n");
+        log_e("could not connect to bss wifi ");
     }
     WiFi.disconnect(false,true);
     ret += ">";
     bt.send(ret);
-    log_i("message sent to master: %s\r\n",ret.c_str());
+    log_i("message sent to master: %s",ret.c_str());
     return true;
 };
 
@@ -127,7 +127,7 @@ bool command_5_enterSwap()
  */
 bool command_6_exitSwap()
 {
-    log_i("exited battery swap mode \r\n");
+    log_i("exited battery swap mode ");
     return true;
 };
 
@@ -154,7 +154,7 @@ bool command_7_checkWifi()
 bool command_8_getTime()
 {
     String ret = unixTime();
-    log_d("The returned time is: %s\r\n", ret);
+    log_d("The returned time is: %s", ret);
     bt.send(ret);
     return true;
 }
@@ -174,9 +174,9 @@ bool command_bt()
     
     if(message.length() > 0)
     {
-        log_i("message received: %s\r\n", message.c_str());
+        log_i("message received: %s", message.c_str());
         int ID = (10 * ((uint8_t)message[1] - 48)) + ((uint8_t)message[2] - 48);
-        log_d("the the ID sent is: %d\r\n", ID);
+        log_d("the the ID sent is: %d", ID);
         if(ID > 0 && ID < 100)
         {
             switch(ID)
@@ -192,13 +192,13 @@ bool command_bt()
                 case 8: // check time
                     return command_8_getTime();
                 default:
-                    log_e("invalid ID \r\n");
+                    log_e("invalid ID ");
                     return false;
             }
         }
         else
         {
-            log_e("entered invalid ID \r\n");
+            log_e("entered invalid ID ");
             return false;
         }
 

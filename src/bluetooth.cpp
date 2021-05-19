@@ -36,7 +36,7 @@ bool ESP_BT::init(){
     //Check if AT Commands are working
     Serial2.write("AT");
     delay(50);
-    log_d("%d\r\n", Serial2.baudRate());
+    log_d("%d", Serial2.baudRate());
 
     // add a while instead of an if and also include a timeout
     if(Serial2.available())
@@ -45,7 +45,7 @@ bool ESP_BT::init(){
     }
     if(samp == "OK")
     {
-        log_d("AT Commands work\r\n");
+        log_d("AT Commands work");
 
         // Set Device Name
         String name = "AT+NAME" + this->bluetooth_name;
@@ -57,7 +57,7 @@ bool ESP_BT::init(){
         }
         if(samp.length() > 0)
         {
-            log_d("%s\r\n", samp.c_str());
+            log_d("%s", samp.c_str());
         }
         
         // Set Device Password
@@ -70,7 +70,7 @@ bool ESP_BT::init(){
         }
         if(samp.length() > 0)
         {
-            log_d("%s \r\n", samp.c_str());
+            log_d("%s ", samp.c_str());
         }
 
         // Set Device Authentication Type
@@ -82,7 +82,7 @@ bool ESP_BT::init(){
         }
         if(samp.length() > 0)
         {
-            log_d("%s\r\n", samp.c_str());
+            log_d("%s", samp.c_str());
         }
 
         // Set Service UUID
@@ -94,7 +94,7 @@ bool ESP_BT::init(){
         }
         if(samp.length() > 0)
         {
-            log_d("%s\r\n", samp.c_str());
+            log_d("%s", samp.c_str());
         }
 
         // Set Characteristic UUID
@@ -106,7 +106,7 @@ bool ESP_BT::init(){
         }
         if(samp.length() > 0)
         {
-            log_d("%s\r\n", samp.c_str());
+            log_d("%s", samp.c_str());
         }
 
         // Set Device Baud Rate
@@ -118,7 +118,7 @@ bool ESP_BT::init(){
         }
         if(samp.length() > 0 && samp == "OK+Set:2")
         {
-            log_d("%s\r\n", samp.c_str());
+            log_d("%s", samp.c_str());
             Serial2.write("AT+RESET");
             delay(100);
             Serial2.readStringUntil('\n');
@@ -139,7 +139,7 @@ bool ESP_BT::init(){
             log_d("AT commands working!");
         }
     }
-    log_i("Bluetooth Device is Ready to Pair\r\n");
+    log_i("Bluetooth Device is Ready to Pair");
     return true;
 }
 
@@ -153,7 +153,7 @@ bool ESP_BT::send(String tosend){
     if(isConnected)
     {
         long len = tosend.length();
-        tosend = "%S%" + String(len) + "," + tosend + "%S%\r\n";
+        tosend = "%S%" + String(len) + "," + tosend + "%S%";
         Serial2.write(tosend.c_str());
         return true;
     }
@@ -175,7 +175,7 @@ String ESP_BT::bt_read()
 {
     // Read the message of a connected device and check if it conforms to the
     // set conventions
-    log_d("The device connection status is: %d\r\n", isConnected);
+    log_d("The device connection status is: %d", isConnected);
     if(isConnected) 
     {
         int32_t size = 0;
@@ -192,7 +192,7 @@ String ESP_BT::bt_read()
             }
             if(size >= 90)
             {
-                log_e("Credentials exceed set limit\r\n");
+                log_e("Credentials exceed set limit");
                 return "";
             }
             BTread += temp;
@@ -200,10 +200,10 @@ String ESP_BT::bt_read()
         else // we got some other message in AT format
         {
             BTread = temp + Serial2.readString();
-            log_d("%s\r\n", BTread.c_str());
+            log_d("%s", BTread.c_str());
             return BTread;
         }
-        log_d("%s\r\n", BTread.c_str());
+        log_d("%s", BTread.c_str());
         return BTread;
     }
 
@@ -234,7 +234,7 @@ String ESP_BT::check_bluetooth()
     if (Serial2.available())
     {
         msg = this->bt_read();
-        log_d("The message recieved is %s\r\n", msg.c_str());
+        log_d("The message recieved is %s", msg.c_str());
         // Check for connection
         if(msg == "OK+CONN")
         {

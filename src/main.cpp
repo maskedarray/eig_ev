@@ -92,17 +92,17 @@ void setup() {
         digitalWrite(RTC_LED, HIGH);
     }
     if(storage.init_storage()){
-        log_d("storage initialization success!\r\n");
+        log_d("storage initialization success!");
         digitalWrite(STORAGE_LED, HIGH);
     }
     else{   //TODO: handle when storage connection fails
         while(1){
-            log_d("storage initialization failed!\r\n");
+            log_d("storage initialization failed!");
             delay(1000);
         }
     }
     wf.init();
-    log_i("initialized wifi successfully\r\n");  
+    log_i("initialized wifi successfully");  
     {
         wf.check_connection();
         settings__.begin("ev-app", false);
@@ -148,7 +148,7 @@ void setup() {
     bt.init();
     delay(5000);    //wait for wifi to initialize
     setupCloudIoT();    //TODO: change this function and add wifi initialization
-    log_i("cloud iot setup complete\r\n");
+    log_i("cloud iot setup complete");
 
     
     //set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
@@ -171,7 +171,7 @@ void setup() {
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 3000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 0);
     
-    log_i("created all tasks\r\n");
+    log_i("created all tasks");
 }
 
 void loop() {
@@ -204,21 +204,21 @@ void vAcquireData( void *pvParameters ){
             towrite += String("34.36") + ",";           //MCU Temperature
             //          B_Slot, B_ID, B_Auth,  B_Age, B_Type , B_M_Cycles, B_U_Cycles , B_Temp, B_SoC, B_SoH, B_RoD, B_Vol , B_Curr
             if(flag == 0){
-                log_i("currently sending data %d\r\n",flag);
+                log_i("currently sending data %d",flag);
                 addSlotsData("01", "batt1", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("02", "BATT3", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT5", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("04", "BATT7", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "26.561");//towrite += ",";
             }
             else if (flag == 1){
-                log_i("currently sending data %d\r\n",flag);
+                log_i("currently sending data %d",flag);
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
             }
             else if (flag ==2){
-                log_i("currently sending data %d\r\n",flag);
+                log_i("currently sending data %d",flag);
                 addSlotsData("01", "BATT2", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("02", "BATT4", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT6", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
@@ -230,7 +230,7 @@ void vAcquireData( void *pvParameters ){
         xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
         xSemaphoreGive(semaStorage1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of acquiredata Task: %d\r\n",(int)uxHighWaterMark);
+        log_v("Stack usage of acquiredata Task: %d",(int)uxHighWaterMark);
         vTaskDelayUntil(&xLastWakeTime, DATA_ACQUISITION_TIME);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
@@ -252,11 +252,11 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         towrite_cpy = towrite;
         xSemaphoreGive(semaAqData1);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-        log_d("sending data over bluetooth \r\n");
+        log_d("sending data over bluetooth ");
         bt.send(towrite_cpy);
         xSemaphoreGive(semaBlRx1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of bltransfer Task: %d\r\n", (int)uxHighWaterMark);
+        log_v("Stack usage of bltransfer Task: %d", (int)uxHighWaterMark);
     }   //end for
 }   //end vBlTransfer task
 
@@ -277,7 +277,7 @@ void vBlCheck( void *pvParameters ){
         xSemaphoreGive(semaBlRx1);
         xSemaphoreGive(semaWifi1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of blcheck Task: %d\r\n",(int)uxHighWaterMark);
+        log_v("Stack usage of blcheck Task: %d",(int)uxHighWaterMark);
         vTaskDelayUntil(&xLastWakeTime_2, 0.3*DATA_ACQUISITION_TIME);
     }
 } // end vBlCheck
@@ -295,7 +295,7 @@ void vStorage( void *pvParameters ){
         }
         xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of Storage Task: %d\r\n",(int)uxHighWaterMark);
+        log_v("Stack usage of Storage Task: %d",(int)uxHighWaterMark);
     }   //end for
 }   //end vStorage task
 
@@ -304,7 +304,7 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        log_v("entering wifi task \r\n");
+        log_v("entering wifi task ");
         if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
             for(int i=0; i<5; i++){
@@ -318,7 +318,7 @@ void vWifiTransfer( void *pvParameters ){
                     toread = storage.read_data();
                     // toread = "dummy string";
                     if (toread != "" && publishTelemetry(toread)){
-                        log_d("sent data to cloud \r\n");
+                        log_d("sent data to cloud ");
                         storage.mark_data(getTime2());
                     }
                 }
@@ -327,12 +327,12 @@ void vWifiTransfer( void *pvParameters ){
             vTaskDelay(1000);
         }
         else{
-            log_d("Wifi disconnected or no data to be sent! \r\n");
+            log_d("Wifi disconnected or no data to be sent! ");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of Wifi Task: %d\r\n",(int)uxHighWaterMark);
+        log_v("Stack usage of Wifi Task: %d",(int)uxHighWaterMark);
         vTaskDelay(10);
     }   //end for
 }   //end vWifiTransfer task

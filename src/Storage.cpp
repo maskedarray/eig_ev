@@ -7,35 +7,35 @@
  * returns true only if the storage is initialized properly.
  */
 bool Storage::init_storage(){
-    log_i("Initializing SD card... \r\n");
+    log_i("Initializing SD card... ");
     mount_success = false;
     if(!SD.begin()){
-        log_e("Card Initialization Failed \r\n");
+        log_e("Card Initialization Failed ");
         return mount_success;
     }
     uint8_t cardType = SD.cardType();
     if(cardType == CARD_NONE){
-        log_e("No SD card attached \r\n");
+        log_e("No SD card attached ");
         return mount_success;
     }
     log_d("init_storage() -> storage.cpp -> SD Card Type: ");
     if(cardType == CARD_MMC){
-        log_d("MMC \r\n");
+        log_d("MMC ");
     } else if(cardType == CARD_SD){
-        log_d("SDSC \r\n");
+        log_d("SDSC ");
     } else if(cardType == CARD_SDHC){
-        log_d("SDHC \r\n");
+        log_d("SDHC ");
     } else {
-        log_d("UNKNOWN \r\n");
+        log_d("UNKNOWN ");
         return mount_success;
     }
 
     uint64_t cardSize = SD.totalBytes() / (1024 * 1024);
-    log_i("SD Card Size: %lluMB\r\n", cardSize);   //TODO: add a card limit check for better reliability
+    log_i("SD Card Size: %lluMB", cardSize);   //TODO: add a card limit check for better reliability
 
     if (SD.exists("/config.txt")){
         resume = true;
-        log_d("Previous data found! \r\n");
+        log_d("Previous data found! ");
         File file = SD.open("/config.txt", FILE_READ);
         char c = file.read();
         String temp;
@@ -53,13 +53,13 @@ bool Storage::init_storage(){
         curr_read_pos = atol(temp.c_str());     //update the position to read
         file.close();
         log_d("File is: ");
-        log_d("%s \r\n", curr_read_file.c_str());
+        log_d("%s ", curr_read_file.c_str());
         log_d("Position is: ");
-        log_d("%d \r\n", curr_read_pos);
+        log_d("%d ", curr_read_pos);
     }
     else {
         resume = false;
-        log_w("Previous data not found! \r\n");
+        log_w("Previous data not found! ");
         curr_read_pos = FILE_START_POS;
         curr_read_file = "";    
     }
@@ -67,12 +67,12 @@ bool Storage::init_storage(){
     // New addition to the init function
     if (SD.exists("/APs.txt")) // Check for APs.txt on SD card
     {
-        log_i("AP storage found! \r\n");
+        log_i("AP storage found! ");
         APList_exists = true;
     }
     else
     {
-        log_e("AP storage not found. Creating new file \r\n");
+        log_e("AP storage not found. Creating new file ");
         File APList = SD.open("/APs.txt", FILE_WRITE);
         APList.print('<');
         APList.print("EiG,12344321");   // Default entry for the APlist
@@ -99,7 +99,7 @@ bool Storage::write_data(String timenow, String data){
     bool write_success = false;
     if(mount_success){
         if((CARD_SIZE_LIMIT_MB - SD.usedBytes()/1048576) < LOW_SPACE_LIMIT_MB) {   //check if there is low space.
-            log_w("Space low! Deleting oldest file \r\n");
+            log_w("Space low! Deleting oldest file ");
             this->remove_oldest_file();
         }
         String path = "/" + timenow + ".txt";
@@ -107,7 +107,7 @@ bool Storage::write_data(String timenow, String data){
         if(!SD.exists(path)){
             file = SD.open(path, FILE_APPEND);
             if(!file){
-                log_e("Failed to open file for writing \r\n");
+                log_e("Failed to open file for writing ");
                 return write_success;
             }
             create_header(file);
@@ -115,7 +115,7 @@ bool Storage::write_data(String timenow, String data){
         else {
             file = SD.open(path, FILE_APPEND); 
             if(!file){
-                log_e("Failed to open file for writing \r\n");
+                log_e("Failed to open file for writing ");
                 return write_success;
             }
         }  
@@ -125,7 +125,7 @@ bool Storage::write_data(String timenow, String data){
             log_d("File written");
             write_success = true;
         } else {
-            log_e("Write failed \r\n");
+            log_e("Write failed ");
         }
         if (!resume){                       //if this is the first time system has started, create config.txt and update variables
             String name = file.name();
@@ -136,13 +136,13 @@ bool Storage::write_data(String timenow, String data){
             file2.print(curr_read_pos);
             file2.println("$");
             file2.close();
-            log_d("config.txt created! \r\n");
+            log_d("config.txt created! ");
             resume = true;
         }
         file.close();
         return write_success;
     } else{
-        log_e("Storage mount failed or not mounted! Try again \r\n");
+        log_e("Storage mount failed or not mounted! Try again ");
         return write_success;
     }
 }
@@ -159,14 +159,14 @@ bool Storage::write_AP(String SSID, String Password) //made with small edits to 
         if(!SD.exists(path)){
             file = SD.open(path, FILE_APPEND);
             if(!file){
-                log_e("Failed to open file for writing \r\n");
+                log_e("Failed to open file for writing ");
                 return write_success;
             }
         }
         else {
             file = SD.open(path, FILE_APPEND); 
             if(!file){
-                log_e("Failed to open file for writing \r\n");
+                log_e("Failed to open file for writing ");
                 return write_success;
             }
         }  
@@ -174,15 +174,15 @@ bool Storage::write_AP(String SSID, String Password) //made with small edits to 
             file.print(SSID + ",");
             file.print(Password);
             file.println(">");
-            log_d("File written \r\n");
+            log_d("File written ");
             write_success = true;
         } else {
-            log_e("Write failed \r\n");
+            log_e("Write failed ");
         }
         file.close();
         return write_success;
     } else{
-        log_e("Storage mount failed or not mounted! Try again \r\n");
+        log_e("Storage mount failed or not mounted! Try again ");
         return write_success;
     }
 }
@@ -203,14 +203,14 @@ bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
         if(!SD.exists(path)){
             file = SD.open(path, FILE_WRITE);
             if(!file){
-                log_e("Failed to open file for writing \r\n");
+                log_e("Failed to open file for writing ");
                 return write_success;
             }
         }
         else {
             file = SD.open(path, FILE_WRITE); 
             if(!file){
-                log_e("Failed to open file for writing \r\n");
+                log_e("Failed to open file for writing ");
                 return write_success;
             }
         }
@@ -221,12 +221,12 @@ bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
                 file.print(SSID[i] + ",");
                 file.print(Password[i]);
                 file.print(">");
-                log_d("File written %s and %s \r\n", SSID[i].c_str(), Password[i].c_str());
+                log_d("File written %s and %s ", SSID[i].c_str(), Password[i].c_str());
                 i++;
             } 
             else 
             {
-                log_e("Write failed \r\n");
+                log_e("Write failed ");
                 file.close();
                 SD.remove(path);
                 return false;
@@ -238,7 +238,7 @@ bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
     }
     else
     {
-        log_e("Storage mount failed or not mounted! Try again \r\n");
+        log_e("Storage mount failed or not mounted! Try again ");
         return write_success;
     }
 }
@@ -274,7 +274,7 @@ void Storage::create_header(File file){
  * - then the smallest files is removed.
  */
 void Storage::remove_oldest_file(){
-    log_w("Space is low! Removing oldest file.. \r\n");
+    log_w("Space is low! Removing oldest file.. ");
     File file = SD.open("/");
     int oldest = 99999999;          //initialized so that first file detected is oldest file
     while(file.openNextFile()){     //convert filename to number and compare to get the oldest
@@ -290,7 +290,7 @@ void Storage::remove_oldest_file(){
     String path = "/" + String(oldest) + ".txt";    //convert number back to filename
     SD.remove(path);
     log_d("File removed at: ");
-    log_d("%s \r\n", path);
+    log_d("%s ", path);
 }
 
 
@@ -308,10 +308,10 @@ void Storage::remove_oldest_file(){
  */
 String Storage::read_data(){    
     log_d("Reading file: ");
-    log_d("%s \r\n", curr_read_file);
+    log_d("%s ", curr_read_file);
     File file = SD.open(curr_read_file, FILE_READ);
     if(!file){
-        log_e("Failed to open file for reading \r\n");
+        log_e("Failed to open file for reading ");
         return "";
     }
     String toread = "";
@@ -329,12 +329,12 @@ String Storage::read_data(){
             }
         }
         else{
-            log_w("File has no data available to be read! \r\n");
+            log_w("File has no data available to be read! ");
             return "";
         }
     }
     if (!readSt){
-        log_e("No valid data found! \r\n");
+        log_e("No valid data found! ");
         return "";
     }
     else{
@@ -344,7 +344,7 @@ String Storage::read_data(){
                 char c = file.read();
                 curr_chunk_size++;
                 if(curr_chunk_size > MAX_CHUNK_SIZE_B){
-                    log_i("Valid data not found for reading! \r\n");
+                    log_i("Valid data not found for reading! ");
                     curr_chunk_size = 0;
                     return "";
                 }
@@ -356,7 +356,7 @@ String Storage::read_data(){
                 }
             }
             else {  //if end character '>' not found till the end of file then data is corrupted
-                log_e("File ended before data read completed. Data corrupt! \r\n");
+                log_e("File ended before data read completed. Data corrupt! ");
                 curr_chunk_size = 0;
                 return "";
             }
@@ -364,7 +364,7 @@ String Storage::read_data(){
         }
     }
     file.close();
-    log_d("Parsed successfully \r\n");
+    log_d("Parsed successfully ");
     return toread;
 }
 
@@ -401,7 +401,7 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
                 temp = AP.read();
                 if(temp == '<' && max_iter_limit < 10)
                 {
-                    log_d("Start of frame found \r\n");
+                    log_d("Start of frame found ");
                     temp = AP.read();
                     max_iter_limit = 0;
                     read_st = true;
@@ -409,7 +409,7 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
 
                 if(max_iter_limit > 10) // could not find the start of frame
                 {
-                    log_e("Start of frame missing \r\n");
+                    log_e("Start of frame missing ");
                     return;
                 }
                 else
@@ -427,13 +427,13 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
                     max_iter_limit++;
                     if(max_iter_limit >= 40) //username greater than assigned limit. Maybe define global variables??
                     {
-                        log_e("Invalid username \r\n");
+                        log_e("Invalid username ");
                         break;
                     }
                     if(temp == ',')
                     {
                         SSID_rd = true;
-                        log_d("%s \r\n", curr_SSID.c_str());
+                        log_d("%s ", curr_SSID.c_str());
                     }
                 }
                 temp = AP.read();
@@ -444,13 +444,13 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
                     max_iter_limit++;
                     if(max_iter_limit >= 40)
                     {
-                        log_e("Invalid password \r\n");
+                        log_e("Invalid password ");
                         break;
                     }
                     if(temp == '>')
                     {
                         Password_rd = true;
-                        log_d("%s \r\n", curr_Password.c_str());
+                        log_d("%s ", curr_Password.c_str());
                     }
                 }
             }
@@ -461,11 +461,11 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
                     SSID_List[i] = curr_SSID;
                     Password_List[i] = curr_Password;
                     i++;
-                    log_d("New AP returned \r\n");
+                    log_d("New AP returned ");
                 }
                 else
                 {
-                    log_w("Maximum number of APs stored in SD card. Please free up space \r\n");
+                    log_w("Maximum number of APs stored in SD card. Please free up space ");
                 }
                 curr_SSID = "";
                 curr_Password = "";
@@ -476,7 +476,7 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
             }
             if(!AP.available())
             {
-                log_d("End of data reached \r\n");
+                log_d("End of data reached ");
                 break;
             }
         }
@@ -492,10 +492,10 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
  */
 void Storage::mark_data(String timenow){
     String curr_write_file = "/" + timenow + ".txt";
-    log_d("Marking current chunk of data \r\n");
+    log_d("Marking current chunk of data ");
     File file = SD.open(curr_read_file, FILE_READ);
     if(!file){
-        log_e("Failed to open file for marking \r\n");
+        log_e("Failed to open file for marking ");
         return;
     }
     file.seek(curr_read_pos);
@@ -503,7 +503,7 @@ void Storage::mark_data(String timenow){
     if (c == '<'){  
         if ((file.size() - (curr_read_pos + curr_chunk_size) < MIN_CHUNK_SIZE_B) && (curr_write_file != curr_read_file)){      //check if this is the end of file 
             file.close();
-            log_d("File completed! Moving to next file \r\n");
+            log_d("File completed! Moving to next file ");
             String next_filename = next_file(curr_read_file);
             while(!SD.exists(next_filename) && (next_filename < curr_write_file)){
                 next_filename = next_file(next_filename);
@@ -519,7 +519,7 @@ void Storage::mark_data(String timenow){
         }
         file = SD.open("/config.txt", FILE_WRITE);               //save the filename and read position to the config.txt file
         if(!file){
-            log_e("Failed to open file for saving config \r\n");
+            log_e("Failed to open file for saving config ");
             return;
         }
         file.print(curr_read_file);
@@ -527,10 +527,10 @@ void Storage::mark_data(String timenow){
         file.print(String(curr_read_pos));
         file.println("$");
         file.close();
-        log_d("Data marked and config updated! \r\n");
+        log_d("Data marked and config updated! ");
     }   
     else {  //if the start character is not '<' then terminate
-        log_e("Valid data not found for marking \r\n");
+        log_e("Valid data not found for marking ");
     }
 }
 
@@ -555,7 +555,7 @@ long Storage::get_unsent_data(String timenow){
     long filepos;
     File file = SD.open("/config.txt", FILE_READ);
     if(!file){
-        log_e("Failed to open config file \r\n");
+        log_e("Failed to open config file ");
         return 0;
     }
     {   //read filename and file position from config.txt
