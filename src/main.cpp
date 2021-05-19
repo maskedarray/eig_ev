@@ -50,7 +50,7 @@ void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
 int dataflag =0;
 FirebaseData firebaseData;
-enum flags_ {rtc, sd, bt, can};
+enum flags_ {rtc_f, sd_f, bt_f, can_f};
 byte flags[16];
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1, semaStorage1, semaWifi1;
@@ -91,11 +91,15 @@ void setup() {
     }
     else{   //sound alarm and do nothing!
         while(1){
+            flags[can_f] = 0;
             delay(100);
         }
     }
     if(initRTC()){
         digitalWrite(RTC_LED, HIGH);
+    }
+    else{
+        flags[rtc_f] = 0;
     }
     if(storage.init_storage()){
         log_d("storage initialization success!\r\n");

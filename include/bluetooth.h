@@ -17,12 +17,9 @@ private:
    
 
 public:
-<<<<<<< HEAD
-=======
     //BluetoothSerial SerialBT;
     String bluetooth_name;
     String bluetooth_password;
->>>>>>> initsetting
     bool init();
     bool send(String tosend);
     String check_bluetooth();
