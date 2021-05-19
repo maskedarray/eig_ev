@@ -153,7 +153,7 @@ bool ESP_BT::send(String tosend){
     if(isConnected)
     {
         long len = tosend.length();
-        tosend = "%S%" + String(len) + "," + tosend + "%S%";
+        tosend = "%S%" + String(len) + "," + tosend + "%S%\r\n";
         Serial2.write(tosend.c_str());
         return true;
     }
