@@ -2,6 +2,6 @@
 #define __DEFINES_H__
 #include <Arduino.h>
 
-const char *registry_id;
-const char *device_id;
+const char *registry_id = "EV-Registry";
+char *device_id;
 #endif

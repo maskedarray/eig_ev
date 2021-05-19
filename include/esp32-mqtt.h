@@ -55,17 +55,6 @@ String getJwt(){
 }
 
 void setupWifi(){
-  Serial.println("Starting wifi");
-
-  WiFi.mode(WIFI_STA);
-  // WiFi.setSleep(false); // May help with disconnect? Seems to have been removed from WiFi
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED){
-    digitalWrite(2, 0);
-    delay(100);
-  }
-
   configTime(0, 0, ntp_primary, ntp_secondary);
   Serial.println("Waiting on time sync...");
   while (time(nullptr) < 1510644967){
@@ -101,7 +90,6 @@ bool publishTelemetry(String subfolder, const char *data, int length){
 }
 
 void connect(){
-  connectWifi();
   mqtt->mqttConnect();
 }
 
