@@ -48,9 +48,10 @@ void vBlCheck( void *pvParameters );
 void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
-int flag =0;
+int dataflag =0;
 FirebaseData firebaseData;
-
+enum flags_ {rtc, sd, bt, can};
+byte flags[16];
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1, semaStorage1, semaWifi1;
 void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , 
@@ -60,7 +61,7 @@ void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B
     return;
 }
 void IRAM_ATTR test(){
-    flag++;
+    dataflag++;
 }
 
 void setup() {
@@ -87,6 +88,11 @@ void setup() {
     
     if(can.init_can()){
         digitalWrite(CAN_LED, HIGH);
+    }
+    else{   //sound alarm and do nothing!
+        while(1){
+            delay(100);
+        }
     }
     if(initRTC()){
         digitalWrite(RTC_LED, HIGH);
@@ -203,22 +209,22 @@ void vAcquireData( void *pvParameters ){
             towrite += String("0.234") + ",";           //MCU CURRENT
             towrite += String("34.36") + ",";           //MCU Temperature
             //          B_Slot, B_ID, B_Auth,  B_Age, B_Type , B_M_Cycles, B_U_Cycles , B_Temp, B_SoC, B_SoH, B_RoD, B_Vol , B_Curr
-            if(flag == 0){
-                log_i("currently sending data %d\r\n",flag);
+            if(dataflag == 0){
+                log_i("currently sending data %d\r\n",dataflag);
                 addSlotsData("01", "batt1", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("02", "BATT3", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT5", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("04", "BATT7", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "26.561");//towrite += ",";
             }
-            else if (flag == 1){
-                log_i("currently sending data %d\r\n",flag);
+            else if (dataflag == 1){
+                log_i("currently sending data %d\r\n",dataflag);
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
             }
-            else if (flag ==2){
-                log_i("currently sending data %d\r\n",flag);
+            else if (dataflag ==2){
+                log_i("currently sending data %d\r\n",dataflag);
                 addSlotsData("01", "BATT2", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("02", "BATT4", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT6", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
