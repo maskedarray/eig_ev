@@ -15,13 +15,15 @@
 
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
+//#define RESET_ESP_STORAGE   //Warning: Do not uncomment this line
 #define LED_1   2
-#define EV_ID "LGA8977"
 #define RTC_LED 14
 #define BT_LED 27
 #define STORAGE_LED 26
 #define CAN_LED 25
 #define WIFI_LED 33
+#define FIREBASE_HOST "airqcontrol-dbc92-default-rtdb.firebaseio.com" 
+#define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -32,8 +34,12 @@
 #include <Storage.h>
 #include "ESPWiFi.h"
 #include "esp32-mqtt.h"
-// #include <sys/time.h>
+#include "Preferences.h"
+#include "defines.h"
+#include "FirebaseESP32.h"
 
+Preferences settings__;
+int EV_ID;
 String towrite;
 TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask;
 void vAcquireData( void *pvParameters );
@@ -43,6 +49,7 @@ void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
 int flag =0;
+FirebaseData firebaseData;
 
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1, semaStorage1, semaWifi1;
@@ -59,6 +66,14 @@ void IRAM_ATTR test(){
 void setup() {
     // cmdinit();
     Serial.begin(115200);
+    #ifdef RESET_ESP_STORAGE
+        settings__.begin("ev-app", false);
+        settings__.clear();
+        settings__.end();
+        log_i("Reset ESP Preferences!");
+        delay(500);
+        ESP.restart();
+    #endif
     pinMode(CAN_LED,OUTPUT);
     pinMode(WIFI_LED,OUTPUT);
     pinMode(STORAGE_LED,OUTPUT);
@@ -69,7 +84,7 @@ void setup() {
     digitalWrite(BT_LED, LOW);
     digitalWrite(WIFI_LED, LOW);
     digitalWrite(STORAGE_LED, LOW);
-    bt.init();
+    
     if(can.init_can()){
         digitalWrite(CAN_LED, HIGH);
     }
@@ -88,10 +103,54 @@ void setup() {
     }
     wf.init();
     log_i("initialized wifi successfully\r\n");  
+    {
+        wf.check_connection();
+        settings__.begin("ev-app", false);
+        EV_ID = settings__.getInt("ev-id", 0);
+        String device_id_ = settings__.getString("dev-id","");
+        device_id = new char[30];
+        device_id_.toCharArray(device_id, strlen(device_id_.c_str()) + 1);
+        bt.bluetooth_name = settings__.getString("bt-name", "");
+        bt.bluetooth_password = settings__.getString("bt-pass","");
+        Serial.println(WiFi.macAddress());
+        Serial.println(EV_ID);
+        Serial.println(device_id);
+        Serial.println(bt.bluetooth_name);
+        Serial.println(bt.bluetooth_password);
+        if(EV_ID != 0 && String(device_id) != "" && bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
+            settings__.end();
+        }
+        else{                                       //saved settings not found
+            Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+            Firebase.reconnectWiFi(true);
+            Firebase.setReadTimeout(firebaseData, 1000 * 60);
+            Firebase.setwriteSizeLimit(firebaseData, "small");
+            String mac = WiFi.macAddress();
+            String tmpdevid, tmpbtname, tmpbtpass;
+            if(Firebase.getInt(firebaseData,"/" + mac + "/ev-id", EV_ID))
+                settings__.putInt("ev-id", EV_ID);
+            if(Firebase.getString(firebaseData,"/" + mac + "/bluetooth-name", tmpbtname))
+                settings__.putString("bt-name", tmpbtname); 
+            if(Firebase.getString(firebaseData, "/" + mac + "/bluetooth-pass", tmpbtpass))
+                settings__.putString("bt-pass", tmpbtpass);
+            if(Firebase.getString(firebaseData, "/" + mac + "/gc-device-id", tmpdevid))
+                settings__.putString("dev-id", tmpdevid);
+            Serial.println(EV_ID);
+            Serial.println(tmpbtname);
+            Serial.println(tmpbtpass);
+            Serial.println(tmpdevid);
+
+            settings__.end();
+            Serial.println("restarting");
+            ESP.restart();
+        }
+    }
+    bt.init();
+    delay(5000);    //wait for wifi to initialize
     setupCloudIoT();    //TODO: change this function and add wifi initialization
     log_i("cloud iot setup complete\r\n");
 
-    delay(3000);
+    
     //set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
     attachInterrupt(0, test, FALLING);
 
@@ -106,11 +165,11 @@ void setup() {
     xSemaphoreGive(semaWifi1);
     
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
+    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 3000, NULL, 3, &dataTask1, 1);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 50000, NULL, 1, &wifiTask, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 3000, NULL, 3, &blTask2, 0);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 0);
     
     log_i("created all tasks\r\n");
 }
@@ -219,7 +278,7 @@ void vBlCheck( void *pvParameters ){
         xSemaphoreGive(semaWifi1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
         log_v("Stack usage of blcheck Task: %d\r\n",(int)uxHighWaterMark);
-        vTaskDelayUntil(&xLastWakeTime_2, 0.1*DATA_ACQUISITION_TIME);
+        vTaskDelayUntil(&xLastWakeTime_2, 0.3*DATA_ACQUISITION_TIME);
     }
 } // end vBlCheck
 

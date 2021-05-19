@@ -18,7 +18,7 @@ bool ESP_BT::init(){
     // The following part until the next comment consists of initializations
     // that need to be carried out every time the device starts
     
-    Serial2.begin(9600);
+    Serial2.begin(38400);
     
     String samp;
     isConnected = false; // Connection not established at initialization
@@ -48,7 +48,8 @@ bool ESP_BT::init(){
         log_d("AT Commands work\r\n");
 
         // Set Device Name
-        Serial2.write("AT+NAMELGAadd");
+        String name = "AT+NAME" + this->bluetooth_name;
+        Serial2.write(name.c_str());
         delay(50);
         if(Serial2.available())
         {
@@ -60,7 +61,8 @@ bool ESP_BT::init(){
         }
         
         // Set Device Password
-        Serial2.write("AT+PASS112233");
+        String pass = "AT+PASS" + this->bluetooth_password;
+        Serial2.write(pass.c_str());
         delay(50);
         if(Serial2.available())
         {
@@ -108,18 +110,33 @@ bool ESP_BT::init(){
         }
 
         // Set Device Baud Rate
-        Serial2.write("AT+BAUD0");
+        Serial2.write("AT+BAUD2");
         delay(100);
         if(Serial2.available())
         {
             samp = Serial2.readStringUntil('\n');
         }
-        if(samp.length() > 0 && samp == "OK+Set:0")
+        if(samp.length() > 0 && samp == "OK+Set:2")
         {
             log_d("%s\r\n", samp.c_str());
             Serial2.write("AT+RESET");
             delay(100);
             Serial2.readStringUntil('\n');
+        }
+        Serial2.flush();
+        Serial2.updateBaudRate(38400);
+        Serial2.write("AT");
+        delay(50);
+        log_d("%d", Serial2.baudRate());
+
+        // add a while instead of an if and also include a timeout
+        if(Serial2.available())
+        {
+            samp = Serial2.readStringUntil('\n');
+        }
+        if(samp == "OK")
+        {
+            log_d("AT commands working!");
         }
     }
     log_i("Bluetooth Device is Ready to Pair\r\n");

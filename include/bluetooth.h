@@ -3,7 +3,6 @@
 #include <Arduino.h>
 // #include <BluetoothSerial.h>
 
-#define BLUETOOTH_NAME "EV BT"
 
 /**
  * This library is made to optimize the functionality of the ESP32 bluetooth
@@ -15,9 +14,15 @@
 class ESP_BT {
 private:
     String bt_read();
-    
+   
 
 public:
+<<<<<<< HEAD
+=======
+    //BluetoothSerial SerialBT;
+    String bluetooth_name;
+    String bluetooth_password;
+>>>>>>> initsetting
     bool init();
     bool send(String tosend);
     String check_bluetooth();
