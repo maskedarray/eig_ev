@@ -308,7 +308,7 @@ void Storage::remove_oldest_file(){
  */
 String Storage::read_data(){    
     log_d("Reading file: ");
-    log_d("%s ", curr_read_file);
+    log_d("%s ", curr_read_file.c_str());
     File file = SD.open(curr_read_file, FILE_READ);
     if(!file){
         log_e("Failed to open file for reading ");
