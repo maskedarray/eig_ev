@@ -28,7 +28,7 @@
 // The MQTT callback function for commands and configuration updates
 // Place your message handler code here.
 void messageReceived(String &topic, String &payload){
-  log_i("incoming: " + topic + " - " + payload);
+  log_i("incoming: %s - %s", topic.c_str(), payload.c_str());
 }
 ///////////////////////////////
 
