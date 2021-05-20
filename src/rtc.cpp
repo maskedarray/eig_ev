@@ -78,3 +78,8 @@ String unixTime(){
     DateTime now = rtc.now();
     return String(now.unixtime());
 }
+
+void _set_time(){
+    DateTime now = rtc.now();
+    __esptime.setTime(now.unixtime(),0);
+}

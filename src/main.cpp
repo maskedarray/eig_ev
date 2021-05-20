@@ -90,6 +90,11 @@ void setup() {
     if(initRTC()){
         digitalWrite(RTC_LED, HIGH);
     }
+    _set_time();
+    while(1){
+        Serial.println(__esptime.getDateTime());
+        delay(1000);
+    }
     if(storage.init_storage()){
         log_d("storage initialization success!");
         digitalWrite(STORAGE_LED, HIGH);
