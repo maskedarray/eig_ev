@@ -22,8 +22,8 @@
 #define STORAGE_LED 26
 #define CAN_LED 25
 #define WIFI_LED 33
-#define FIREBASE_HOST "airqcontrol-dbc92-default-rtdb.firebaseio.com" 
-#define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
+#define FIREBASE_HOST "batteryswapstation.firebaseio.com" 
+#define FIREBASE_AUTH "3v7E1QgsqLjEUx5KX1mw6kaj0ONb1IrtJ5HyNxCO" 
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -39,7 +39,6 @@
 #include "FirebaseESP32.h"
 
 Preferences settings__;
-int EV_ID;
 String towrite;
 TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask;
 void vAcquireData( void *pvParameters );
@@ -106,42 +105,30 @@ void setup() {
     {
         wf.check_connection();
         settings__.begin("ev-app", false);
-        EV_ID = settings__.getInt("ev-id", 0);
-        String device_id_ = settings__.getString("dev-id","");
-        device_id = new char[30];
-        device_id_.toCharArray(device_id, strlen(device_id_.c_str()) + 1);
         bt.bluetooth_name = settings__.getString("bt-name", "");
         bt.bluetooth_password = settings__.getString("bt-pass","");
-        Serial.println(WiFi.macAddress());
-        Serial.println(EV_ID);
-        Serial.println(device_id);
-        Serial.println(bt.bluetooth_name);
-        Serial.println(bt.bluetooth_password);
-        if(EV_ID != 0 && String(device_id) != "" && bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
+        EV_ID = bt.bluetooth_name;
+        device_id = new char[30];
+        bt.bluetooth_name.toCharArray(device_id, strlen(bt.bluetooth_name.c_str()) + 1);
+        if(bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
             settings__.end();
+            log_i("Settings found!\r\nbluetooth name: %s\r\n bluetooth password: %s", bt.bluetooth_name.c_str(), bt.bluetooth_password.c_str());
         }
         else{                                       //saved settings not found
+            log_i("Settings not found! Loading from Firebase");
             Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
             Firebase.reconnectWiFi(true);
             Firebase.setReadTimeout(firebaseData, 1000 * 60);
             Firebase.setwriteSizeLimit(firebaseData, "small");
             String mac = WiFi.macAddress();
             String tmpdevid, tmpbtname, tmpbtpass;
-            if(Firebase.getInt(firebaseData,"/" + mac + "/ev-id", EV_ID))
-                settings__.putInt("ev-id", EV_ID);
-            if(Firebase.getString(firebaseData,"/" + mac + "/bluetooth-name", tmpbtname))
+            if(Firebase.getString(firebaseData,"/" + mac + "/bluetoothName", tmpbtname))
                 settings__.putString("bt-name", tmpbtname); 
-            if(Firebase.getString(firebaseData, "/" + mac + "/bluetooth-pass", tmpbtpass))
+            if(Firebase.getString(firebaseData, "/" + mac + "/bluetoothPass", tmpbtpass))
                 settings__.putString("bt-pass", tmpbtpass);
-            if(Firebase.getString(firebaseData, "/" + mac + "/gc-device-id", tmpdevid))
-                settings__.putString("dev-id", tmpdevid);
-            Serial.println(EV_ID);
-            Serial.println(tmpbtname);
-            Serial.println(tmpbtpass);
-            Serial.println(tmpdevid);
-
+            log_i("got data from firebase\r\nbluetooth name: %s\r\n bluetooth password: %s",tmpbtname.c_str(), tmpbtpass.c_str());
             settings__.end();
-            Serial.println("restarting");
+            log_i("restarting");
             ESP.restart();
         }
     }
@@ -196,7 +183,7 @@ void vAcquireData( void *pvParameters ){
             //Dummy acquisition of data
             float randvoltage = 11 + (random(0,2000)/1000.0);
             towrite = "";                               //empty the string
-            towrite += String("18:50") + ",";           //time
+            towrite += String(getTime()) + ",";           //time
             towrite += String(EV_ID) + ",";      //vehicle id
             towrite += String("3000") + ",";            //vehicle rpm
             towrite += String("5.019") + ",";           //MCU voltage
