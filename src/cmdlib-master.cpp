@@ -84,7 +84,7 @@ bool command_3_newConn(String message)
  */
 bool command_5_enterSwap()
 {
-    WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
+/*     WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
     vTaskDelay(10000);
     String ret = "<40,";
     if(WiFi.isConnected() == true){
@@ -114,7 +114,8 @@ bool command_5_enterSwap()
     WiFi.disconnect(false,true);
     ret += ">";
     bt.send(ret);
-    log_i("message sent to master: %s",ret.c_str());
+    log_i("message sent to master: %s",ret.c_str()); */
+    log_i("entered battery swap mode");
     return true;
 };
 
