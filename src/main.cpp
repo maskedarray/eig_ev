@@ -22,8 +22,8 @@
 #define STORAGE_LED 26
 #define CAN_LED 25
 #define WIFI_LED 33
-#define FIREBASE_HOST "airqcontrol-dbc92-default-rtdb.firebaseio.com" 
-#define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
+#define FIREBASE_HOST "batteryswapstation.firebaseio.com" 
+#define FIREBASE_AUTH "3v7E1QgsqLjEUx5KX1mw6kaj0ONb1IrtJ5HyNxCO" 
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
