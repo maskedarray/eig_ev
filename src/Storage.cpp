@@ -503,7 +503,7 @@ void Storage::mark_data(String timenow){
     if (c == '<'){  
         if ((file.size() - (curr_read_pos + curr_chunk_size) < MIN_CHUNK_SIZE_B) && (curr_write_file != curr_read_file)){      //check if this is the end of file 
             file.close();
-            log_d("File completed! Moving to next file ");
+            log_d("File completed! Moving to next file CWF: %s CRF: %s ", curr_write_file.c_str(), curr_read_file.c_str());
             String next_filename = next_file(curr_read_file);
             while(!SD.exists(next_filename) && (next_filename < curr_write_file)){
                 next_filename = next_file(next_filename);

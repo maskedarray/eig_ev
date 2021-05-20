@@ -2,6 +2,7 @@
 #include <RTClib.h>
 
 RTC_DS3231 rtc;
+ESP32Time esp_sys_time;
 //TODO: Update time from internet after a while
 /*
  * Function initRTC initializes RTC and adjusts date and time in case of power loss
@@ -31,17 +32,17 @@ bool initRTC(){
  *       This will reduce the temporary ram usage
  */
 String getTime(){
-    DateTime now = rtc.now();
-    String YYYY = String(now.year(), DEC);
-    String mm = String(now.month(), DEC);
+    tm now = esp_sys_time.getTimeStruct();
+    String YYYY = String(now.tm_year+1900, DEC);
+    String mm = String(now.tm_mon, DEC);
     if (mm.length() == 1){mm = "0" + mm; }
-    String dd = String(now.day(), DEC);
+    String dd = String(now.tm_mday, DEC);
     if (dd.length() == 1){dd = "0" + dd; }
-    String HH = String(now.hour(), DEC);
+    String HH = String(now.tm_hour, DEC);
     if (HH.length() == 1){HH = "0" + HH; }
-    String MM = String(now.minute(), DEC);
+    String MM = String(now.tm_min, DEC);
     if (MM.length() == 1){MM = "0" + MM; }
-    String SS = String(now.second(), DEC);
+    String SS = String(now.tm_sec, DEC);
     if (SS.length() == 1){SS = "0" + SS; }
     return  (YYYY + "-" + mm + "-" + dd + " " + HH + ":" + MM + ":" + SS) ; 
 }
@@ -53,11 +54,11 @@ String getTime(){
  */
 
   String getTime2(){
-    DateTime now = rtc.now();
-    String YYYY = String(now.year(), DEC);
-    String mm = String(now.month(), DEC);
+    tm now = esp_sys_time.getTimeStruct();
+    String YYYY = String(now.tm_year+1900, DEC);
+    String mm = String(now.tm_mon, DEC);
     if (mm.length() == 1){mm = "0" + mm; }
-    String dd = String(now.day(), DEC);
+    String dd = String(now.tm_mday, DEC);
     if (dd.length() == 1){dd = "0" + dd; }
     return YYYY + mm + dd;
   }
@@ -79,7 +80,7 @@ String unixTime(){
     return String(now.unixtime());
 }
 
-void _set_time(){
+void _set_esp_time(){
     DateTime now = rtc.now();
-    __esptime.setTime(now.unixtime(),0);
+    esp_sys_time.setTime(now.unixtime(),0);
 }
