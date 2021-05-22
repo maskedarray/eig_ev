@@ -154,10 +154,10 @@ void setup() {
     xSemaphoreGive(semaWifi1);
     
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 3000, NULL, 3, &dataTask1, 1);
-    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
+    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
+    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 7000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 3000, NULL, 3, &blTask2, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 0);
     
     log_i("created all tasks");
@@ -220,7 +220,7 @@ void vAcquireData( void *pvParameters ){
         xSemaphoreGive(semaStorage1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
         log_v("Stack usage of acquiredata Task: %d",(int)uxHighWaterMark);
-        vTaskDelayUntil(&xLastWakeTime, DATA_ACQUISITION_TIME);    //defines the data acquisition rate
+        vTaskDelayUntil(&xLastWakeTime, 5*DATA_ACQUISITION_TIME);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
 
@@ -267,7 +267,7 @@ void vBlCheck( void *pvParameters ){
         xSemaphoreGive(semaWifi1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
         log_v("Stack usage of blcheck Task: %d",(int)uxHighWaterMark);
-        vTaskDelayUntil(&xLastWakeTime_2, 0.3*DATA_ACQUISITION_TIME);
+        vTaskDelayUntil(&xLastWakeTime_2, 0.5*DATA_ACQUISITION_TIME);
     }
 } // end vBlCheck
 

@@ -18,7 +18,7 @@ bool ESP_BT::init(){
     // The following part until the next comment consists of initializations
     // that need to be carried out every time the device starts
     
-    Serial2.begin(38400);
+    Serial2.begin(115200);
     
     String samp;
     isConnected = false; // Connection not established at initialization
@@ -110,13 +110,13 @@ bool ESP_BT::init(){
         }
 
         // Set Device Baud Rate
-        Serial2.write("AT+BAUD2");
+        Serial2.write("AT+BAUD4");
         delay(100);
         if(Serial2.available())
         {
             samp = Serial2.readStringUntil('\n');
         }
-        if(samp.length() > 0 && samp == "OK+Set:2")
+        if(samp.length() > 0 && samp == "OK+Set:4")
         {
             log_d("%s", samp.c_str());
             Serial2.write("AT+RESET");
@@ -124,7 +124,7 @@ bool ESP_BT::init(){
             Serial2.readStringUntil('\n');
         }
         Serial2.flush();
-        Serial2.updateBaudRate(38400);
+        Serial2.updateBaudRate(115200);
         Serial2.write("AT");
         delay(50);
         log_d("%d", Serial2.baudRate());
@@ -154,7 +154,11 @@ bool ESP_BT::send(String tosend){
     {
         long len = tosend.length();
         tosend = "%S%" + String(len) + "," + tosend + "%S%\r\n";
-        Serial2.write(tosend.c_str());
+        Serial2.write(tosend.substring(0,(int)(len/3)).c_str());
+        vTaskDelay(200);
+        Serial2.write(tosend.substring((int)(len/3),(int)((2*len)/3)).c_str());
+        vTaskDelay(200);
+        Serial2.write(tosend.substring((int)((2*len)/3),len+13).c_str());
         return true;
     }
     else
