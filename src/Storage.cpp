@@ -247,23 +247,11 @@ bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
  * places CSV header on the file
  */
 void Storage::create_header(File file){
-    file.println("Time,BSS_ID,Total_Slots,BSS_Voltage,BSS_Current,BSS_Power,BSS_PowerFactor,"
-                "S1_B_Slot,S1_B_ID,S1_B_Auth,S1_B_Age,S1_B_Type,S1_B_M_Cylcles,S1_B_U_Cylcles,S1_B_Temp,S1_B_SoC,S1_B_SoH,S1_B_RoD,S1_B_Vol,S1_B_Curr,"
-                "S2_B_Slot,S2_B_ID,S2_B_Auth,S2_B_Age,S2_B_Type,S2_B_M_Cylcles,S2_B_U_Cylcles,S2_B_Temp,S2_B_SoC,S2_B_SoH,S2_B_RoD,S2_B_Vol,S2_B_Curr,"
-                "S3_B_Slot,S3_B_ID,S3_B_Auth,S3_B_Age,S3_B_Type,S3_B_M_Cylcles,S3_B_U_Cylcles,S3_B_Temp,S3_B_SoC,S3_B_SoH,S3_B_RoD,S3_B_Vol,S3_B_Curr,"
-                "S4_B_Slot,S4_B_ID,S4_B_Auth,S4_B_Age,S4_B_Type,S4_B_M_Cylcles,S4_B_U_Cylcles,S4_B_Temp,S4_B_SoC,S4_B_SoH,S4_B_RoD,S4_B_Vol,S4_B_Curr,"
-                "S5_B_Slot,S5_B_ID,S5_B_Auth,S5_B_Age,S5_B_Type,S5_B_M_Cylcles,S5_B_U_Cylcles,S5_B_Temp,S5_B_SoC,S5_B_SoH,S5_B_RoD,S5_B_Vol,S5_B_Curr,"
-                "S6_B_Slot,S6_B_ID,S6_B_Auth,S6_B_Age,S6_B_Type,S6_B_M_Cylcles,S6_B_U_Cylcles,S6_B_Temp,S6_B_SoC,S6_B_SoH,S6_B_RoD,S6_B_Vol,S6_B_Curr,"
-                "S7_B_Slot,S7_B_ID,S7_B_Auth,S7_B_Age,S7_B_Type,S7_B_M_Cylcles,S7_B_U_Cylcles,S7_B_Temp,S7_B_SoC,S7_B_SoH,S7_B_RoD,S7_B_Vol,S7_B_Curr,"
-                "S8_B_Slot,S8_B_ID,S8_B_Auth,S8_B_Age,S8_B_Type,S8_B_M_Cylcles,S8_B_U_Cylcles,S8_B_Temp,S8_B_SoC,S8_B_SoH,S8_B_RoD,S8_B_Vol,S8_B_Curr,"
-                "S9_B_Slot,S9_B_ID,S9_B_Auth,S9_B_Age,S9_B_Type,S9_B_M_Cylcles,S9_B_U_Cylcles,S9_B_Temp,S9_B_SoC,S9_B_SoH,S9_B_RoD,S9_B_Vol,S9_B_Curr,"
-                "S10_B_Slot,S10_B_ID,S10_B_Auth,S10_B_Age,S10_B_Type,S10_B_M_Cylcles,S10_B_U_Cylcles,S10_B_Temp,S10_B_SoC,S10_B_SoH,S10_B_RoD,S10_B_Vol,S10_B_Curr,"
-                "S11_B_Slot,S11_B_ID,S11_B_Auth,S11_B_Age,S11_B_Type,S11_B_M_Cylcles,S11_B_U_Cylcles,S11_B_Temp,S11_B_SoC,S11_B_SoH,S11_B_RoD,S11_B_Vol,S11_B_Curr,"
-                "S12_B_Slot,S12_B_ID,S12_B_Auth,S12_B_Age,S12_B_Type,S12_B_M_Cylcles,S12_B_U_Cylcles,S12_B_Temp,S12_B_SoC,S12_B_SoH,S12_B_RoD,S12_B_Vol,S12_B_Curr,"
-                "S13_B_Slot,S13_B_ID,S13_B_Auth,S13_B_Age,S13_B_Type,S13_B_M_Cylcles,S13_B_U_Cylcles,S13_B_Temp,S13_B_SoC,S13_B_SoH,S13_B_RoD,S13_B_Vol,S13_B_Curr,"
-                "S14_B_Slot,S14_B_ID,S14_B_Auth,S14_B_Age,S14_B_Type,S14_B_M_Cylcles,S14_B_U_Cylcles,S14_B_Temp,S14_B_SoC,S14_B_SoH,S14_B_RoD,S14_B_Vol,S14_B_Curr,"
-                "S15_B_Slot,S15_B_ID,S15_B_Auth,S15_B_Age,S15_B_Type,S15_B_M_Cylcles,S15_B_U_Cylcles,S15_B_Temp,S15_B_SoC,S15_B_SoH,S15_B_RoD,S15_B_Vol,S15_B_Curr,"
-                "S16_B_Slot,S16_B_ID,S16_B_Auth,S16_B_Age,S16_B_Type,S16_B_M_Cylcles,S16_B_U_Cylcles,S16_B_Temp,S16_B_SoC,S16_B_SoH,S16_B_RoD,S16_B_Vol,S16_B_Curr");
+    file.println("Time,EV_ID,EV_Voltage,EV_Current,EV_MCU_Rpm,EV_MCU_Temp,"
+                "S1_B_Slot,S1_B_ID,S1_B_U_Cylcles,S1_B_Temp,S1_B_SoC,S1_B_SoH,S1_B_Vol,S1_B_Curr,"
+                "S2_B_Slot,S2_B_ID,S2_B_U_Cylcles,S2_B_Temp,S2_B_SoC,S2_B_SoH,S2_B_Vol,S2_B_Curr,"
+                "S3_B_Slot,S3_B_ID,S3_B_U_Cylcles,S3_B_Temp,S3_B_SoC,S3_B_SoH,S3_B_Vol,S3_B_Curr,"
+                "S4_B_Slot,S4_B_ID,S4_B_U_Cylcles,S4_B_Temp,S4_B_SoC,S4_B_SoH,S4_B_Vol,S4_B_Curr");
     return;
 }
 
