@@ -3,6 +3,7 @@
 
 RTC_DS3231 rtc;
 ESP32Time esp_sys_time;
+ESP32Time __esptime;
 //TODO: Update time from internet after a while
 /*
  * Function initRTC initializes RTC and adjusts date and time in case of power loss

@@ -49,7 +49,7 @@ void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
 int dataflag =0;
 FirebaseData firebaseData;
-enum flags_ {rtc_f, sd_f, bt_f, can_f};
+String EV_ID;
 byte flags[16];
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1, semaStorage1, semaWifi1;
@@ -84,9 +84,11 @@ void setup() {
     digitalWrite(BT_LED, LOW);
     digitalWrite(WIFI_LED, LOW);
     digitalWrite(STORAGE_LED, LOW);
+    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
     
     if(can.init_can()){
         digitalWrite(CAN_LED, HIGH);
+        flags[can_f] = 1;
     }
     else{   //sound alarm and do nothing!
         while(1){
@@ -96,26 +98,26 @@ void setup() {
     }
     if(initRTC()){
         digitalWrite(RTC_LED, HIGH);
+        flags[rtc_f] = 1;
+        _set_esp_time();
     }
     else{
-        flags[rtc_f] = 0;
+        flags[rtc_f] = 0;               //the system time would be 000 from start. The data would be ? I guess 1/1/2000, or maybe 1970..
     }
-    _set_esp_time();
+    
     log_i("ESP system time: %s", esp_sys_time.getDateTime().c_str());
     if(storage.init_storage()){
         log_d("storage initialization success!");
+        flags[sd_f] = 1;
         digitalWrite(STORAGE_LED, HIGH);
     }
-    else{   //TODO: handle when storage connection fails
-        while(1){
-            log_d("storage initialization failed!");
-            delay(1000);
-        }
+    else{
+        flags[sd_f] = 0;
+        log_d("storage initialization failed!");
     }
     wf.init();
     log_i("initialized wifi successfully");  
     {
-        wf.check_connection();
         settings__.begin("ev-app", false);
         bt.bluetooth_name = settings__.getString("bt-name", "");
         bt.bluetooth_password = settings__.getString("bt-pass","");
@@ -128,6 +130,11 @@ void setup() {
         }
         else{                                       //saved settings not found
             log_i("Settings not found! Loading from Firebase");
+            wf.check_connection();
+            while(!WiFi.isConnected()){
+                log_e("No wifi available, waiting for connection");
+                delay(1000);
+            }
             Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
             Firebase.reconnectWiFi(true);
             Firebase.setReadTimeout(firebaseData, 1000 * 60);
@@ -163,7 +170,7 @@ void setup() {
     xSemaphoreGive(semaBlRx1);
     xSemaphoreGive(semaWifi1);
     
-    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
+    
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 7000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);

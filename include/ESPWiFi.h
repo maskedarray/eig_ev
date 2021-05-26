@@ -4,6 +4,7 @@
 #include <WiFiMulti.h> // for multiple APs and connecting to the closest
 #include <Arduino.h>
 #include <Storage.h> // to access APs.txt
+#include <defines.h>
 
 #define DEFAULT_SSID "EiG"
 #define DEFAULT_PASSWORD "12344321"

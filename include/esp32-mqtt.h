@@ -24,6 +24,8 @@
 #include "ciotc_config.h" // Update this file with your configuration
 #include "defines.h"
 
+const char *registry_id = "EV-Registry";
+char *device_id;
 // !!REPLACEME!!
 // The MQTT callback function for commands and configuration updates
 // Place your message handler code here.
