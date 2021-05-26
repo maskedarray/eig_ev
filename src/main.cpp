@@ -22,8 +22,8 @@
 #define STORAGE_LED 26
 #define CAN_LED 25
 #define WIFI_LED 33
-#define FIREBASE_HOST "airqcontrol-dbc92-default-rtdb.firebaseio.com" 
-#define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
+#define FIREBASE_HOST "batteryswapstation.firebaseio.com" 
+#define FIREBASE_AUTH "3v7E1QgsqLjEUx5KX1mw6kaj0ONb1IrtJ5HyNxCO" 
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -39,7 +39,6 @@
 #include "FirebaseESP32.h"
 
 Preferences settings__;
-int EV_ID;
 String towrite;
 TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask;
 void vAcquireData( void *pvParameters );
@@ -54,10 +53,10 @@ enum flags_ {rtc_f, sd_f, bt_f, can_f};
 byte flags[16];
 
 SemaphoreHandle_t semaAqData1, semaBlTx1, semaBlRx1, semaStorage1, semaWifi1;
-void addSlotsData(String B_Slot,String B_ID,String B_Auth, String B_Age,String B_Type ,String B_M_Cycles ,String B_U_Cycles , 
-                    String B_Temp, String B_SoC, String B_SoH, String B_RoC,String B_Vol ,String B_Curr){
-    towrite += B_Slot + "," + B_ID + "," + B_Auth + "," + B_Age + "," + B_Type + "," + B_M_Cycles + "," + 
-            B_U_Cycles + "," + B_Temp + "," + B_SoC + "," + B_SoH + "," + B_RoC + "," + B_Vol + "," + B_Curr;
+void addSlotsData(String B_Slot,String B_ID,String B_U_Cycles , 
+                    String B_Temp, String B_SoC, String B_SoH,String B_Vol ,String B_Curr){
+    towrite += B_Slot + "," + B_ID + "," +
+            B_U_Cycles + "," + B_Temp + "," + B_SoC + "," + B_SoH + "," + B_Vol + "," + B_Curr;
     return;
 }
 void IRAM_ATTR test(){
@@ -101,64 +100,54 @@ void setup() {
     else{
         flags[rtc_f] = 0;
     }
+    _set_esp_time();
+    log_i("ESP system time: %s", esp_sys_time.getDateTime().c_str());
     if(storage.init_storage()){
-        log_d("storage initialization success!\r\n");
+        log_d("storage initialization success!");
         digitalWrite(STORAGE_LED, HIGH);
     }
     else{   //TODO: handle when storage connection fails
         while(1){
-            log_d("storage initialization failed!\r\n");
+            log_d("storage initialization failed!");
             delay(1000);
         }
     }
     wf.init();
-    log_i("initialized wifi successfully\r\n");  
+    log_i("initialized wifi successfully");  
     {
         wf.check_connection();
         settings__.begin("ev-app", false);
-        EV_ID = settings__.getInt("ev-id", 0);
-        String device_id_ = settings__.getString("dev-id","");
-        device_id = new char[30];
-        device_id_.toCharArray(device_id, strlen(device_id_.c_str()) + 1);
         bt.bluetooth_name = settings__.getString("bt-name", "");
         bt.bluetooth_password = settings__.getString("bt-pass","");
-        Serial.println(WiFi.macAddress());
-        Serial.println(EV_ID);
-        Serial.println(device_id);
-        Serial.println(bt.bluetooth_name);
-        Serial.println(bt.bluetooth_password);
-        if(EV_ID != 0 && String(device_id) != "" && bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
+        EV_ID = bt.bluetooth_name;
+        device_id = new char[30];
+        bt.bluetooth_name.toCharArray(device_id, strlen(bt.bluetooth_name.c_str()) + 1);
+        if(bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
             settings__.end();
+            log_i("Settings found!\r\nbluetooth name: %s\r\n bluetooth password: %s", bt.bluetooth_name.c_str(), bt.bluetooth_password.c_str());
         }
         else{                                       //saved settings not found
+            log_i("Settings not found! Loading from Firebase");
             Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
             Firebase.reconnectWiFi(true);
             Firebase.setReadTimeout(firebaseData, 1000 * 60);
             Firebase.setwriteSizeLimit(firebaseData, "small");
             String mac = WiFi.macAddress();
             String tmpdevid, tmpbtname, tmpbtpass;
-            if(Firebase.getInt(firebaseData,"/" + mac + "/ev-id", EV_ID))
-                settings__.putInt("ev-id", EV_ID);
-            if(Firebase.getString(firebaseData,"/" + mac + "/bluetooth-name", tmpbtname))
+            if(Firebase.getString(firebaseData,"/" + mac + "/bluetoothName", tmpbtname))
                 settings__.putString("bt-name", tmpbtname); 
-            if(Firebase.getString(firebaseData, "/" + mac + "/bluetooth-pass", tmpbtpass))
+            if(Firebase.getString(firebaseData, "/" + mac + "/bluetoothPass", tmpbtpass))
                 settings__.putString("bt-pass", tmpbtpass);
-            if(Firebase.getString(firebaseData, "/" + mac + "/gc-device-id", tmpdevid))
-                settings__.putString("dev-id", tmpdevid);
-            Serial.println(EV_ID);
-            Serial.println(tmpbtname);
-            Serial.println(tmpbtpass);
-            Serial.println(tmpdevid);
-
+            log_i("got data from firebase\r\nbluetooth name: %s\r\n bluetooth password: %s",tmpbtname.c_str(), tmpbtpass.c_str());
             settings__.end();
-            Serial.println("restarting");
+            log_i("restarting");
             ESP.restart();
         }
     }
     bt.init();
     delay(5000);    //wait for wifi to initialize
     setupCloudIoT();    //TODO: change this function and add wifi initialization
-    log_i("cloud iot setup complete\r\n");
+    log_i("cloud iot setup complete");
 
     
     //set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
@@ -175,13 +164,13 @@ void setup() {
     xSemaphoreGive(semaWifi1);
     
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
-    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 3000, NULL, 3, &dataTask1, 1);
-    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
+    xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
+    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 7000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 3000, NULL, 3, &blTask2, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 0);
     
-    log_i("created all tasks\r\n");
+    log_i("created all tasks");
 }
 
 void loop() {
@@ -206,33 +195,33 @@ void vAcquireData( void *pvParameters ){
             //Dummy acquisition of data
             float randvoltage = 11 + (random(0,2000)/1000.0);
             towrite = "";                               //empty the string
-            towrite += String("18:50") + ",";           //time
+            towrite += String(getTime()) + ",";           //time
             towrite += String(EV_ID) + ",";      //vehicle id
-            towrite += String("3000") + ",";            //vehicle rpm
             towrite += String("5.019") + ",";           //MCU voltage
             towrite += String("0.234") + ",";           //MCU CURRENT
+            towrite += String("3000") + ",";            //vehicle rpm
             towrite += String("34.36") + ",";           //MCU Temperature
-            //          B_Slot, B_ID, B_Auth,  B_Age, B_Type , B_M_Cycles, B_U_Cycles , B_Temp, B_SoC, B_SoH, B_RoD, B_Vol , B_Curr
+            //          S1_B_Slot, S1_B_ID, S1_B_U_Cylcles, S1_B_Temp, S1_B_SoC, S1_B_SoH, S1_B_Vol, S1_B_Curr,
             if(dataflag == 0){
-                log_i("currently sending data %d\r\n",dataflag);
-                addSlotsData("01", "batt1", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("02", "BATT3", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("03", "BATT5", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("04", "BATT7", "BSS22", "22", "2211", "500", "200", "30", "80", "50", "22", String(randvoltage), "26.561");//towrite += ",";
+                log_i("currently sending data %d",dataflag);
+                addSlotsData("01", "batt1", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("02", "BATT3", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("03", "BATT5", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("04", "BATT7", "30", "80", "50", "22", String(randvoltage), "26.561");//towrite += ",";
             }
             else if (dataflag == 1){
-                log_i("currently sending data %d\r\n",dataflag);
-                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
-                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
-                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
-                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
+                log_i("currently sending data %d",dataflag);
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
+                addSlotsData("0", "0", "0", "0", "0", "0", "0", "0");
             }
             else if (dataflag ==2){
-                log_i("currently sending data %d\r\n",dataflag);
-                addSlotsData("01", "BATT2", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("02", "BATT4", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("03", "BATT6", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("04", "BATT8", "BSS22", "22", "2211", "500", "200", "30", "90", "50", "22", String(randvoltage), "26.561");//towrite += ",";
+                log_i("currently sending data %d",dataflag);
+                addSlotsData("01", "BATT2", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("02", "BATT4", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("03", "BATT6", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("04", "BATT8", "BSS22", "30", "50", "22", String(randvoltage), "26.561");//towrite += ",";
             }
             //Now towrite string contains one valid string of CSV data chunk
         }
@@ -240,8 +229,8 @@ void vAcquireData( void *pvParameters ){
         xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
         xSemaphoreGive(semaStorage1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of acquiredata Task: %d\r\n",(int)uxHighWaterMark);
-        vTaskDelayUntil(&xLastWakeTime, DATA_ACQUISITION_TIME);    //defines the data acquisition rate
+        log_v("Stack usage of acquiredata Task: %d",(int)uxHighWaterMark);
+        vTaskDelayUntil(&xLastWakeTime, 5*DATA_ACQUISITION_TIME);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
 
@@ -262,11 +251,11 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         towrite_cpy = towrite;
         xSemaphoreGive(semaAqData1);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-        log_d("sending data over bluetooth \r\n");
+        log_d("sending data over bluetooth ");
         bt.send(towrite_cpy);
         xSemaphoreGive(semaBlRx1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of bltransfer Task: %d\r\n", (int)uxHighWaterMark);
+        log_v("Stack usage of bltransfer Task: %d", (int)uxHighWaterMark);
     }   //end for
 }   //end vBlTransfer task
 
@@ -287,8 +276,8 @@ void vBlCheck( void *pvParameters ){
         xSemaphoreGive(semaBlRx1);
         xSemaphoreGive(semaWifi1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of blcheck Task: %d\r\n",(int)uxHighWaterMark);
-        vTaskDelayUntil(&xLastWakeTime_2, 0.3*DATA_ACQUISITION_TIME);
+        log_v("Stack usage of blcheck Task: %d",(int)uxHighWaterMark);
+        vTaskDelayUntil(&xLastWakeTime_2, 0.5*DATA_ACQUISITION_TIME);
     }
 } // end vBlCheck
 
@@ -305,7 +294,7 @@ void vStorage( void *pvParameters ){
         }
         xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of Storage Task: %d\r\n",(int)uxHighWaterMark);
+        log_v("Stack usage of Storage Task: %d",(int)uxHighWaterMark);
     }   //end for
 }   //end vStorage task
 
@@ -314,7 +303,7 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         xSemaphoreTake(semaWifi1,portMAX_DELAY);
-        log_v("entering wifi task \r\n");
+        log_v("entering wifi task ");
         if(wf.check_connection() && (storage.get_unsent_data(getTime2()) > 500))
         {
             for(int i=0; i<5; i++){
@@ -328,7 +317,7 @@ void vWifiTransfer( void *pvParameters ){
                     toread = storage.read_data();
                     // toread = "dummy string";
                     if (toread != "" && publishTelemetry(toread)){
-                        log_d("sent data to cloud \r\n");
+                        log_d("sent data to cloud ");
                         storage.mark_data(getTime2());
                     }
                 }
@@ -337,12 +326,12 @@ void vWifiTransfer( void *pvParameters ){
             vTaskDelay(1000);
         }
         else{
-            log_d("Wifi disconnected or no data to be sent! \r\n");
+            log_d("Wifi disconnected or no data to be sent! ");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of Wifi Task: %d\r\n",(int)uxHighWaterMark);
+        log_v("Stack usage of Wifi Task: %d",(int)uxHighWaterMark);
         vTaskDelay(10);
     }   //end for
 }   //end vWifiTransfer task

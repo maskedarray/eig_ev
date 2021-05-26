@@ -28,7 +28,7 @@
 // The MQTT callback function for commands and configuration updates
 // Place your message handler code here.
 void messageReceived(String &topic, String &payload){
-  Serial.println("incoming: " + topic + " - " + payload);
+  log_i("incoming: %s - %s", topic.c_str(), payload.c_str());
 }
 ///////////////////////////////
 
@@ -49,21 +49,21 @@ String getDefaultSensor(){
 
 String getJwt(){
   iat = time(nullptr);
-  Serial.println("Refreshing JWT");
+  log_d("Refreshing JWT");
   jwt = device->createJWT(iat, jwt_exp_secs);
   return jwt;
 }
 
 void setupWifi(){
   configTime(0, 0, ntp_primary, ntp_secondary);
-  Serial.println("Waiting on time sync...");
+  log_i("Waiting on time sync...");
   while (time(nullptr) < 1510644967){
     delay(10);
   }
 }
 
 void connectWifi(){
-  Serial.print("checking wifi...");
+  log_d("checking wifi...");
   while (WiFi.status() != WL_CONNECTED){
     Serial.print(".");
     delay(1000);
