@@ -98,15 +98,6 @@ void setup() {
             delay(100);
         }
     }
-    if(initRTC()){
-        digitalWrite(RTC_LED, HIGH);
-        flags[rtc_f] = 1;
-        _set_esp_time();
-    }
-    else{
-        flags[rtc_f] = 0;               //the system time would be 000 from start. The data would be ? I guess 1/1/2000, or maybe 1970..
-    }
-    
     log_i("ESP system time: %s", esp_sys_time.getDateTime().c_str());
     if(storage.init_storage()){
         log_d("storage initialization success!");
@@ -118,7 +109,16 @@ void setup() {
         log_d("storage initialization failed!");
     }
     wf.init();
+    wf.check_connection();
     log_i("initialized wifi successfully");  
+    if(initRTC()){
+        digitalWrite(RTC_LED, HIGH);
+        flags[rtc_f] = 1;
+        _set_esp_time();
+    }
+    else{
+        flags[rtc_f] = 0;               //the system time would be 000 from start. The data would be ? I guess 1/1/2000, or maybe 1970..
+    }
     {
         settings__.begin("ev-app", false);
         bt.bluetooth_name = settings__.getString("bt-name", "");
@@ -131,7 +131,6 @@ void setup() {
             log_i("Settings found!\r\nbluetooth name: %s\r\n bluetooth password: %s", bt.bluetooth_name.c_str(), bt.bluetooth_password.c_str());
         }
         else{                                       //saved settings not found
-            
             int blinkDelay = 200;   //milliseconds
             xTaskCreatePinnedToCore(vLedBlink, "conf led blink", 1000, (void *)&blinkDelay, 4, &status_blink_handler, 1);
             log_i("Settings not found! Loading from Firebase");
@@ -152,8 +151,91 @@ void setup() {
                 settings__.putString("bt-pass", tmpbtpass);
             log_i("got data from firebase\r\nbluetooth name: %s\r\nbluetooth password: %s",tmpbtname.c_str(), tmpbtpass.c_str());
             settings__.end();
+            
+            Serial2.begin(9600);
+            String samp;
+            Serial2.write("AT");
+            delay(50);
+            if(Serial2.available())  {
+                samp = Serial2.readStringUntil('\n');
+            }
+            if(samp == "OK")  {
+                log_d("AT Commands work");
+                // Set Device Name
+                String name = "AT+NAME" + tmpbtname;
+                Serial2.write(name.c_str());
+                delay(50);
+                if(Serial2.available())  {
+                    samp = Serial2.readStringUntil('\n');
+                }
+                if(samp.length() > 0) {
+                    log_d("%s", samp.c_str());
+                }
+                // Set Device Password
+                String pass = "AT+PASS" + tmpbtpass;
+                Serial2.write(pass.c_str());
+                delay(50);
+                if(Serial2.available())  {
+                    samp = Serial2.readStringUntil('\n');
+                }
+                if(samp.length() > 0) {
+                    log_d("%s ", samp.c_str());
+                }
+                // Set Device Authentication Type
+                Serial2.write("AT+TYPE3");
+                delay(100);
+                if(Serial2.available()) {
+                    samp = Serial2.readStringUntil('\n');
+                }
+                if(samp.length() > 0) {
+                    log_d("%s", samp.c_str());
+                }
+                // Set Service UUID
+                Serial2.write("AT+UUID0xFEED");
+                delay(100);
+                if(Serial2.available()) {
+                    samp = Serial2.readStringUntil('\n');
+                }
+                if(samp.length() > 0) {
+                    log_d("%s", samp.c_str());
+                }
+                // Set Characteristic UUID
+                Serial2.write("AT+CHAR0xBEEF");
+                delay(100);
+                if(Serial2.available()) {
+                    samp = Serial2.readStringUntil('\n');
+                }
+                if(samp.length() > 0) {
+                    log_d("%s", samp.c_str());
+                }
+                // Set Device Baud Rate
+                Serial2.write("AT+BAUD4");
+                delay(100);
+                if(Serial2.available()) {
+                    samp = Serial2.readStringUntil('\n');
+                }
+                if(samp.length() > 0 && samp == "OK+Set:4") {
+                    log_d("%s", samp.c_str());
+                    Serial2.write("AT+RESET");
+                    delay(100);
+                    Serial2.readStringUntil('\n');
+                }
+                Serial2.flush();
+                Serial2.updateBaudRate(115200);
+                Serial2.write("AT");
+                delay(50);
+                log_d("%d", Serial2.baudRate());
+                // add a while instead of an if and also include a timeout
+                if(Serial2.available()) {
+                    samp = Serial2.readStringUntil('\n');
+                }
+                if(samp == "OK") {
+                    log_d("AT commands working!");
+                }
+            }
             log_i("restarting");
             vTaskDelete(status_blink_handler);
+            delay(1000);
             ESP.restart();
         }
     }
@@ -173,6 +255,10 @@ void setup() {
     xSemaphoreGive(semaAqData1);
     xSemaphoreGive(semaBlRx1);
     xSemaphoreGive(semaWifi1);
+    while(1){
+        log_e("here");
+        delay(1000);
+    }
     
     xTaskCreatePinnedToCore(vTimeSync, "Time Sync", 2000, NULL, 1, &timeSyncTask, 1);
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);

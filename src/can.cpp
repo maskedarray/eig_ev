@@ -14,30 +14,33 @@ int cur_batt;
 bool EVCan::init_can(){ 
 
     for(int i = 0; i < 5; i++){
-        if(CAN_OK != mcp_can.begin(CAN_500KBPS))
+        if(CAN_OK != mcp_can.begin(CAN_500KBPS)){
             log_e("CAN bus init failed! ");
+            return false;
+        }
         else{
             log_i("CAN bus initialized! ");
-            byte data[8];
-            data[0] = 0x02;
-            data[1] = 0x00;
-            data[2] = 0x03;
-            data[4] = 0x00;
-            data[5] = 0x00;
-            data[6] = 0x55;
-            data[7] = 0xAA;
-            for (int i= 0; i<16; i++){
-                cur_batt = i;
-                data[3] = i;
-                mcp_can.sendMsgBuf(0x6E0, 0, 8, data);
-                int stime = millis();
-                int ntime = millis();
-                while((ntime - stime) < INIT_REQ_TIMEOUT){
-                    receive_msg();                              //return something to show battery id has been read!
-                    ntime = millis();
-                }
-            }
             return true;
+            // byte data[8];
+            // data[0] = 0x02;
+            // data[1] = 0x00;
+            // data[2] = 0x03;
+            // data[4] = 0x00;
+            // data[5] = 0x00;
+            // data[6] = 0x55;
+            // data[7] = 0xAA;
+            // for (int i= 0; i<16; i++){
+            //     cur_batt = i;
+            //     data[3] = i;
+            //     mcp_can.sendMsgBuf(0x6E0, 0, 8, data);
+            //     int stime = millis();
+            //     int ntime = millis();
+            //     while((ntime - stime) < INIT_REQ_TIMEOUT){
+            //         receive_msg();                              //return something to show battery id has been read!
+            //         ntime = millis();
+            //     }
+            // }
+            // return true;
         }
         delay(500);
     }
