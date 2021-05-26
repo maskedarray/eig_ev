@@ -128,7 +128,7 @@ void setup() {
                 settings__.putString("bt-name", tmpbtname); 
             if(Firebase.getString(firebaseData, "/" + mac + "/bluetoothPass", tmpbtpass))
                 settings__.putString("bt-pass", tmpbtpass);
-            log_i("got data from firebase\r\nbluetooth name: %s\r\n bluetooth password: %s",tmpbtname.c_str(), tmpbtpass.c_str());
+            log_i("got data from firebase\r\nbluetooth name: %s\r\nbluetooth password: %s",tmpbtname.c_str(), tmpbtpass.c_str());
             settings__.end();
             log_i("restarting");
             ESP.restart();
@@ -181,6 +181,7 @@ void vAcquireData( void *pvParameters ){
 
     for(;;){    //infinite loop
         xSemaphoreTake(semaAqData1, portMAX_DELAY); //semaphore to check if sending of data over bluetooth and storage has returned
+        log_i("getting data from CAN");
         {
             //Dummy acquisition of data
             float randvoltage = 11 + (random(0,2000)/1000.0);
@@ -194,10 +195,10 @@ void vAcquireData( void *pvParameters ){
             //          S1_B_Slot, S1_B_ID, S1_B_U_Cylcles, S1_B_Temp, S1_B_SoC, S1_B_SoH, S1_B_Vol, S1_B_Curr,
             if(flag == 0){
                 log_i("currently sending data %d",flag);
-                addSlotsData("01", "batt1", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("02", "BATT3", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("03", "BATT5", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("04", "BATT7", "30", "80", "50", "22", String(randvoltage), "26.561");//towrite += ",";
+                addSlotsData("01", "BATT1", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("02", "BATT3", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("03", "BATT5", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("04", "BATT7", "30", "80", "40", "22", String(randvoltage), "26.561");//towrite += ",";
             }
             else if (flag == 1){
                 log_i("currently sending data %d",flag);
@@ -208,10 +209,10 @@ void vAcquireData( void *pvParameters ){
             }
             else if (flag ==2){
                 log_i("currently sending data %d",flag);
-                addSlotsData("01", "BATT2", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("02", "BATT4", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("03", "BATT6", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("04", "BATT8", "BSS22", "30", "50", "22", String(randvoltage), "26.561");//towrite += ",";
+                addSlotsData("01", "BATT2", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("02", "BATT4", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("03", "BATT6", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("04", "BATT8", "BSS22", "30", "80", "22", String(randvoltage), "26.561");//towrite += ",";
             }
             //Now towrite string contains one valid string of CSV data chunk
         }
@@ -241,7 +242,7 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
         towrite_cpy = towrite;
         xSemaphoreGive(semaAqData1);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-        log_d("sending data over bluetooth ");
+        log_i("sending data over bluetooth ");
         bt.send(towrite_cpy);
         xSemaphoreGive(semaBlRx1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
@@ -257,10 +258,18 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
  */
 void vBlCheck( void *pvParameters ){
     TickType_t xLastWakeTime_2 = xTaskGetTickCount();
+    int _counter = 0;
     for(;;){
         xSemaphoreTake(semaWifi1, portMAX_DELAY);
         xSemaphoreTake(semaBlRx1, portMAX_DELAY);
         {
+            if(_counter < 10){
+                _counter += 1;
+            }
+            else{
+                _counter = 0;
+                log_i("checking bluetooth commands");
+            }
             command_bt();
         }
         xSemaphoreGive(semaBlRx1);
@@ -281,6 +290,7 @@ void vStorage( void *pvParameters ){
         xSemaphoreTake(semaWifi1,portMAX_DELAY);    //wait for wifi transfer task to finish
         {
             storage.write_data(getTime2(), towrite_cpy);
+            log_i("data written to storage");
         }
         xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
@@ -289,6 +299,7 @@ void vStorage( void *pvParameters ){
 }   //end vStorage task
 
 void vWifiTransfer( void *pvParameters ){
+    int _counter = 0;
     for(;;){    //infinite loop
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
@@ -308,15 +319,20 @@ void vWifiTransfer( void *pvParameters ){
                     // toread = "dummy string";
                     if (toread != "" && publishTelemetry(toread)){
                         log_d("sent data to cloud ");
+                        _counter += 1;
                         storage.mark_data(getTime2());
                     }
                 }
+            }
+            if (_counter >= 5 ){
+                _counter = 0;
+                log_i("sent multiple data chunks to cloud");
             }
             xSemaphoreGive(semaWifi1);
             vTaskDelay(1000);
         }
         else{
-            log_d("Wifi disconnected or no data to be sent! ");
+            log_i("Wifi disconnected or no data to be sent! ");
             xSemaphoreGive(semaWifi1);
             vTaskDelay(10000);
         }
