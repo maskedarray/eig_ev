@@ -195,7 +195,11 @@ void vAcquireData( void *pvParameters ){
             //          S1_B_Slot, S1_B_ID, S1_B_U_Cylcles, S1_B_Temp, S1_B_SoC, S1_B_SoH, S1_B_Vol, S1_B_Curr,
             if(flag == 0){
                 log_i("currently sending data %d",flag);
+<<<<<<< HEAD
                 addSlotsData("01", "BATT1", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
+=======
+                addSlotsData("01", "batt1", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
+>>>>>>> 8b4674492548ae2473679c4e85285d151b7cf480
                 addSlotsData("02", "BATT3", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT5", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("04", "BATT7", "30", "80", "40", "22", String(randvoltage), "26.561");//towrite += ",";
