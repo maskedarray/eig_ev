@@ -215,21 +215,12 @@ void vAcquireData( void *pvParameters ){
             towrite += String("3000") + ",";            //vehicle rpm
             towrite += String("34.36") + ",";           //MCU Temperature
             //          S1_B_Slot, S1_B_ID, S1_B_U_Cylcles, S1_B_Temp, S1_B_SoC, S1_B_SoH, S1_B_Vol, S1_B_Curr,
-<<<<<<< HEAD
             if(dataflag == 0){
                 log_i("currently sending data %d",dataflag);
                 addSlotsData("01", "batt1", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("02", "BATT3", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT5", "30", "80", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("04", "BATT7", "30", "80", "50", "22", String(randvoltage), "26.561");//towrite += ",";
-=======
-            if(flag == 0){
-                log_i("currently sending data %d",flag);
-                addSlotsData("01", "batt1", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("02", "BATT3", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("03", "BATT5", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("04", "BATT7", "30", "80", "40", "22", String(randvoltage), "26.561");//towrite += ",";
->>>>>>> master
             }
             else if (dataflag == 1){
                 log_i("currently sending data %d",dataflag);
@@ -238,21 +229,12 @@ void vAcquireData( void *pvParameters ){
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0");towrite += ",";
                 addSlotsData("0", "0", "0", "0", "0", "0", "0", "0");
             }
-<<<<<<< HEAD
             else if (dataflag ==2){
                 log_i("currently sending data %d",dataflag);
                 addSlotsData("01", "BATT2", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("02", "BATT4", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT6", "BSS22", "30", "50", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("04", "BATT8", "BSS22", "30", "50", "22", String(randvoltage), "26.561");//towrite += ",";
-=======
-            else if (flag ==2){
-                log_i("currently sending data %d",flag);
-                addSlotsData("01", "BATT2", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("02", "BATT4", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("03", "BATT6", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
-                addSlotsData("04", "BATT8", "BSS22", "30", "80", "22", String(randvoltage), "26.561");//towrite += ",";
->>>>>>> master
             }
             //Now towrite string contains one valid string of CSV data chunk
         }
