@@ -41,12 +41,14 @@
 Preferences settings__;
 String towrite;
 TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask;
+TaskHandle_t status_blink_handler;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
 void vBlCheck( void *pvParameters );
 void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
+void vLedBlink( void * blinkDelay); 
 int dataflag =0;
 FirebaseData firebaseData;
 String EV_ID;
@@ -86,7 +88,7 @@ void setup() {
     digitalWrite(STORAGE_LED, LOW);
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
     
-    if(can.init_can()){
+    if(can.init_can()){             //true if initialize success and TODO: battery ids read
         digitalWrite(CAN_LED, HIGH);
         flags[can_f] = 1;
     }
@@ -101,8 +103,13 @@ void setup() {
         flags[rtc_f] = 1;
         _set_esp_time();
     }
+<<<<<<< Updated upstream
     else{
         flags[rtc_f] = 0;               //the system time would be 000 from start. The data would be ? I guess 1/1/2000, or maybe 1970..
+=======
+    else{                   //the system time would be dummy.
+        flags[rtc_f] = 0;
+>>>>>>> Stashed changes
     }
     
     log_i("ESP system time: %s", esp_sys_time.getDateTime().c_str());
@@ -129,6 +136,9 @@ void setup() {
             log_i("Settings found!\r\nbluetooth name: %s\r\n bluetooth password: %s", bt.bluetooth_name.c_str(), bt.bluetooth_password.c_str());
         }
         else{                                       //saved settings not found
+            
+            int blinkDelay = 200;   //milliseconds
+            xTaskCreatePinnedToCore(vLedBlink, "conf led blink", 1000, (void *)&blinkDelay, 4, &status_blink_handler, 1);
             log_i("Settings not found! Loading from Firebase");
             wf.check_connection();
             while(!WiFi.isConnected()){
@@ -148,6 +158,7 @@ void setup() {
             log_i("got data from firebase\r\nbluetooth name: %s\r\n bluetooth password: %s",tmpbtname.c_str(), tmpbtpass.c_str());
             settings__.end();
             log_i("restarting");
+            vTaskDelete(status_blink_handler);
             ESP.restart();
         }
     }
@@ -358,5 +369,16 @@ void vStatusLed( void * pvParameters){
             digitalWrite(WIFI_LED,LOW);
         }
         vTaskDelay(50);
+    }
+}
+
+void vLedBlink( void * blinkDelay){ 
+    for (;;){
+        digitalWrite(CAN_LED, !digitalRead(CAN_LED));
+        digitalWrite(RTC_LED, !digitalRead(RTC_LED));
+        digitalWrite(BT_LED, !digitalRead(BT_LED));
+        digitalWrite(WIFI_LED, !digitalRead(WIFI_LED));
+        digitalWrite(STORAGE_LED, !digitalRead(STORAGE_LED));
+        vTaskDelay(*(int*)blinkDelay);
     }
 }
