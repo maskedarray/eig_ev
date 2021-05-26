@@ -11,7 +11,7 @@
 
 //TODO: handle the problem when semaphore is not available within the defined time. and also define the blocking time
 //TODO: OPTIMIZATION: convert String to c string.
-//TODO: optimization of data that is to be saved and sent
+
 
 #define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
@@ -40,7 +40,7 @@
 
 Preferences settings__;
 String towrite;
-TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask;
+TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask, timeSyncTask;
 TaskHandle_t status_blink_handler;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
@@ -49,6 +49,7 @@ void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
 void vLedBlink( void * blinkDelay); 
+void vTimeSync( void * pvParameters);
 int dataflag =0;
 FirebaseData firebaseData;
 String EV_ID;
@@ -86,7 +87,6 @@ void setup() {
     digitalWrite(BT_LED, LOW);
     digitalWrite(WIFI_LED, LOW);
     digitalWrite(STORAGE_LED, LOW);
-    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
     
     if(can.init_can()){             //true if initialize success and TODO: battery ids read
         digitalWrite(CAN_LED, HIGH);
@@ -103,13 +103,8 @@ void setup() {
         flags[rtc_f] = 1;
         _set_esp_time();
     }
-<<<<<<< Updated upstream
     else{
         flags[rtc_f] = 0;               //the system time would be 000 from start. The data would be ? I guess 1/1/2000, or maybe 1970..
-=======
-    else{                   //the system time would be dummy.
-        flags[rtc_f] = 0;
->>>>>>> Stashed changes
     }
     
     log_i("ESP system time: %s", esp_sys_time.getDateTime().c_str());
@@ -163,10 +158,8 @@ void setup() {
         }
     }
     bt.init();
-    delay(5000);    //wait for wifi to initialize
     setupCloudIoT();    //TODO: change this function and add wifi initialization
     log_i("cloud iot setup complete");
-
     
     //set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
     attachInterrupt(0, test, FALLING);
@@ -181,7 +174,8 @@ void setup() {
     xSemaphoreGive(semaBlRx1);
     xSemaphoreGive(semaWifi1);
     
-    
+    xTaskCreatePinnedToCore(vTimeSync, "Time Sync", 2000, NULL, 1, &timeSyncTask, 1);
+    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 7000, NULL, 2, &storageTask, 1);
     xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
@@ -380,5 +374,24 @@ void vLedBlink( void * blinkDelay){
         digitalWrite(WIFI_LED, !digitalRead(WIFI_LED));
         digitalWrite(STORAGE_LED, !digitalRead(STORAGE_LED));
         vTaskDelay(*(int*)blinkDelay);
+    }
+}
+
+void vTimeSync( void * pvParameters ){
+    for (;;){
+        if(time(nullptr) < 1609441200)      //system time is not adjusted
+        {    
+            while(time(nullptr) < 1609441200)   //time less than 1 Jan 2021 12:00 AM
+            {
+                vTaskDelay(1000);
+                log_e("waiting for time update from ntp server");
+            }
+            //system time is adjusted set rtc now
+        }
+        if(!flags[rtc_f]){
+            log_i("setting rtc time now");
+            setRtcTime();
+        }
+        vTaskDelay(3600000);       //1 hour
     }
 }
