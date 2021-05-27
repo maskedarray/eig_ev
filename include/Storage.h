@@ -19,7 +19,6 @@ class Storage {
 private:
     bool resume;
     long curr_read_pos;
-    String curr_read_file;
     int curr_chunk_size;
     bool mount_success;
     void remove_oldest_file();
@@ -37,6 +36,7 @@ public:
     void return_APList(String SSID[10], String Password[10]); // Return String arrays for SSIDs and Passwords
     void mark_data(String timenow);
     long get_unsent_data(String timenow);       //return unsent data in MBs
+    String curr_read_file;
 };
 
 extern Storage storage;

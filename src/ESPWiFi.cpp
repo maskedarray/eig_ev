@@ -59,10 +59,6 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
             log_e("Failed to connect. Please check SSID and Password");
             return false;
         }
-        digitalWrite(LED_BUILTIN, HIGH);
-        vTaskDelay(500);
-        digitalWrite(LED_BUILTIN, LOW);
-        vTaskDelay(500);
         timer += 1;
     }
 

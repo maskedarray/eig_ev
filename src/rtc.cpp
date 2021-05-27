@@ -82,6 +82,10 @@ void _set_esp_time(){
     esp_sys_time.setTime(now.unixtime(),0);
 }
 
+void _set_esp_time(int yr, int mn, int dy){
+    esp_sys_time.setTime(0,0,0,dy,mn,yr,0);
+}
+
 void setRtcTime(){
     tm now = esp_sys_time.getTimeStruct();
     rtc.adjust(DateTime(now.tm_year, now.tm_mon +1, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec));

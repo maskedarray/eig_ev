@@ -267,7 +267,7 @@ void Storage::remove_oldest_file(){
     int oldest = 99999999;          //initialized so that first file detected is oldest file
     while(file.openNextFile()){     //convert filename to number and compare to get the oldest
         String name = file.name();
-        if (name != "/config.txt"){  //do not check the config.txt file
+        if (name != "/config.txt" && name != "/APs.txt"){  //do not check the config.txt file
             name.remove(0,1);
             int temp = name.toInt();
             if (temp < oldest)

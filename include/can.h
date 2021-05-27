@@ -2,7 +2,7 @@
 #define __CAN_H__
 #include <Arduino.h>
 
-#define MCP2515_CSPIN 32
+#define MCP2515_CSPIN 2
 #define INIT_REQ_TIMEOUT 1000   //milliseconds
 
 struct EvData{
