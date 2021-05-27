@@ -59,7 +59,11 @@ void addSlotsData(String B_Slot,String B_ID,String B_U_Cycles ,
     return;
 }
 void IRAM_ATTR test(){
-    flag++;
+    static unsigned long prev_interrupt_time;
+    unsigned long interrupt_time = millis();
+    if(interrupt_time - prev_interrupt_time > 500){
+        flag++;
+    }
 }
 
 void setup() {
@@ -195,7 +199,7 @@ void vAcquireData( void *pvParameters ){
             //          S1_B_Slot, S1_B_ID, S1_B_U_Cylcles, S1_B_Temp, S1_B_SoC, S1_B_SoH, S1_B_Vol, S1_B_Curr,
             if(flag == 0){
                 log_i("currently sending data %d",flag);
-                addSlotsData("01", "batt1", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
+                addSlotsData("01", "BATT1", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("02", "BATT3", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT5", "30", "80", "40", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("04", "BATT7", "30", "80", "40", "22", String(randvoltage), "26.561");//towrite += ",";
@@ -213,6 +217,9 @@ void vAcquireData( void *pvParameters ){
                 addSlotsData("02", "BATT4", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("03", "BATT6", "BSS22", "30", "80", "22", String(randvoltage), "20.561");towrite += ",";
                 addSlotsData("04", "BATT8", "BSS22", "30", "80", "22", String(randvoltage), "26.561");//towrite += ",";
+            }
+            else if (flag >=3 ){
+                flag = 0;
             }
             //Now towrite string contains one valid string of CSV data chunk
         }
