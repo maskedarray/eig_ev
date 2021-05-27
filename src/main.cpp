@@ -84,9 +84,9 @@ void setup() {
     digitalWrite(WIFI_LED, LOW);
     digitalWrite(STORAGE_LED, LOW);
     
-    if(can.init_can()){
-        digitalWrite(CAN_LED, HIGH);
-    }
+    // if(can.init_can()){
+    //     digitalWrite(CAN_LED, HIGH);
+    // }
     if(initRTC()){
         digitalWrite(RTC_LED, HIGH);
     }
