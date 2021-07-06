@@ -22,12 +22,13 @@
 #include <CloudIoTCore.h>
 #include <CloudIoTCoreMqtt.h>
 #include "ciotc_config.h" // Update this file with your configuration
+#include "defines.h"
 
 // !!REPLACEME!!
 // The MQTT callback function for commands and configuration updates
 // Place your message handler code here.
 void messageReceived(String &topic, String &payload){
-  Serial.println("incoming: " + topic + " - " + payload);
+  log_i("incoming: %s - %s", topic.c_str(), payload.c_str());
 }
 ///////////////////////////////
 
@@ -48,32 +49,21 @@ String getDefaultSensor(){
 
 String getJwt(){
   iat = time(nullptr);
-  Serial.println("Refreshing JWT");
+  log_d("Refreshing JWT");
   jwt = device->createJWT(iat, jwt_exp_secs);
   return jwt;
 }
 
 void setupWifi(){
-  Serial.println("Starting wifi");
-
-  WiFi.mode(WIFI_STA);
-  // WiFi.setSleep(false); // May help with disconnect? Seems to have been removed from WiFi
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED){
-    digitalWrite(2, 0);
-    delay(100);
-  }
-
   configTime(0, 0, ntp_primary, ntp_secondary);
-  Serial.println("Waiting on time sync...");
+  log_i("Waiting on time sync...");
   while (time(nullptr) < 1510644967){
     delay(10);
   }
 }
 
 void connectWifi(){
-  Serial.print("checking wifi...");
+  log_d("checking wifi...");
   while (WiFi.status() != WL_CONNECTED){
     Serial.print(".");
     delay(1000);
@@ -100,7 +90,6 @@ bool publishTelemetry(String subfolder, const char *data, int length){
 }
 
 void connect(){
-  connectWifi();
   mqtt->mqttConnect();
 }
 

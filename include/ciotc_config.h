@@ -21,8 +21,7 @@ const char *password = "12344321";
 // Cloud iot details.
 const char *project_id = "batteryswapstation";
 const char *location = "us-central1";
-const char *registry_id = "registry-esp32";
-const char *device_id = "device-esp32";
+
 
 // Configuration for NTP
 const char* ntp_primary = "pool.ntp.org";
