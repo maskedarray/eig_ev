@@ -379,6 +379,7 @@ bool ESP_BT::check_bluetooth()
                 // NOTE: this will probably cause problems on the phone side since
                 // the data isn't changing (we'll see it when we cross that bridge)
                 pChr->setValue((uint8_t *)tosend.c_str(), tosend.length()+1);
+                this->commandInQueue = false;
                 return true;
             }
         }
