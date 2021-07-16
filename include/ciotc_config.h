@@ -23,10 +23,6 @@ const char *project_id = "batteryswapstation";
 const char *location = "us-central1";
 
 
-// Configuration for NTP
-const char* ntp_primary = "pool.ntp.org";
-const char* ntp_secondary = "time.nist.gov";
-
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 13
 #endif

@@ -24,6 +24,8 @@
 #include "ciotc_config.h" // Update this file with your configuration
 #include "defines.h"
 
+const char *registry_id = "EV-Registry";
+char *device_id;
 // !!REPLACEME!!
 // The MQTT callback function for commands and configuration updates
 // Place your message handler code here.
@@ -54,13 +56,6 @@ String getJwt(){
   return jwt;
 }
 
-void setupWifi(){
-  configTime(0, 0, ntp_primary, ntp_secondary);
-  log_i("Waiting on time sync...");
-  while (time(nullptr) < 1510644967){
-    delay(10);
-  }
-}
 
 void connectWifi(){
   log_d("checking wifi...");
@@ -98,7 +93,6 @@ void setupCloudIoT(){
       project_id, location, registry_id, device_id,
       private_key_str);
 
-  setupWifi();
   netClient = new WiFiClientSecure();
   mqttClient = new MQTTClient(6000); // number of characters 
   mqttClient->setOptions(180, true, 1000); // keepAlive, cleanSession, timeout

@@ -17,21 +17,12 @@ bool ESP_BT::init(){
     
     // The following part until the next comment consists of initializations
     // that need to be carried out every time the device starts
-    
     Serial2.begin(115200);
-    
     String samp;
     isConnected = false; // Connection not established at initialization
-
     delay(50);
-
-    // The following initializations need only be called once as the module
-    // saves these settings 
-
     // TODO: Add a check for if the device has set up the module in order to run
     // the following part only once
-
-    // TODO: Add parameters for the name and password
 
     //Check if AT Commands are working
     Serial2.write("AT");
@@ -43,101 +34,17 @@ bool ESP_BT::init(){
     {
         samp = Serial2.readStringUntil('\n');
     }
+    else{
+        log_e("error in bluetooth");
+        return false;
+    }
     if(samp == "OK")
     {
         log_d("AT Commands work");
-
-        // Set Device Name
-        String name = "AT+NAME" + this->bluetooth_name;
-        Serial2.write(name.c_str());
-        delay(50);
-        if(Serial2.available())
-        {
-            samp = Serial2.readStringUntil('\n');
-        }
-        if(samp.length() > 0)
-        {
-            log_d("%s", samp.c_str());
-        }
-        
-        // Set Device Password
-        String pass = "AT+PASS" + this->bluetooth_password;
-        Serial2.write(pass.c_str());
-        delay(50);
-        if(Serial2.available())
-        {
-            samp = Serial2.readStringUntil('\n');
-        }
-        if(samp.length() > 0)
-        {
-            log_d("%s ", samp.c_str());
-        }
-
-        // Set Device Authentication Type
-        Serial2.write("AT+TYPE3");
-        delay(100);
-        if(Serial2.available())
-        {
-            samp = Serial2.readStringUntil('\n');
-        }
-        if(samp.length() > 0)
-        {
-            log_d("%s", samp.c_str());
-        }
-
-        // Set Service UUID
-        Serial2.write("AT+UUID0xFEED");
-        delay(100);
-        if(Serial2.available())
-        {
-            samp = Serial2.readStringUntil('\n');
-        }
-        if(samp.length() > 0)
-        {
-            log_d("%s", samp.c_str());
-        }
-
-        // Set Characteristic UUID
-        Serial2.write("AT+CHAR0xBEEF");
-        delay(100);
-        if(Serial2.available())
-        {
-            samp = Serial2.readStringUntil('\n');
-        }
-        if(samp.length() > 0)
-        {
-            log_d("%s", samp.c_str());
-        }
-
-        // Set Device Baud Rate
-        Serial2.write("AT+BAUD4");
-        delay(100);
-        if(Serial2.available())
-        {
-            samp = Serial2.readStringUntil('\n');
-        }
-        if(samp.length() > 0 && samp == "OK+Set:4")
-        {
-            log_d("%s", samp.c_str());
-            Serial2.write("AT+RESET");
-            delay(100);
-            Serial2.readStringUntil('\n');
-        }
-        Serial2.flush();
-        Serial2.updateBaudRate(115200);
-        Serial2.write("AT");
-        delay(50);
-        log_d("%d", Serial2.baudRate());
-
-        // add a while instead of an if and also include a timeout
-        if(Serial2.available())
-        {
-            samp = Serial2.readStringUntil('\n');
-        }
-        if(samp == "OK")
-        {
-            log_d("AT commands working!");
-        }
+    }
+    else{
+        log_e("error in bluetooth");
+        return false;
     }
     log_i("Bluetooth Device is Ready to Pair");
     return true;

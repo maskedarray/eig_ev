@@ -21,7 +21,12 @@ void ESP_WiFi::update_APs()
 {
     int i = 0;
     //String SSIDs[10]; String Passwords[10];
-    storage.return_APList(SSID_List, Password_List);
+    if(flags[sd_f]){
+        storage.return_APList(SSID_List, Password_List);
+    }   else{
+        SSID_List[0] = DEFAULT_SSID;
+        Password_List[0] = DEFAULT_PASSWORD;
+    }
     access_points = new WiFiMulti();
     while(!SSID_List[i].isEmpty() && i < 10)
     {
@@ -54,10 +59,6 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
             log_e("Failed to connect. Please check SSID and Password");
             return false;
         }
-        digitalWrite(LED_BUILTIN, HIGH);
-        vTaskDelay(500);
-        digitalWrite(LED_BUILTIN, LOW);
-        vTaskDelay(500);
         timer += 1;
     }
 
@@ -80,13 +81,21 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
         SSID_List[1] = (String) SSID;
         Password_List[1] = (String) Password;
         credential_length = 2;
-        if(remake_access_points() && storage.rewrite_storage_APs(SSID_List, Password_List))
+        if(remake_access_points())
         {
+            if(flags[sd_f]){
+                if(storage.rewrite_storage_APs(SSID_List, Password_List))
+                    return true;
+                else{
+                    log_e("Failed to rewrite storage APs");
+                    return false;
+                }
+            }
             return true;
         }
         else
         {
-            log_e("Failed to rewrite storage APs or remake access points ");
+            log_e("Failed to remake access points");
             return false;
         }
     }
@@ -114,17 +123,20 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
                 Password_List[i] = (String) Password;
                 if(remake_access_points())
                 {
-                    if(storage.rewrite_storage_APs(SSID_List, Password_List))
-                        return true;
-                    else
-                        log_e("Error in rewriting storage APs ");
+                    if(flags[sd_f]){
+                        if(storage.rewrite_storage_APs(SSID_List, Password_List))
+                            return true;
+                        else
+                            log_e("Error in rewriting storage APs ");
+                    }
                 }
                 else
                     log_e("error in remaking access points ");
             }
         }
     }
-    storage.write_AP(SSID, Password); // Add to storage
+    if(flags[sd_f])
+        storage.write_AP(SSID, Password); // Add to storage
     access_points->addAP(SSID, Password); // Add to WiFiMulti Class
     credential_length++; // Add to credential length
     return true;

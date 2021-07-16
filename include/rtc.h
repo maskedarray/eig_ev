@@ -10,5 +10,7 @@ String getTime2();
 String unixTime();
 String getNextDay(int,int,int);
 void _set_esp_time();
+void _set_esp_time(int,int,int);
+void setRtcTime();
 
 #endif
