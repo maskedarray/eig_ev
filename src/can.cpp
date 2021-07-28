@@ -5,12 +5,12 @@ MCP_CAN mcp_can(MCP2515_CSPIN);
 int cur_batt;
 
 /**
- * Initializes CAN module. The speed of CAN and other parameters are decided by 
- * the standard kept by Koreans. The intialization is tried 5 times. 
+ * @brief Initializes CAN module. The speed of CAN and other parameters are decided by 
+ * the standard kept by Koreans. The intialization is tried 5 times.
  * 
- * @return 1 if initialization is successful and 0 if it fails.
+ * @return true if successful
+ * @return false otherwise
  */
-
 bool EVCan::init_can(){ 
 
     for(int i = 0; i < 5; i++){
@@ -44,21 +44,21 @@ bool EVCan::init_can(){
     return false;
 }
 
-/**
- * Sends message on CAN bus
- * 
- * It is only for emulation of CAN protocol developed by the Koreans. It is 
- * only used in hardware for emulation. This function sends data on CAN bus according to 
- * standard defined by Koreans.
- * 
- * @param[in] id: 11 bit ID in hex
- * @param[in] soc: state of charge. ranges from 0-100. resolution 1.
- * @param[in] hi_temp: BMS high temperature. ranges from -40-120. resolution 1.
- * @param[in] lo_temp: BMS low temperature. ranges from -40-120. resolution 1.
- * @param[in] voltage: BMS voltage ranges from 0.0 - 500.0. resolution 0.1.
- * @param[in] current: BMS current. ranges from -350.0 - 350.0. resolution 0.1. 
- */
 
+/**
+ * @brief Sends message on CAN bus
+ *
+ * It is only for emulation of CAN protocol developed by the Koreans. It is only
+ * used in hardware for emulation. This function sends data on CAN bus according
+ * to standard defined by Koreans.
+ *
+ * @param id 11 bit ID in hex
+ * @param soc state of charge. ranges from 0-100. resolution 1.
+ * @param hi_temp BMS high temperature. ranges from -40-120. resolution 1.
+ * @param lo_temp BMS low temperature. ranges from -40-120. resolution 1.
+ * @param voltage BMS voltage ranges from 0.0 - 500.0. resolution 0.1.
+ * @param current BMS current. ranges from -350.0 - 350.0. resolution 0.1.
+ */
 void EVCan::send_msg(uint16_t id, float soc, float hi_temp, float lo_temp, float voltage, float current){
     switch (id)
     {
@@ -83,15 +83,16 @@ void EVCan::send_msg(uint16_t id, float soc, float hi_temp, float lo_temp, float
 }
 
 /**
- * Reads data from CAN bus
+ * @brief Reads data from CAN bus
+ *
+ * First, it checks if data is available to be read. If there is data available
+ * then it reads data according to prestored ids as provided by Koreans. It does
+ * not return the data rather it updates the variables in the class object
+ * itself.
  * 
- * First, it checks if data is available to be read. If there is data available then
- * it reads data according to prestored ids as provided by Koreans. It does not return 
- * the data rather it updates the variables in the class object itself.
- * 
- * @return 1 if data is read according to valid id or 0 if no data is found or id is invalid.
+ * @return true if data is read according to valid id
+ * @return false if no data is found or id is invalid
  */
-
 bool EVCan::receive_msg(void){
     bool read_success = false;
     byte data[8];
@@ -120,6 +121,12 @@ bool EVCan::receive_msg(void){
     return read_success;
 }
 
+/**
+ * @brief sets the values of the variables in the evdata struct using the data
+ * received via the CAN bus 
+ *
+ * @param data data received CAN 
+ */
 void EVCan::mcu_message(byte data[8]){
     switch(data[0]){
         case 0x80:
@@ -135,6 +142,13 @@ void EVCan::mcu_message(byte data[8]){
     }
 }
 
+/**
+ * @brief sets the utilized cycles of the batteries in the BSS via the CAN data
+ * received
+ * 
+ * @param id battery slot
+ * @param data data from CAN
+ */
 void EVCan::ucycle_message(uint16_t id, byte data[8]){
     switch(id){
         case 0x6C0:
@@ -189,6 +203,14 @@ void EVCan::ucycle_message(uint16_t id, byte data[8]){
             break;
     }
 }
+
+/**
+ * @brief sets the current, voltage, state of charge and temperature (CVTS) of
+ * each battery using the CAN data received
+ *
+ * @param id battery slot
+ * @param data data from CAN
+ */
 void EVCan::cvts_message(uint16_t id, byte data[8]){
     switch(id){
         case 0x610:
@@ -291,6 +313,14 @@ void EVCan::cvts_message(uint16_t id, byte data[8]){
             break;
     }
 }
+
+/**
+ * @brief sets the state of health of each battery in the BSS using the CAN data
+ * received
+ *
+ * @param id battery slot
+ * @param data data from CAN
+ */
 void EVCan::soh_message(uint16_t id, byte data[8]){
     switch(id){
         case 0x620:
@@ -345,6 +375,14 @@ void EVCan::soh_message(uint16_t id, byte data[8]){
             break;
     }
 }
+
+/**
+ * @brief updates the battery ID in each battery slot in the BSS according to
+ * the data received from the CAN bus
+ *
+ * @param id battery slot
+ * @param data data from CAN
+ */
 void EVCan::bid_message(uint16_t id, byte data[8]){
     switch(id){
         case 0x6F1:

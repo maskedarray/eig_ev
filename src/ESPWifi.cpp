@@ -1,9 +1,16 @@
 #include <ESPWiFi.h>
-//TODO: optimize wifi reconnection time. 
+
 /**
- * This function initializes the ESP wifi module with the requisite
+ * TODO: optimize wifi reconnection time. 
+ */
+
+/**
+ * @brief This function initializes the ESP wifi module with the requisite
  * configurations. It attempts to connect to a default SSID and password and
  * also updates the vector for APs in the WiFiMulti class.
+ *
+ * @return true if successful
+ * @return false otherwise
  */
 bool ESP_WiFi::init()
 {
@@ -13,9 +20,10 @@ bool ESP_WiFi::init()
 }
 
 /**
- * This function adds new APs to the WiFiMulti class. This should only be called
- * on the first initialization as it may result in multiple instances of the
- * same credentials in the vector.
+ * @brief This function adds new APs to the WiFiMulti class. This should only be
+ * called on the first initialization as it may result in multiple instances of
+ * the same credentials in the vector.
+ *
  */
 void ESP_WiFi::update_APs()
 {
@@ -36,10 +44,15 @@ void ESP_WiFi::update_APs()
 }
 
 /**
- * This function adds a new connection to the vector in the WiFiMulti class and
- * the text file for APs in the Sd card. In the situation that the SSID sent is
- * the same as one that already exists, the function will either fail if the
- * password is the same or update the specific entry if not.
+ * @brief This function adds a new connection to the vector in the WiFiMulti
+ * class and the text file for APs in the Sd card. In the situation that the
+ * SSID sent is the same as one that already exists, the function will either
+ * fail if the password is the same or update the specific entry if not.
+ * 
+ * @param SSID the SSID of the new AP
+ * @param Password the Password of the new AP
+ * @return true if successful
+ * @return false otherwise
  */
 bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
 {
@@ -130,11 +143,13 @@ bool ESP_WiFi::create_new_connection(const char *SSID, const char *Password)
     return true;
 }
 
-
 /**
- * This function serves to destroy and recreate a WiFiMulti class in order to
- * change the list of APs. This is done as the AP list (vector) is a private
- * variable
+ * @brief This function serves to destroy and recreate a WiFiMulti class in
+ * order to change the list of APs. This is done as the AP list (vector) is a
+ * private variable
+ *
+ * @return true if successful
+ * @return false otherwise
  */
 bool ESP_WiFi::remake_access_points()
 {
@@ -150,9 +165,12 @@ bool ESP_WiFi::remake_access_points()
     return true;
 }
 
-
 /**
- * This fucntion is used to connect to the nearest available access point.
+ * @brief This function is used to connect to the nearest available access
+ * point.
+ *
+ * @return true if successful
+ * @return false otherwise
  */
 bool ESP_WiFi::connect_to_nearest()
 {
@@ -170,9 +188,9 @@ bool ESP_WiFi::connect_to_nearest()
  * @brief This function is a wrapper function which checks the status of the
  * wifi connection. It is designed to be used in a loop. Can be altered
  * according to requirements.
- *
- * @return previous connection exists 
- * @return previous connection doesn't exist
+ * 
+ * @return true if previous connection exists
+ * @return false is previous connection doesn't exist
  */
 bool ESP_WiFi::check_connection()
 {

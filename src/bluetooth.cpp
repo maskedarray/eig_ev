@@ -9,7 +9,7 @@
 static NimBLEServer* pServer;
 
 /**  None of these are required as they will be handled by the library with defaults. **
- **                       Remove as you see fit for your needs                        */  
+ **                       Remove as you see fit for your needs                        */
 class ServerCallbacks: public NimBLEServerCallbacks {
     void onConnect(NimBLEServer* pServer) {
         Serial.println("Client connected");
@@ -150,11 +150,15 @@ static DescriptorCallbacks dscCallbacks;
 static CharacteristicCallbacks chrCallbacks;
 
 /**
- * This function initializes the bluetooth. The name of bluetooth is defined in
- * macro BLUETOOTH_NAME present in header file
- * 
- * @return true if bluetooth initialization is successful. false if some error occurs
- * 
+ * @brief This function initializes the bluetooth. The name of bluetooth is
+ * defined in macro BLUETOOTH_NAME present in header file. This initializes the
+ * name of the server and the security mode for the bluetooth server. It
+ * additionally defines all the requisite services and characteristics, with the
+ * required properties and security levels. Additionally callbacks are
+ * associated to the respective components in this function as well.
+ *
+ * @return true if successful
+ * @return false otherwise
  */
 bool ESP_BT::init()
 {
@@ -263,10 +267,14 @@ bool ESP_BT::init()
 }
 
 /**
- * Sends string of response data on bluetooth upon receiving instructions
- * 
- * @param[in] tosend is the string of data to send on bluetooth
- * @return true if data is sent. false if no data is sent.
+ * @brief Sends string of response data on bluetooth upon receiving
+ * instructions. This function is separate from the function that sends CAN data
+ * to the phone and deals singularly with responses to instructions given from
+ * the phone.
+ *
+ * @param tosend string of data to send on bluetooth
+ * @return true if data is sent
+ * @return false otherwise
  */
 bool ESP_BT::send(String tosend)
 {
@@ -289,6 +297,18 @@ bool ESP_BT::send(String tosend)
     return false;
 }
 
+/**
+ * @brief This function deals with sending the CAN data in the form of periodic
+ * notifications to the phone
+ *
+ * TODO: this function has an issue with the burst size which is making it
+ * unviable in notification mode. It does however work fine in read mode. Figure
+ * out if there's a workaround to this or if the notification mode not usable
+ *
+ * @param tosend data to be sent
+ * @return true 
+ * @return false 
+ */
 bool ESP_BT::send_notification(String tosend)
 {
     long len = tosend.length();
@@ -373,7 +393,7 @@ bool ESP_BT::check_bluetooth()
             if(pChr)
             {
                 String toreceive = pChr->getValue().c_str();
-                Serial.println("we got into the send function");
+                // Serial.println("we got into the send function");
                 Serial.println("the message received is:" + toreceive);
                 String tosend = command_bt(toreceive);
                 // NOTE: this will probably cause problems on the phone side since

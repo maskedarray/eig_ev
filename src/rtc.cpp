@@ -3,10 +3,19 @@
 
 RTC_DS3231 rtc;
 ESP32Time esp_sys_time;
-//TODO: Update time from internet after a while
-/*
- * Function initRTC initializes RTC and adjusts date and time in case of power loss
- * TODO: Handle error in case RTC initialization fails
+
+/**
+ * TODO: Update time from internet after a while
+ */
+
+/**
+ * @brief Function initRTC initializes RTC and adjusts date and time in case of
+ * power loss
+ * 
+ * TODO: handle error in case RTC initialization fails
+ *
+ * @return true if successful
+ * @return false otherwise
  */
 bool initRTC(){
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -25,12 +34,14 @@ bool initRTC(){
     }
 }
 
-
-/*
- * Function getTime returns time from RTC hardware in form of string. 
- * The format is : "YYYY-MM-DD HH:MM:SS"
- * TODO: Optimize the function by replacing individual strings in the return statement.
- *       This will reduce the temporary ram usage
+/**
+ * @brief Function getTime returns time from RTC hardware in form of string. The
+ * format is : "YYYY-MM-DD HH : MM : SS"
+ *
+ * TODO: Optimize the function by replacing individual strings in the return
+ * statement. This will reduce the temporary ram usage
+ *
+ * @return String time from RTC hardware
  */
 String getTime(){
     tm now = esp_sys_time.getTimeStruct();
@@ -48,13 +59,14 @@ String getTime(){
     return  (YYYY + "-" + mm + "-" + dd + " " + HH + ":" + MM + ":" + SS) ; 
 }
 
-/*
- * Function getTime2 returns time from RTC hardware in form of string.
- * The format is: "YYYYMMDD"
- * Difference from getTime() function is the format. It is required for writing data in file
+/**
+ * @brief Function getTime2 returns time from RTC hardware in form of string.
+ * The format is: "YYYYMMDD". Difference from getTime() function is the format.
+ * It is required for writing data in file
+ *
+ * @return String time from RTC hardware
  */
-
-  String getTime2(){
+String getTime2(){
     tm now = esp_sys_time.getTimeStruct();
     String YYYY = String(now.tm_year+1900, DEC);
     String mm = String(now.tm_mon, DEC);
@@ -62,8 +74,16 @@ String getTime(){
     String dd = String(now.tm_mday, DEC);
     if (dd.length() == 1){dd = "0" + dd; }
     return YYYY + mm + dd;
-  }
+}
 
+/**
+ * @brief Get the string for the next day in the format "YYYYMMDD" 
+ * 
+ * @param iyear the initial year
+ * @param imonth the initial month
+ * @param iday the initial day
+ * @return String the date of the next day
+ */
 String getNextDay(int iyear, int imonth, int iday){
     DateTime temp1(iyear,imonth,iday,0,0,0);
     TimeSpan temp2(1,0,0,0);
@@ -76,11 +96,20 @@ String getNextDay(int iyear, int imonth, int iday){
     return (YYYY + mm + dd);
 }
 
+/**
+ * @brief converts the current time into unix format
+ *
+ * @return String time in unix format
+ */
 String unixTime(){
     DateTime now = rtc.now();
     return String(now.unixtime());
 }
 
+/**
+ * @brief sets the current time of the esp using the rtc time
+ *
+ */
 void _set_esp_time(){
     DateTime now = rtc.now();
     esp_sys_time.setTime(now.unixtime(),0);

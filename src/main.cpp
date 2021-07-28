@@ -260,7 +260,7 @@ void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
 
 /**
  * @brief This function checks and executes any available command sent 
- * by the mobile phone.
+ * by the mobile phone and executes it accordingly.
  * 
  * @param pvParameters void
  */
@@ -290,6 +290,11 @@ void vBlCheck( void *pvParameters ){
     }
 } // end vBlCheck
 
+/**
+ * @brief This function stores data on the sd card if the wifi is unavailable.
+ *
+ * @param pvParameters void
+ */
 void vStorage( void *pvParameters ){
     for(;;){    //infinite loop
         xSemaphoreTake(semaStorage1,portMAX_DELAY); //for syncing task with acquire
@@ -308,6 +313,11 @@ void vStorage( void *pvParameters ){
     }   //end for
 }   //end vStorage task
 
+/**
+ * @brief This function sends data across WiFi to the cloud
+ * 
+ * @param pvParameters void
+ */
 void vWifiTransfer( void *pvParameters ){
     int _counter = 0;
     for(;;){    //infinite loop
@@ -352,6 +362,12 @@ void vWifiTransfer( void *pvParameters ){
     }   //end for
 }   //end vWifiTransfer task
 
+/**
+ * @brief This function changes the status of LEDs according to the status of
+ * peripherals and power
+ *
+ * @param pvParameters 
+ */
 void vStatusLed( void * pvParameters){
     for(;;){    //infinite loop
         if(bt.isConnected){

@@ -148,7 +148,12 @@ bool Storage::write_data(String timenow, String data){
 }
 
 /**
- * This function adds an access point to the SD card file APs.txt
+ * @brief This function adds an access point to the SD card file APs.txt
+ * 
+ * @param SSID SSID of AP
+ * @param Password Password of AP
+ * @return true if successful
+ * @return false otherwise
  */
 bool Storage::write_AP(String SSID, String Password) //made with small edits to the write_data function
 {
@@ -188,9 +193,15 @@ bool Storage::write_AP(String SSID, String Password) //made with small edits to 
 }
 
 /**
- * This function clears the APs.txt file and adds new credentials according to
- * the String passed to it. It is called whenever the AP list exceeds a set
- * limit or a saved SSID is being connected to with a different password.
+ * @brief This function clears the APs.txt file and adds new credentials
+ * according to the String passed to it. It is called whenever the AP list
+ * exceeds a set limit or a saved SSID is being connected to with a different
+ * password.
+ *
+ * @param SSID list of SSIDs to add
+ * @param Password list of passwords to add
+ * @return true if successful
+ * @return false otherwise
  */
 bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
 {
@@ -294,6 +305,22 @@ void Storage::remove_oldest_file(){
  *   till the max_chunk_size_b limit
  * - returns the string without encapsulation "<>" 
  */
+
+/**
+ * @brief  function reads the data starting with < character
+ * - it returns data by removing encapsulation "<>"
+ * - it also updates the size of current chunk of data.
+ * - to check the start of data, it checks the next 30 characters for '<'. if
+ *   this is not found then it returns false (failure)
+ * - in case the file has ended before detection of start character, that means
+ *   there is no more data to be read in file.
+ * - if data start is not at the curr_read_pos, then it also updates the
+ *   curr_read_pos variable to start of data.
+ * - if the starting character is found, then it loops over the data to check
+ *   the end character '>' till the max_chunk_size_b limit
+ * 
+ * @return String the string without encapsulation "<>" 
+ */
 String Storage::read_data(){    
     log_d("Reading file: ");
     log_d("%s ", curr_read_file.c_str());
@@ -357,10 +384,13 @@ String Storage::read_data(){
 }
 
 /**
- * This funtion cycles through the APs stored in the SD card and stores them in
- * a String array. Since the String array parameter degenerates to a pointer it
- * chenges the original referenced parameter and thus returns the list of
- * credentials in two arrays.
+ * @brief This function cycles through the APs stored in the SD card and stores
+ * them in a String array. Since the String array parameter degenerates to a
+ * pointer it changes the original referenced parameter and thus returns the
+ * list of credentials in two arrays.
+ * 
+ * @param SSID_List the returned list of SSIDs
+ * @param Password_List the returned list of Passwords
  */
 void Storage::return_APList(String SSID_List [10], String Password_List[10])
 {
@@ -474,9 +504,11 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
     }
 }
 
-/*
- * mark_data updates the curr_read_pos in config.txt
+/**
+ * @brief mark_data updates the curr_read_pos in config.txt
  * - if the remaining data in file is less than 10 it also updates the filename
+ *
+ * @param timenow date of file to read 
  */
 void Storage::mark_data(String timenow){
     String curr_write_file = "/" + timenow + ".txt";
@@ -522,6 +554,12 @@ void Storage::mark_data(String timenow){
     }
 }
 
+/**
+ * @brief returns the name of the next file
+ * 
+ * @param curr_file current file being used
+ * @return String the name of the next file
+ */
 String Storage::next_file(String curr_file){
     String syear = curr_file.substring(1,5);
     String smonth = curr_file.substring(5,7);
@@ -534,8 +572,11 @@ String Storage::next_file(String curr_file){
     return next_file;
 }
 
-/*
- * get_unsent_data returns the data in bytes
+/**
+ * @brief returns unsent data in bytes
+ * 
+ * @param timenow file to read
+ * @return long size of unsent data
  */
 long Storage::get_unsent_data(String timenow){ 
     String filename;

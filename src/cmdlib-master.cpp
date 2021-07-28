@@ -80,48 +80,20 @@ String command_3_newConn(String message)
  * for subtraction when the battery swap mode is exited
  *
  * @return empty string if initialization is successful
- * @return error string otherwi
+ * @return error string otherwise
  */
 String command_5_enterSwap()
 {
-/*     WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
-    vTaskDelay(10000);
-    String ret = "<40,";
-    if(WiFi.isConnected() == true){
-        //handle here
-        WiFiClient client;
-        if(client.connect("192.168.0.107",80)){
-            log_d("client connected ");
-            client.print("client1711\n");
-            long time_start = millis();
-            long time_stop = millis();
-            while(time_stop - time_start < 5000){
-                if(client.available()){
-                    ret += client.readStringUntil('\n');
-                    log_d("response received ");
-                    break;
-                }
-                time_stop = millis();
-                vTaskDelay(10);
-            }
-            client.stop();
-            log_d("client disconnected ");
-        }
-    }
-    else{
-        log_e("could not connect to bss wifi ");
-    }
-    WiFi.disconnect(false,true);
-    ret += ">";
-    bt.send(ret);
-    log_i("message sent to master: %s",ret.c_str()); */
     log_i("entered battery swap mode");
     return "";
 };
 
 /**
  * @brief This command exits battery swap mode and takes the final cycles of the
- * swapped batteries and sends the difference via bluetooth.  
+ * swapped batteries and sends the difference via bluetooth.
+ *
+ * TODO: the function does not return any difference at the moment as we aren't
+ * receiving CAN data yet. Fix this when the time comes.
  *
  * @return empty string if initialization is successful
  * @return error string otherwise
@@ -133,11 +105,11 @@ String command_6_exitSwap()
 };
 
 /**
- * @brief this command tells the slave to check the wifi connection and send the
+ * @brief This command tells the slave to check the wifi connection and send the
  * status back to the master
  *
- * @return true if command has been sent
- * @return false if command could not be sent
+ * @return "connected" if command has been sent
+ * @return "disconnected" if command could not be sent
  */
 String command_7_checkWifi()
 {
@@ -149,7 +121,7 @@ String command_7_checkWifi()
 /**
  * @brief This command returns the unix time
  * 
- * @return as string for the current unix time
+ * @return string for the current unix time
  */
 String command_8_getTime()
 {
@@ -162,8 +134,9 @@ String command_8_getTime()
 /**
  * @brief This is the main wrapper function that is called in a loop and checks
  * for commands on bluetooth.
- *
- * @return the command response string
+ * 
+ * @param message the instructions sent from the phone
+ * @return String the response string
  */
 String command_bt(String message)
 {
