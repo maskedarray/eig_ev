@@ -63,26 +63,26 @@ String parse_by_key(String message, int key)
  * in the list of APs.
  *
  * @param message the received string
- * @return true if connection instruction is sent
- * @return false otherwise
+ * @return empty string if connection instruction is sent
+ * @return error string otherwise
  */
-bool command_3_newConn(String message)
+String command_3_newConn(String message)
 {
     bool ret = false;
     String tempssid = parse_by_key(message, 1);
     String temppass = parse_by_key(message, 2);
     ret = wf.create_new_connection(tempssid.c_str(),temppass.c_str());
-    return ret;
+    return ret ? "" : "error";
 };
 
 /**
  * @brief This command initiates battery swap mode and saves the initial cycles
  * for subtraction when the battery swap mode is exited
  *
- * @return true if initialization is successful
- * @return false otherwise
+ * @return empty string if initialization is successful
+ * @return error string otherwi
  */
-bool command_5_enterSwap()
+String command_5_enterSwap()
 {
 /*     WiFi.begin(DEFAULT_BSS_WIFI_SSID,DEFAULT_BSS_WIFI_PASS);
     vTaskDelay(10000);
@@ -116,20 +116,20 @@ bool command_5_enterSwap()
     bt.send(ret);
     log_i("message sent to master: %s",ret.c_str()); */
     log_i("entered battery swap mode");
-    return true;
+    return "";
 };
 
 /**
  * @brief This command exits battery swap mode and takes the final cycles of the
  * swapped batteries and sends the difference via bluetooth.  
  *
- * @return true if sending is successful
- * @return false otherwise
+ * @return empty string if initialization is successful
+ * @return error string otherwise
  */
-bool command_6_exitSwap()
+String command_6_exitSwap()
 {
     log_i("exited battery swap mode ");
-    return true;
+    return "";
 };
 
 /**
@@ -139,25 +139,24 @@ bool command_6_exitSwap()
  * @return true if command has been sent
  * @return false if command could not be sent
  */
-bool command_7_checkWifi()
+String command_7_checkWifi()
 {
     bool ret = WiFi.isConnected();
     log_i("the connection status is: %d\n\r", ret);
-    return ret;
+    return ret ? "connected" : "disconnected";
 }
 
 /**
  * @brief This command returns the unix time
  * 
- * @return true if command returns successful
- * @return false otherwise
+ * @return as string for the current unix time
  */
-bool command_8_getTime()
+String command_8_getTime()
 {
     String ret = unixTime();
     log_d("The returned time is: %s", ret);
-    bt.send(ret);
-    return true;
+    // bt.send(ret);
+    return ret;
 }
 
 /**
@@ -168,11 +167,15 @@ bool command_8_getTime()
  * @return true if command returns true
  * @return false otherwise
  */
-bool command_bt()
+/**
+ * @brief This is the main wrapper function that is called in a loop and checks
+ * for commands on bluetooth.
+ *
+ * @return the command response string
+ */
+String command_bt(String message)
 {
-    String message = "";
-    message = bt.check_bluetooth();
-    
+
     if(message.length() > 0)
     {
         log_i("message received: %s", message.c_str());
@@ -194,18 +197,18 @@ bool command_bt()
                     return command_8_getTime();
                 default:
                     log_e("invalid ID ");
-                    return false;
+                    return "error";
             }
         }
         else
         {
             log_e("entered invalid ID ");
-            return false;
+            return "error";
         }
 
     }
     else
     {
-        return false;
+        return "error";
     }
 }

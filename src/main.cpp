@@ -168,88 +168,7 @@ void setup() {
                 settings__.putString("bt-pass", tmpbtpass);
             log_i("got data from firebase\r\nbluetooth name: %s\r\nbluetooth password: %s",tmpbtname.c_str(), tmpbtpass.c_str());
             settings__.end();
-            
-            Serial2.begin(9600);
-            String samp;
-            Serial2.write("AT");
-            delay(50);
-            if(Serial2.available())  {
-                samp = Serial2.readStringUntil('\n');
-            }
-            if(samp == "OK")  {
-                log_d("AT Commands work");
-                // Set Device Name
-                String name = "AT+NAME" + tmpbtname;
-                Serial2.write(name.c_str());
-                delay(50);
-                if(Serial2.available())  {
-                    samp = Serial2.readStringUntil('\n');
-                }
-                if(samp.length() > 0) {
-                    log_d("%s", samp.c_str());
-                }
-                // Set Device Password
-                String pass = "AT+PASS" + tmpbtpass;
-                Serial2.write(pass.c_str());
-                delay(50);
-                if(Serial2.available())  {
-                    samp = Serial2.readStringUntil('\n');
-                }
-                if(samp.length() > 0) {
-                    log_d("%s ", samp.c_str());
-                }
-                // Set Device Authentication Type
-                Serial2.write("AT+TYPE3");
-                delay(100);
-                if(Serial2.available()) {
-                    samp = Serial2.readStringUntil('\n');
-                }
-                if(samp.length() > 0) {
-                    log_d("%s", samp.c_str());
-                }
-                // Set Service UUID
-                Serial2.write("AT+UUID0xFEED");
-                delay(100);
-                if(Serial2.available()) {
-                    samp = Serial2.readStringUntil('\n');
-                }
-                if(samp.length() > 0) {
-                    log_d("%s", samp.c_str());
-                }
-                // Set Characteristic UUID
-                Serial2.write("AT+CHAR0xBEEF");
-                delay(100);
-                if(Serial2.available()) {
-                    samp = Serial2.readStringUntil('\n');
-                }
-                if(samp.length() > 0) {
-                    log_d("%s", samp.c_str());
-                }
-                // Set Device Baud Rate
-                Serial2.write("AT+BAUD4");
-                delay(100);
-                if(Serial2.available()) {
-                    samp = Serial2.readStringUntil('\n');
-                }
-                if(samp.length() > 0 && samp == "OK+Set:4") {
-                    log_d("%s", samp.c_str());
-                    Serial2.write("AT+RESET");
-                    delay(100);
-                    Serial2.readStringUntil('\n');
-                }
-                Serial2.flush();
-                Serial2.updateBaudRate(115200);
-                Serial2.write("AT");
-                delay(50);
-                log_d("%d", Serial2.baudRate());
-                // add a while instead of an if and also include a timeout
-                if(Serial2.available()) {
-                    samp = Serial2.readStringUntil('\n');
-                }
-                if(samp == "OK") {
-                    log_d("AT commands working!");
-                }
-            }
+    
             log_i("restarting");
             vTaskDelete(status_blink_handler);
             delay(1000);
@@ -353,6 +272,7 @@ void vAcquireData( void *pvParameters ){
         xSemaphoreGive(semaStorage1);
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
         log_v("Stack usage of acquiredata Task: %d",(int)uxHighWaterMark);
+        flags[can_blink_f] = 1;
         vTaskDelayUntil(&xLastWakeTime, 2*DATA_ACQUISITION_TIME);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
@@ -368,21 +288,24 @@ void vAcquireData( void *pvParameters ){
  */
 void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
     for(;;){    //infinite loop
-    if(flags[bt_f]){
-        xSemaphoreTake(semaBlTx1, portMAX_DELAY);   //for task sync with acquire data
-        xSemaphoreTake(semaAqData1, portMAX_DELAY); //for copying towrite string
-        String towrite_cpy;
-        towrite_cpy = towrite;
-        xSemaphoreGive(semaAqData1);
-        xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-        log_i("sending data over bluetooth ");
-        bt.send(towrite_cpy);
-        xSemaphoreGive(semaBlRx1);
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        log_v("Stack usage of bltransfer Task: %d", (int)uxHighWaterMark);
-    }   else{
-        vTaskDelay(600000); //bluetooth is not working, delay 10 minutes
-    }
+        if(flags[bt_f] && bt.isConnected){
+            xSemaphoreTake(semaBlTx1, portMAX_DELAY);   //for task sync with acquire data
+            xSemaphoreTake(semaAqData1, portMAX_DELAY); //for copying towrite string
+            String towrite_cpy;
+            towrite_cpy = towrite;
+            xSemaphoreGive(semaAqData1);
+            xSemaphoreTake(semaBlRx1, portMAX_DELAY);
+            log_i("sending data over bluetooth ");
+            bt.send_notification(towrite_cpy);
+            xSemaphoreGive(semaBlRx1);
+            UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+            log_v("Stack usage of bltransfer Task: %d", (int)uxHighWaterMark);
+            flags[bt_blink_f] = 1;
+        }   else if(flags[bt_f]){
+            vTaskDelay(500);     
+        }   else {
+            vTaskDelay(600000); //bluetooth is not working delay 10 minutes
+        }
     }   //end for
 }   //end vBlTransfer task
 
@@ -396,7 +319,7 @@ void vBlCheck( void *pvParameters ){
     TickType_t xLastWakeTime_2 = xTaskGetTickCount();
     int _counter = 0;
     for(;;){
-        if(flags[bt_f]){        //bluetooth is working 
+        if(flags[bt_f] && bt.isConnected){        //bluetooth is working 
             xSemaphoreTake(semaWifi1, portMAX_DELAY);
             xSemaphoreTake(semaBlRx1, portMAX_DELAY);
             {
@@ -407,15 +330,17 @@ void vBlCheck( void *pvParameters ){
                     _counter = 0;
                     log_i("checking bluetooth commands");
                 }
-                command_bt();
+                bt.check_bluetooth();
             }
             xSemaphoreGive(semaBlRx1);
             xSemaphoreGive(semaWifi1);
             UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
             log_v("Stack usage of blcheck Task: %d",(int)uxHighWaterMark);
             vTaskDelayUntil(&xLastWakeTime_2, 0.5*DATA_ACQUISITION_TIME);   
-        }   else{
-            vTaskDelay(600000);     //bluetooth is not working delay 10 minutes
+        }   else if(flags[bt_f]){
+            vTaskDelay(500);     
+        }   else {
+            vTaskDelay(600000); //bluetooth is not working delay 10 minutes
         }
     }
 } // end vBlCheck
@@ -432,6 +357,7 @@ void vStorage( void *pvParameters ){
             if(storage.write_data(getTime2(), towrite_cpy)){
                 log_i("data written to storage");
                 flags[sd_f] = 1;
+                flags[sd_blink_f] = 1;
             }   else {
                 log_e("Storage stopped working!");
                 flags[sd_f] = 0;
@@ -508,13 +434,25 @@ void vWifiTransfer( void *pvParameters ){
 }   //end vWifiTransfer task
 
 void vStatusLed( void * pvParameters){
+    int sd_blink_count = 0, can_blink_count = 0, bt_blink_count = 0;
+    const int max_blink = 3;
     for(;;){    //infinite loop
-        if(bt.isConnected){
-            digitalWrite(BT_LED,HIGH);
-        }  
-        else{
-            digitalWrite(BT_LED,LOW);
+        if(flags[bt_blink_f]){
+            digitalWrite(BT_LED, !digitalRead(BT_LED));
+            bt_blink_count++;
+            if(bt_blink_count > max_blink){
+                bt_blink_count = 0;
+                flags[bt_blink_f] = 0;
+            }
+        } else {
+            if(bt.isConnected){
+                digitalWrite(BT_LED,HIGH);
+            }  
+            else{
+                digitalWrite(BT_LED,LOW);
+            }
         }
+
         if(flags[cloud_blink_f]){
             digitalWrite(WIFI_LED, !digitalRead(WIFI_LED));
         } else {
@@ -525,11 +463,35 @@ void vStatusLed( void * pvParameters){
                 digitalWrite(WIFI_LED,LOW);
             }
         }
-        if(flags[sd_f]){
-            digitalWrite(STORAGE_LED, HIGH);
+        if(flags[can_blink_f]){
+            digitalWrite(CAN_LED, !digitalRead(CAN_LED));
+            can_blink_count++;
+            if(can_blink_count > max_blink){
+                can_blink_count = 0;
+                flags[can_blink_f] = 0;
+            }
+        } else{
+            if(flags[can_f]){
+                digitalWrite(CAN_LED, HIGH);
+            }
+            else{
+                digitalWrite(CAN_LED,LOW);
+            }
         }
-        else{
-            digitalWrite(STORAGE_LED,LOW);
+        if(flags[sd_blink_f]){
+            digitalWrite(STORAGE_LED, !digitalRead(STORAGE_LED));
+            sd_blink_count++;
+            if(sd_blink_count > max_blink){
+                sd_blink_count = 0;
+                flags[sd_blink_f] = 0;
+            }
+        } else {
+            if(flags[sd_f]){
+                digitalWrite(STORAGE_LED, HIGH);
+            }
+            else{
+                digitalWrite(STORAGE_LED,LOW);
+            }
         }
         vTaskDelay(50);
     }

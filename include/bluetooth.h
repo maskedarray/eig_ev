@@ -1,7 +1,7 @@
 #ifndef __BLUETOOTH_H__
 #define __BLUETOOTH_H__
-#include <Arduino.h>
-// #include <BluetoothSerial.h>
+#include <NimBLEDevice.h>
+#include <cmdlib-master.h>
 
 
 /**
@@ -14,7 +14,6 @@
 class ESP_BT {
 private:
     String bt_read();
-   
 
 public:
     //BluetoothSerial SerialBT;
@@ -22,8 +21,11 @@ public:
     String bluetooth_password;
     bool init();
     bool send(String tosend);
-    String check_bluetooth();
+    bool send_notification(String tosend);
+    void display(String ID, String Username, String Password);
+    bool check_bluetooth();
     bool isConnected;
+    bool commandInQueue;
 };
 
 extern ESP_BT bt;
