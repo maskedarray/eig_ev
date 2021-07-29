@@ -105,7 +105,6 @@ void setup() {
             delay(100);
         }
     }
-    log_i("ESP system time: %s", esp_sys_time.getDateTime().c_str());
     if(storage.init_storage()){
         log_d("storage initialization success!");
         flags[sd_f] = 1;
@@ -117,15 +116,15 @@ void setup() {
     }
     wf.init();
     wf.check_connection();
-    log_i("initialized wifi successfully");  
+    log_i("initialized wifi successfully"); 
     if(initRTC()){
         digitalWrite(RTC_LED, HIGH);
         flags[rtc_f] = 1;
-        _set_esp_time();
+        //_set_esp_time();
     }
     else{
         flags[rtc_f] = 0;               //the system time would be 000 from start. The data would be ? I guess 1/1/2000, or maybe 1970..
-        if(flags[sd_f]) {//if storage is working
+        if(flags[sd_f]) {//if storage is working    //This part of code isn't particularly needed.
             String curr_file = storage.curr_read_file;
             curr_file.remove(0,1);
             String syear = curr_file.substring(1,5);
@@ -278,13 +277,16 @@ void setup() {
     xSemaphoreGive(semaBlRx1);
     xSemaphoreGive(semaWifi1);
     
-    xTaskCreatePinnedToCore(vTimeSync, "Time Sync", 2000, NULL, 1, &timeSyncTask, 1);
-    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 1000, NULL, 1, &ledTask, 1);
+    flags[cloud_f] = 0;
+    flags[cloud_blink_f] = 0;
+
+    //xTaskCreatePinnedToCore(vTimeSync, "Time Sync", 2000, NULL, 1, &timeSyncTask, 1);
+    xTaskCreatePinnedToCore(vStatusLed, "Status LED", 5000, NULL, 1, &ledTask, 1);
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
-    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 7000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
-    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 5000, NULL, 3, &blTask2, 0);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 10000, NULL, 1, &wifiTask, 0);
+    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
+    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 4000, NULL, 2, &blTask1, 0);
+    xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 4000, NULL, 3, &blTask2, 0);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 7000, NULL, 1, &wifiTask, 0);
     
     log_i("created all tasks");
     digitalWrite(SETUP_LED, HIGH);
@@ -427,9 +429,12 @@ void vStorage( void *pvParameters ){
             towrite_cpy = towrite;
             xSemaphoreGive(semaAqData1);
             xSemaphoreTake(semaWifi1,portMAX_DELAY);    //wait for wifi transfer task to finish
-            {
-                storage.write_data(getTime2(), towrite_cpy);
+            if(storage.write_data(getTime2(), towrite_cpy)){
                 log_i("data written to storage");
+                flags[sd_f] = 1;
+            }   else {
+                log_e("Storage stopped working!");
+                flags[sd_f] = 0;
             }
             xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
             UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
@@ -455,9 +460,16 @@ void vWifiTransfer( void *pvParameters ){
                     mqtt->loop();
                     vTaskDelay(10);  // <- fixes some issues with WiFi stability
                     if (!mqttClient->connected()) {
+                        configTime(18000, 0, "pool.ntp.org");
+                        while(time(nullptr) < 1609441200)   //time less than 1 Jan 2021 12:00 AM
+                        {
+                            vTaskDelay(1000);
+                            log_e("waiting for time update from ntp server");
+                        }
                         mqtt->mqttConnect();
                     }
                     if (mqttClient->connected()) {
+                        flags[cloud_f] = 1;
                         String toread; 
                         toread = storage.read_data();
                         // toread = "dummy string";
@@ -467,13 +479,19 @@ void vWifiTransfer( void *pvParameters ){
                             storage.mark_data(getTime2());
                         }
                     }
+                    else{
+                        flags[cloud_f] = 0;
+                    }
                 }
                 if (_counter >= 2 ){
                     _counter = 0;
                     log_i("sent 2 data chunks to cloud");
                 }
+                flags[cloud_blink_f] = 1;
+                setRtcTime();
                 xSemaphoreGive(semaWifi1);
                 vTaskDelay(1000);
+                flags[cloud_blink_f] = 0;
             }
             else{
                 log_i("Wifi disconnected or no data to be sent! ");
@@ -497,11 +515,21 @@ void vStatusLed( void * pvParameters){
         else{
             digitalWrite(BT_LED,LOW);
         }
-        if(WiFi.isConnected()){
-            digitalWrite(WIFI_LED, HIGH);
+        if(flags[cloud_blink_f]){
+            digitalWrite(WIFI_LED, !digitalRead(WIFI_LED));
+        } else {
+            if(flags[cloud_f]){
+                digitalWrite(WIFI_LED, HIGH);
+            }
+            else{
+                digitalWrite(WIFI_LED,LOW);
+            }
+        }
+        if(flags[sd_f]){
+            digitalWrite(STORAGE_LED, HIGH);
         }
         else{
-            digitalWrite(WIFI_LED,LOW);
+            digitalWrite(STORAGE_LED,LOW);
         }
         vTaskDelay(50);
     }

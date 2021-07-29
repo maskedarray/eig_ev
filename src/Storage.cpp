@@ -126,6 +126,7 @@ bool Storage::write_data(String timenow, String data){
             write_success = true;
         } else {
             log_e("Write failed ");
+            return write_success;
         }
         if (!resume){                       //if this is the first time system has started, create config.txt and update variables
             String name = file.name();

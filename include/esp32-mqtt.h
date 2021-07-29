@@ -94,6 +94,9 @@ void setupCloudIoT(){
       private_key_str);
 
   netClient = new WiFiClientSecure();
+  WiFiClientSecure * temp = (WiFiClientSecure *)netClient;
+  temp->setCACert(root_cert);
+  temp->setPreSharedKey(NULL, NULL);
   mqttClient = new MQTTClient(6000); // number of characters 
   mqttClient->setOptions(180, true, 1000); // keepAlive, cleanSession, timeout
   mqtt = new CloudIoTCoreMqtt(mqttClient, netClient, device);
