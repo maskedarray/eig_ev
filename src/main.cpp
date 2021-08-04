@@ -354,7 +354,7 @@ void vStorage( void *pvParameters ){
             towrite_cpy = towrite;
             xSemaphoreGive(semaAqData1);
             xSemaphoreTake(semaWifi1,portMAX_DELAY);    //wait for wifi transfer task to finish
-            if(storage.write_data(getTime2(), towrite_cpy)){
+            if(/*storage.write_data(getTime2(), towrite_cpy)*/ 1){
                 log_i("data written to storage");
                 flags[sd_f] = 1;
                 flags[sd_blink_f] = 1;
@@ -377,12 +377,15 @@ void vWifiTransfer( void *pvParameters ){
         //check unsent data and send data over wifi
         //also take semaWifi1 when starting to send one chunk of data and give semaWifi1 when sending of one chunk of data is complete
         if(flags[sd_f]){
-            xSemaphoreTake(semaWifi1,portMAX_DELAY);
             log_v("entering wifi task ");
             long unsent_bytes = storage.get_unsent_data(getTime2());
             if(wf.check_connection() && unsent_bytes > 500)
             {
-                for(int i=0; i<5; i++){
+                int max_run = unsent_bytes/MAX_CHUNK_SIZE_B;
+                if(unsent_bytes < 20*MAX_CHUNK_SIZE_B)  max_run += 5;
+                else if (unsent_bytes >= 20*MAX_CHUNK_SIZE_B)   max_run += 50;
+                for(int i=0; i<max_run; i++){
+                    xSemaphoreTake(semaWifi1,portMAX_DELAY);
                     mqtt->loop();
                     vTaskDelay(10);  // <- fixes some issues with WiFi stability
                     if (!mqttClient->connected()) {
@@ -394,6 +397,9 @@ void vWifiTransfer( void *pvParameters ){
                         }
                         mqtt->mqttConnect();
                     }
+                    xSemaphoreGive(semaWifi1);
+                    vTaskDelay(1);
+                    xSemaphoreTake(semaWifi1, portMAX_DELAY);
                     if (mqttClient->connected()) {
                         flags[cloud_f] = 1;
                         String toread; 
@@ -408,20 +414,20 @@ void vWifiTransfer( void *pvParameters ){
                     else{
                         flags[cloud_f] = 0;
                     }
+                    xSemaphoreGive(semaWifi1);
                 }
                 if (_counter >= 2 ){
+                    log_i("sent %d data chunks to cloud", _counter);
                     _counter = 0;
-                    log_i("sent 2 data chunks to cloud");
                 }
                 flags[cloud_blink_f] = 1;
                 setRtcTime();
-                xSemaphoreGive(semaWifi1);
                 vTaskDelay(1000);
                 flags[cloud_blink_f] = 0;
             }
             else{
                 log_i("Wifi disconnected or no data to be sent! ");
-                xSemaphoreGive(semaWifi1);
+                // xSemaphoreGive(semaWifi1);
                 vTaskDelay(10000);
             }
             UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
