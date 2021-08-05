@@ -19,6 +19,7 @@ public:
     //BluetoothSerial SerialBT;
     String bluetooth_name;
     String bluetooth_password;
+    String bt_msg;
     bool init();
     bool send(String tosend);
     bool send_notification(String tosend);
@@ -26,6 +27,7 @@ public:
     bool check_bluetooth();
     bool isConnected;
     bool commandInQueue;
+    bool commandComplete;
 };
 
 extern ESP_BT bt;
