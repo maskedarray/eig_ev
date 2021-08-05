@@ -87,8 +87,29 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
         /*String msg = command_bt(pCharacteristic->getValue().c_str());
         Serial.println(msg);
         bt.send(msg);*/
-        bt.commandInQueue = true;
+                String temp = pCharacteristic->getValue().c_str();
+        Serial.println("the last char of the captured string: " + *(temp.end() - 1));
+        if(temp[0] == '<')
+        {
+            bt.bt_msg = temp;
+            bt.commandInQueue = true;
+        }
+        else if(bt.commandInQueue && *(temp.end() - 1) != '>')
+        {
+            bt.bt_msg += temp;
+        }
+        else if(bt.commandInQueue && *(temp.end() - 1) == '>')
+        {
+            bt.bt_msg += temp;
+            bt.commandInQueue = false;
+            bt.commandComplete = true;
+        }
+        else
+        {
+            bt.bt_msg = "";
+        }
     };
+
     /** Called before notification or indication is sent, 
      *  the value can be changed here before sending if desired.
      */
@@ -385,7 +406,7 @@ void ESP_BT::display(String ID, String Username, String Password)
  */
 bool ESP_BT::check_bluetooth()
 {
-    if(this->commandInQueue)
+    if(!this->commandInQueue && this->commandComplete)
     {
         NimBLEService* pSvc = pServer->getServiceByUUID("DEAD");
         if(pSvc)
@@ -393,7 +414,9 @@ bool ESP_BT::check_bluetooth()
             NimBLECharacteristic* pChr = pSvc->getCharacteristic("BEEF");
             if(pChr)
             {
-                String toreceive = pChr->getValue().c_str();
+                delay(10);
+                //String toreceive = pChr->getValue().c_str();
+                String toreceive = this->bt_msg;
                 Serial.println("we got into the send function");
                 Serial.println("the message received is:" + toreceive);
                 String tosend = command_bt(toreceive);
@@ -401,6 +424,7 @@ bool ESP_BT::check_bluetooth()
                 // the data isn't changing (we'll see it when we cross that bridge)
                 pChr->setValue((uint8_t *)tosend.c_str(), tosend.length()+1);
                 this->commandInQueue = false;
+                this->commandComplete = false;
                 return true;
             }
         }

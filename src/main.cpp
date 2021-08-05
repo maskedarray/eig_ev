@@ -382,8 +382,8 @@ void vWifiTransfer( void *pvParameters ){
             if(wf.check_connection() && unsent_bytes > 500)
             {
                 int max_run = unsent_bytes/MAX_CHUNK_SIZE_B;
-                if(unsent_bytes < 20*MAX_CHUNK_SIZE_B)  max_run += 5;
-                else if (unsent_bytes >= 20*MAX_CHUNK_SIZE_B)   max_run += 50;
+                //if(unsent_bytes < 20*MAX_CHUNK_SIZE_B)  max_run += 5;
+                //else if (unsent_bytes >= 20*MAX_CHUNK_SIZE_B)   max_run += 50;
                 for(int i=0; i<max_run; i++){
                     xSemaphoreTake(semaWifi1,portMAX_DELAY);
                     mqtt->loop();
