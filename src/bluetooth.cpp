@@ -89,6 +89,12 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
         bt.send(msg);*/
                 String temp = pCharacteristic->getValue().c_str();
         Serial.println("the last char of the captured string: " + *(temp.end() - 1));
+        if(temp[0] == '<' && *(temp.end() - 1) == '>')
+        {
+            bt.bt_msg = temp;
+            bt.commandInQueue = false;
+            bt.commandComplete = true;
+        }
         if(temp[0] == '<')
         {
             bt.bt_msg = temp;

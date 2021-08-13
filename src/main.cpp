@@ -398,7 +398,7 @@ void vWifiTransfer( void *pvParameters ){
                         mqtt->mqttConnect();
                     }
                     xSemaphoreGive(semaWifi1);
-                    vTaskDelay(1);
+                    vTaskDelay(10);
                     xSemaphoreTake(semaWifi1, portMAX_DELAY);
                     if (mqttClient->connected()) {
                         flags[cloud_f] = 1;
