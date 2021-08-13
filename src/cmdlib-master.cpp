@@ -159,14 +159,7 @@ String command_8_getTime()
     return ret;
 }
 
-/**
- * @brief This is the main wrapper function that is called in a loop and checks
- * for commands on bluetooth. It also checks if authorization has been granted
- * for different functions and resets authorization after every command call.
- *
- * @return true if command returns true
- * @return false otherwise
- */
+
 /**
  * @brief This is the main wrapper function that is called in a loop and checks
  * for commands on bluetooth.

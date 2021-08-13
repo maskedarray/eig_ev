@@ -5,7 +5,7 @@ MCP_CAN mcp_can(MCP2515_CSPIN);
 int cur_batt;
 
 /**
- * Initializes CAN module. The speed of CAN and other parameters are decided by 
+ * @brief Initializes CAN module. The speed of CAN and other parameters are decided by 
  * the standard kept by Koreans. The intialization is tried 5 times. 
  * 
  * @return 1 if initialization is successful and 0 if it fails.
@@ -48,12 +48,10 @@ bool EVCan::init_can(){
 }
 
 /**
- * Sends message on CAN bus
- * 
- * It is only for emulation of CAN protocol developed by the Koreans. It is 
- * only used in hardware for emulation. This function sends data on CAN bus according to 
- * standard defined by Koreans.
- * 
+ * @brief Sends message on CAN bus. It is only for emulation of CAN protocol
+ * developed by the Koreans. It is only used in hardware for emulation. This
+ * function sends data on CAN bus according to standard defined by Koreans.
+ *
  * @param[in] id: 11 bit ID in hex
  * @param[in] soc: state of charge. ranges from 0-100. resolution 1.
  * @param[in] hi_temp: BMS high temperature. ranges from -40-120. resolution 1.
@@ -86,13 +84,13 @@ void EVCan::send_msg(uint16_t id, float soc, float hi_temp, float lo_temp, float
 }
 
 /**
- * Reads data from CAN bus
- * 
- * First, it checks if data is available to be read. If there is data available then
- * it reads data according to prestored ids as provided by Koreans. It does not return 
- * the data rather it updates the variables in the class object itself.
- * 
- * @return 1 if data is read according to valid id or 0 if no data is found or id is invalid.
+ * @brief Reads data from CAN bus. First, it checks if data is available to be
+ * read. If there is data available then it reads data according to prestored
+ * ids as provided by Koreans. It does not return the data rather it updates the
+ * variables in the class object itself.
+ *
+ * @return 1 if data is read according to valid id or 0 if no data is found or
+ * id is invalid.
  */
 
 bool EVCan::receive_msg(void){

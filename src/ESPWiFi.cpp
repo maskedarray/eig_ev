@@ -1,5 +1,5 @@
 #include <ESPWiFi.h>
-//TODO: optimize wifi reconnection time. 
+//TODO: optimize wifi reconnection time.
 /**
  * This function initializes the ESP wifi module with the requisite
  * configurations. It attempts to connect to a default SSID and password and

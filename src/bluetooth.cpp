@@ -170,7 +170,7 @@ static DescriptorCallbacks dscCallbacks;
 static CharacteristicCallbacks chrCallbacks;
 
 /**
- * This function initializes the bluetooth. The name of bluetooth is defined in
+ * @brief This function initializes the bluetooth. The name of bluetooth is defined in
  * macro BLUETOOTH_NAME present in header file
  * 
  * @return true if bluetooth initialization is successful. false if some error occurs
@@ -283,7 +283,7 @@ bool ESP_BT::init()
 }
 
 /**
- * Sends string of response data on bluetooth upon receiving instructions
+ * @brief Sends string of response data on bluetooth upon receiving instructions
  * 
  * @param[in] tosend is the string of data to send on bluetooth
  * @return true if data is sent. false if no data is sent.
@@ -309,6 +309,14 @@ bool ESP_BT::send(String tosend)
     return false;
 }
 
+/**
+ * @brief Sends notifications to the subscribed bluetooth device in 20 byte
+ * messages
+ *
+ * @param tosend String to be sent
+ * @return true if sending is successful
+ * @return false otherwise
+ */
 bool ESP_BT::send_notification(String tosend)
 {
     long len = tosend.length();
@@ -328,63 +336,6 @@ bool ESP_BT::send_notification(String tosend)
     }
     return false;
 }
-
-/**
- * @brief This function reads and returns a serially transmitted message from
- * the controller (phone application). It is built with generalizability in mind
- * and records everything in <>.
- *
- * @return String 
- * 
- * NOTE: removed in new iteration
- */
-// String ESP_BT::bt_read() 
-// {
-//     // Read the message of a connected device and check if it conforms to the
-//     // set conventions
-//     log_d("The device connection status is: %d", isConnected);
-//     if(isConnected) 
-//     {
-//         int32_t size = 0;
-//         char temp = '\0';
-//         String BTread = "";
-//         temp = Serial2.read();
-//         if(temp == '<')
-//         {
-//             while(temp != '>' && size <= 90) // ID size will be fixed, needs to be addressed
-//             {
-//                 BTread += temp;
-//                 temp = Serial2.read();
-//                 size++;
-//             }
-//             if(size >= 90)
-//             {
-//                 log_e("Credentials exceed set limit");
-//                 return "";
-//             }
-//             BTread += temp;
-//         }
-//         else // we got some other message in AT format
-//         {
-//             BTread = temp + Serial2.readString();
-//             log_d("%s", BTread.c_str());
-//             return BTread;
-//         }
-//         log_d("%s", BTread.c_str());
-//         return BTread;
-//     }
-
-//     /**
-//      * TODO: add the custom timed read and read string functions
-//      */
-//     else
-//     {
-//         // Read message without checking for message conventions
-//         String BTread = Serial2.readString();
-//         log_d("%s", BTread.c_str());
-//         return BTread;
-//     }
-// }
 
 /**
  * @brief This is a simple diagnostic function for debugging purposes.

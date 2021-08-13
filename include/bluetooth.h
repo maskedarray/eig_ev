@@ -3,9 +3,8 @@
 #include <NimBLEDevice.h>
 #include <cmdlib-master.h>
 
-
 /**
- * This library is made to optimize the functionality of the ESP32 bluetooth
+ * @brief This library is made to optimize the functionality of the ESP32 bluetooth
  * functions. It allows for the reading and parsing of serial data for the
  * specific purpose of collecting new access points, which will be subsequently
  * stored for late use.
