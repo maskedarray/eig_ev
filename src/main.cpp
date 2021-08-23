@@ -13,7 +13,7 @@
 //TODO: OPTIMIZATION: convert String to c string.
 
 
-#define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
+#define DATA_ACQUISITION_TIME 10000      //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 //#define RESET_ESP_STORAGE   //Warning: Do not uncomment this line
 #define SETUP_LED   32
@@ -97,7 +97,7 @@ void setup() {
     
     if(can.init_can()){             //true if initialize success and TODO: battery ids read
         digitalWrite(CAN_LED, HIGH);
-        flags[can_f] = 1;
+        flags[can_f] = 1;  
     }
     else{   //sound alarm and do nothing!
         while(1){
@@ -105,7 +105,7 @@ void setup() {
             delay(100);
         }
     }
-    if(storage.init_storage()){
+    if(!storage.init_storage()){
         log_d("storage initialization success!");
         flags[sd_f] = 1;
         digitalWrite(STORAGE_LED, HIGH);
@@ -114,7 +114,7 @@ void setup() {
         flags[sd_f] = 0;
         log_d("storage initialization failed!");
     }
-    wf.init();
+    //wf.init();
     wf.check_connection();
     log_i("initialized wifi successfully"); 
     if(initRTC()){
@@ -143,7 +143,7 @@ void setup() {
         EV_ID = bt.bluetooth_name;
         device_id = new char[30];
         bt.bluetooth_name.toCharArray(device_id, strlen(bt.bluetooth_name.c_str()) + 1);
-        if(bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
+        if(bt.bluetooth_name == "" && bt.bluetooth_password == ""){                             //settings saved previously
             settings__.end();
             log_i("Settings found!\r\nbluetooth name: %s\r\n bluetooth password: %s", bt.bluetooth_name.c_str(), bt.bluetooth_password.c_str());
         }
@@ -156,7 +156,7 @@ void setup() {
                 log_e("No wifi available, waiting for connection");
                 delay(1000);
             }
-            Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+            //Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
             Firebase.reconnectWiFi(true);
             Firebase.setReadTimeout(firebaseData, 1000 * 60);
             Firebase.setwriteSizeLimit(firebaseData, "small");
@@ -202,10 +202,10 @@ void setup() {
     //xTaskCreatePinnedToCore(vTimeSync, "Time Sync", 2000, NULL, 1, &timeSyncTask, 1);
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 5000, NULL, 1, &ledTask, 1);
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
-    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 4000, NULL, 2, &blTask1, 0);
+    xTaskCreatePinnedToCore(vStorage, "Storage Handler", 500, NULL, 2, &storageTask, 1);
+    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 5000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 4000, NULL, 3, &blTask2, 0);
-    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 7000, NULL, 1, &wifiTask, 0);
+    xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 1000, NULL, 1, &wifiTask, 0);
     
     log_i("created all tasks");
     digitalWrite(SETUP_LED, HIGH);
@@ -347,7 +347,7 @@ void vBlCheck( void *pvParameters ){
 
 void vStorage( void *pvParameters ){
     for(;;){    //infinite loop
-        if(flags[sd_f]){                //storage is working
+        if(!flags[sd_f]){                //storage is working
             xSemaphoreTake(semaStorage1,portMAX_DELAY); //for syncing task with acquire
             xSemaphoreTake(semaAqData1, portMAX_DELAY); // make copy of data and stop data acquisition
             String towrite_cpy;
@@ -385,7 +385,7 @@ void vWifiTransfer( void *pvParameters ){
                 for(int i=0; i<5; i++){
                     mqtt->loop();
                     vTaskDelay(10);  // <- fixes some issues with WiFi stability
-                    if (!mqttClient->connected()) {
+                    if (mqttClient->connected()) {
                         configTime(18000, 0, "pool.ntp.org");
                         while(time(nullptr) < 1609441200)   //time less than 1 Jan 2021 12:00 AM
                         {
