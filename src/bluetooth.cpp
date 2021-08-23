@@ -89,12 +89,18 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
         bt.send(msg);*/
         String temp = pCharacteristic->getValue().c_str();
         Serial.println("the last char of the captured string: " + *(temp.end() - 1));
-        if(temp[0] == '<')
+        if(temp[0] == '<' && *(temp.end() - 1) == '>')
+        {
+            bt.bt_msg = temp;
+            bt.commandInQueue = false;
+            bt.commandComplete = true;
+        }
+        else if(temp[0] == '<')
         {
             bt.bt_msg = temp;
             bt.commandInQueue = true;
         }
-        else if(bt.commandInQueue && *(temp.end() - 1) != '>')
+        else if(bt.commandInQueue && *(temp.end() - 1) != '>') // NOTE: does not account for the message with a starting bracket and no end brakcet
         {
             bt.bt_msg += temp;
         }
@@ -320,7 +326,7 @@ bool ESP_BT::send(String tosend)
 bool ESP_BT::send_notification(String tosend)
 {
     long len = tosend.length();
-    tosend = "%S%" + String(len) + "," + tosend + "%S%\n\r";
+    tosend = "%S%" + String(len) + "," + tosend + "%S%$";
     NimBLEService* pSvc = pServer->getServiceByUUID("BAAD");
     if(pSvc)
     {
