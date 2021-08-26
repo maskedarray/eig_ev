@@ -2,9 +2,15 @@
 #include <rtc.h>
 
 
-/*
- * init_storage initialises storage (SD card)
- * returns true only if the storage is initialized properly.
+/**
+ * @brief init_storage initialises storage (SD card).
+ * It checks whether the card is mounted or not, detects 
+ * the card type and size if connected read the required
+ * data from the files already available in the SD card.
+ * Moreover, this function creates the APs file in the memory
+ * if not already avaiable before initialization.
+ * 
+ * @return returns true only if the storage is initialized properly.
  */
 bool Storage::init_storage(){
     log_i("Initializing SD card... ");
@@ -85,15 +91,16 @@ bool Storage::init_storage(){
     return mount_success;
 }
 
-
-/*
- * write data function writes data to the storage.
- * - required parameters are the current time in format YYYYMMDD and the string of data
+/**
+ * @brief write_data function writes data to the storage.
  * - to separate a chunk of data from another, it encapsulates data in '<>'
  * - the first thing it performs is to check if card has free space greater than LOW_SPACE_LIMIT_MB 
  *   if the space is less, delete the oldest file
  * - if this is the first time of writing data, the write data function also creates the config.txt file
- * - return value is true if the write operation is successful
+ * 
+ * @param timenow is the current time in format YYYYMMDD
+ * @param data the string of data that needs to be written in the storage
+ * @return return value is true if the write operation is successful
  */
 bool Storage::write_data(String timenow, String data){
     bool write_success = false;
@@ -149,7 +156,11 @@ bool Storage::write_data(String timenow, String data){
 }
 
 /**
- * This function adds an access point to the SD card file APs.txt
+ * @brief This function adds an access point to the SD card file APs.txt
+ * 
+ * @param SSID is the name of Wifi that is to be added in the APs list
+ * @param Password is the password for respective SSID
+ * 
  */
 bool Storage::write_AP(String SSID, String Password) //made with small edits to the write_data function
 {
