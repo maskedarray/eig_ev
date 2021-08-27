@@ -206,7 +206,6 @@ void setup() {
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 5000, NULL, 1, &ledTask, 1);
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
-    // xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 4000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 4000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 7000, NULL, 1, &wifiTask, 0);
     
@@ -340,42 +339,6 @@ void vBlTransfer(void *pvParameters)
         }
     } //end for
 } //end vBlTransfer task
-
-/**
- * @brief This function checks and executes any available command sent 
- * by the mobile phone.
- * 
- * @param pvParameters void
- */
-void vBlCheck( void *pvParameters ){
-    TickType_t xLastWakeTime_2 = xTaskGetTickCount();
-    int _counter = 0;
-    for(;;){
-        if(flags[bt_f] && bt.isConnected){        //bluetooth is working 
-            xSemaphoreTake(semaWifi1, portMAX_DELAY);
-            xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-            {
-                if(_counter < 10){
-                    _counter += 1;
-                }
-                else{
-                    _counter = 0;
-                    log_i("checking bluetooth commands");
-                }
-                bt.check_bluetooth();
-            }
-            xSemaphoreGive(semaBlRx1);
-            xSemaphoreGive(semaWifi1);
-            UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-            log_v("Stack usage of blcheck Task: %d",(int)uxHighWaterMark);
-            vTaskDelayUntil(&xLastWakeTime_2, 0.5*DATA_ACQUISITION_TIME);   
-        }   else if(flags[bt_f]){
-            vTaskDelay(500);     
-        }   else {
-            vTaskDelay(600000); //bluetooth is not working delay 10 minutes
-        }
-    }
-} // end vBlCheck
 
 void vStorage( void *pvParameters ){
     for(;;){    //infinite loop
