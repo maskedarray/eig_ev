@@ -117,7 +117,8 @@ void setup() {
     wf.init();
     wf.check_connection();
 
-    log_i("initialized wifi successfully"); 
+    Serial.println(WiFi.macAddress());
+        log_i("initialized wifi successfully");
     if(initRTC()){
         digitalWrite(RTC_LED, HIGH);
         flags[rtc_f] = 1;
@@ -205,7 +206,7 @@ void setup() {
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 5000, NULL, 1, &ledTask, 1);
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
-    xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 4000, NULL, 2, &blTask1, 0);
+    // xTaskCreatePinnedToCore(vBlCheck, "Bluetooth Commands", 4000, NULL, 2, &blTask1, 0);
     xTaskCreatePinnedToCore(vBlTransfer, "Bluetooth Transfer", 4000, NULL, 3, &blTask2, 0);
     xTaskCreatePinnedToCore(vWifiTransfer, "Transfer data on Wifi", 7000, NULL, 1, &wifiTask, 0);
     
@@ -288,79 +289,57 @@ void vAcquireData( void *pvParameters ){
  * 
  * @param pvParameters void
  */
-void vBlTransfer( void *pvParameters ){ //synced by the acquire data function
-    for(;;){    //infinite loop
-        if(flags[bt_f] && bt.isConnected){
-            xSemaphoreTake(semaBlTx1, portMAX_DELAY);   //for task sync with acquire data
-            xSemaphoreTake(semaAqData1, portMAX_DELAY); //for copying towrite string
-            String towrite_cpy;
-            towrite_cpy = towrite;
-            xSemaphoreGive(semaAqData1);
+
+void vBlTransfer(void *pvParameters)
+{ //synced by the acquire data function
+    TickType_t xLastWakeTime_2 = xTaskGetTickCount();
+    int _counter = 0;
+    for (;;)
+    { //infinite loop
+        if (flags[bt_f] && bt.isConnected)
+        {
+            if (xSemaphoreTake(semaBlTx1, 10))
+            {
+                xSemaphoreTake(semaAqData1, portMAX_DELAY); //for copying towrite string
+                String towrite_cpy;
+                towrite_cpy = towrite;
+                xSemaphoreGive(semaAqData1);
+                xSemaphoreTake(semaBlRx1, portMAX_DELAY);
+                log_i("sending data over bluetooth ");
+                bt.send_notification(towrite_cpy);
+                xSemaphoreGive(semaBlRx1);
+                flags[bt_blink_f] = 1;
+                UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+                log_v("Stack usage of blcheck Task: %d", (int)uxHighWaterMark);
+            }
+            xSemaphoreTake(semaWifi1, portMAX_DELAY);
             xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-            log_i("sending data over bluetooth ");
-            bt.send_notification(towrite_cpy);
+            {
+                if (_counter < 10)
+                {
+                    _counter += 1;
+                }
+                else
+                {
+                    _counter = 0;
+                    log_i("checking bluetooth commands");
+                }
+                bt.check_bluetooth();
+            }
             xSemaphoreGive(semaBlRx1);
-            UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-            log_v("Stack usage of bltransfer Task: %d", (int)uxHighWaterMark);
-            flags[bt_blink_f] = 1;
-        }   else if(flags[bt_f]){
-            vTaskDelay(500);     
-        }   else {
+            xSemaphoreGive(semaWifi1);
+            vTaskDelayUntil(&xLastWakeTime_2, 0.5 * DATA_ACQUISITION_TIME);
+        }
+        else if (flags[bt_f])
+        {
+            vTaskDelay(500);
+        }
+        else
+        {
             vTaskDelay(600000); //bluetooth is not working delay 10 minutes
         }
-    }   //end for
-}   //end vBlTransfer task
-
-// void vBlTransfer(void *pvParameters)
-// { //synced by the acquire data function
-//     TickType_t xLastWakeTime_2 = xTaskGetTickCount();
-//     int _counter = 0;
-//     for (;;)
-//     { //infinite loop
-//         if (flags[bt_f] && bt.isConnected)
-//         {
-//             if (xSemaphoreTake(semaBlTx1, 10))
-//             {
-//                 xSemaphoreTake(semaAqData1, portMAX_DELAY); //for copying towrite string
-//                 String towrite_cpy;
-//                 towrite_cpy = towrite;
-//                 xSemaphoreGive(semaAqData1);
-//                 xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-//                 log_i("sending data over bluetooth ");
-//                 bt.send_notification(towrite_cpy);
-//                 xSemaphoreGive(semaBlRx1);
-//                 flags[bt_blink_f] = 1;
-//             }
-//             xSemaphoreTake(semaWifi1, portMAX_DELAY);
-//             xSemaphoreTake(semaBlRx1, portMAX_DELAY);
-//             {
-//                 if (_counter < 10)
-//                 {
-//                     _counter += 1;
-//                 }
-//                 else
-//                 {
-//                     _counter = 0;
-//                     log_i("checking bluetooth commands");
-//                 }
-//                 bt.check_bluetooth();
-//             }
-//             xSemaphoreGive(semaBlRx1);
-//             xSemaphoreGive(semaWifi1);
-//             UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-//             log_v("Stack usage of blcheck Task: %d", (int)uxHighWaterMark);
-//             vTaskDelayUntil(&xLastWakeTime_2, 0.5 * DATA_ACQUISITION_TIME);
-//         }
-//         else if (flags[bt_f])
-//         {
-//             vTaskDelay(500);
-//         }
-//         else
-//         {
-//             vTaskDelay(600000); //bluetooth is not working delay 10 minutes
-//         }
-//     } //end for
-// } //end vBlTransfer task
+    } //end for
+} //end vBlTransfer task
 
 /**
  * @brief This function checks and executes any available command sent 
