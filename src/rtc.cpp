@@ -115,6 +115,7 @@ void _set_esp_time(int yr, int mn, int dy){
 }
 
 void setRtcTime(){
+    log_i("Set RTC time");
     tm now = esp_sys_time.getTimeStruct();
     rtc.adjust(DateTime(now.tm_year, now.tm_mon +1, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec));
 }
