@@ -157,9 +157,12 @@ bool Storage::write_data(String timenow, String data){
 
 /**
  * @brief This function adds an access point to the SD card file APs.txt
+ * as well as creates the file APs.txt if not found
  * 
  * @param SSID is the name of Wifi that is to be added in the APs list
  * @param Password is the password for respective SSID
+ * 
+ * @return true if access point is succesfully added to the file
  * 
  */
 bool Storage::write_AP(String SSID, String Password) //made with small edits to the write_data function
@@ -200,9 +203,16 @@ bool Storage::write_AP(String SSID, String Password) //made with small edits to 
 }
 
 /**
- * This function clears the APs.txt file and adds new credentials according to
+ * @brief This function clears the APs.txt file and adds new credentials according to
  * the String passed to it. It is called whenever the AP list exceeds a set
  * limit or a saved SSID is being connected to with a different password.
+ * 
+ * @param SSID is a list of SSIDs that needs to be written in the APs.txt file
+ *  with a maximum capacity of 10 SSIDs
+ * @param Password is the list of passwords to the corresponsing entries of SSID
+ *  stored in the SSID array
+ * 
+ * @return True if success 
  */
 bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
 {
@@ -255,8 +265,11 @@ bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
     }
 }
 
-/*
- * places CSV header on the file
+/**
+ * @brief places CSV header on the file. This CSV header is placed on the top of
+ * each file (when a file is created)
+ * 
+ * @param File is a parameter of type File in which teh header needs to be placed
  */
 void Storage::create_header(File file){
     file.println("Time,EV_ID,EV_Voltage,EV_Current,EV_MCU_Rpm,EV_MCU_Temp,"
@@ -268,8 +281,8 @@ void Storage::create_header(File file){
 }
 
 
-/*
- * remove_oldest_file() function removes the oldest file based on filename.
+/**
+ * @brief remove_oldest_file() function removes the oldest file based on filename.
  * - it converts the filenames to integers and loops over all files to check the smallest.
  * - then the smallest files is removed.
  */
