@@ -199,7 +199,6 @@ void setup() {
     flags[cloud_f] = 0;
     flags[cloud_blink_f] = 0;
 
-    //xTaskCreatePinnedToCore(vTimeSync, "Time Sync", 2000, NULL, 1, &timeSyncTask, 1);
     xTaskCreatePinnedToCore(vStatusLed, "Status LED", 5000, NULL, 1, &ledTask, 1);
     xTaskCreatePinnedToCore(vAcquireData, "Data Acquisition", 5000, NULL, 3, &dataTask1, 1);
     xTaskCreatePinnedToCore(vStorage, "Storage Handler", 5000, NULL, 2, &storageTask, 1);
@@ -494,35 +493,5 @@ void vStatusLed( void * pvParameters){
             }
         }
         vTaskDelay(50);
-    }
-}
-
-void vLedBlink( void * blinkDelay){ 
-    for (;;){
-        digitalWrite(CAN_LED, !digitalRead(CAN_LED));
-        digitalWrite(RTC_LED, !digitalRead(RTC_LED));
-        digitalWrite(BT_LED, !digitalRead(BT_LED));
-        digitalWrite(WIFI_LED, !digitalRead(WIFI_LED));
-        digitalWrite(STORAGE_LED, !digitalRead(STORAGE_LED));
-        vTaskDelay(*(int*)blinkDelay);
-    }
-}
-
-void vTimeSync( void * pvParameters ){
-    for (;;){
-        if(time(nullptr) < 1609441200)      //system time is not adjusted
-        {    
-            while(time(nullptr) < 1609441200)   //time less than 1 Jan 2021 12:00 AM
-            {
-                vTaskDelay(1000);
-                log_e("waiting for time update from ntp server");
-            }
-            //system time is adjusted set rtc now
-        }
-        if(!flags[rtc_f]){
-            log_i("setting rtc time now");
-            setRtcTime();
-        }
-        vTaskDelay(3600000);       //1 hour
     }
 }
