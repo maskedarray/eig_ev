@@ -112,7 +112,7 @@ bool Storage::write_data(String timenow, String data){
         String path = "/" + timenow + ".txt";
         File file;
         if(!SD.exists(path)){
-            file = SD.open(path, FILE_APPEND);
+            file = SD.open(path, FILE_WRITE);
             if(!file){
                 log_e("Failed to open file for writing ");
                 return write_success;
@@ -157,9 +157,12 @@ bool Storage::write_data(String timenow, String data){
 
 /**
  * @brief This function adds an access point to the SD card file APs.txt
+ * as well as creates the file APs.txt if not found
  * 
  * @param SSID is the name of Wifi that is to be added in the APs list
  * @param Password is the password for respective SSID
+ * 
+ * @return true if access point is succesfully added to the file
  * 
  */
 bool Storage::write_AP(String SSID, String Password) //made with small edits to the write_data function
@@ -169,7 +172,7 @@ bool Storage::write_AP(String SSID, String Password) //made with small edits to 
         String path = "/APs.txt";
         File file;
         if(!SD.exists(path)){
-            file = SD.open(path, FILE_APPEND);
+            file = SD.open(path, FILE_WRITE);
             if(!file){
                 log_e("Failed to open file for writing ");
                 return write_success;
@@ -200,9 +203,16 @@ bool Storage::write_AP(String SSID, String Password) //made with small edits to 
 }
 
 /**
- * This function clears the APs.txt file and adds new credentials according to
+ * @brief This function clears the APs.txt file and adds new credentials according to
  * the String passed to it. It is called whenever the AP list exceeds a set
  * limit or a saved SSID is being connected to with a different password.
+ * 
+ * @param SSID is a list of SSIDs that needs to be written in the APs.txt file
+ *  with a maximum capacity of 10 SSIDs
+ * @param Password is the list of passwords to the corresponsing entries of SSID
+ *  stored in the SSID array
+ * 
+ * @return True if success 
  */
 bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
 {
@@ -255,8 +265,11 @@ bool Storage::rewrite_storage_APs(String SSID[10], String Password[10])
     }
 }
 
-/*
- * places CSV header on the file
+/**
+ * @brief places CSV header on the file. This CSV header is placed on the top of
+ * each file (when a file is created)
+ * 
+ * @param File is a parameter of type File in which teh header needs to be placed
  */
 void Storage::create_header(File file){
     file.println("Time,EV_ID,EV_Voltage,EV_Current,EV_MCU_Rpm,EV_MCU_Temp,"
@@ -268,8 +281,8 @@ void Storage::create_header(File file){
 }
 
 
-/*
- * remove_oldest_file() function removes the oldest file based on filename.
+/**
+ * @brief remove_oldest_file() function removes the oldest file based on filename.
  * - it converts the filenames to integers and loops over all files to check the smallest.
  * - then the smallest files is removed.
  */
@@ -294,8 +307,8 @@ void Storage::remove_oldest_file(){
 }
 
 
-/*
- * read_data() function reads the data starting with < character
+/**
+ * @brief read_data() function reads the data starting with < character
  * - it returns data by removing encapsulation "<>"
  * - it also updates the size of current chunk of data.
  * - to check the start of data, it checks the next 30 characters for '<'. if this is not found
@@ -304,7 +317,8 @@ void Storage::remove_oldest_file(){
  * - if data start is not at the curr_read_pos, then it also updates the curr_read_pos variable to start of data.
  * - if the starting character is found, then it loops over the data to check the end character '>' 
  *   till the max_chunk_size_b limit
- * - returns the string without encapsulation "<>" 
+ * 
+ * - @return returns the string without encapsulation "<>" 
  */
 String Storage::read_data(){    
     log_d("Reading file: ");
@@ -369,10 +383,13 @@ String Storage::read_data(){
 }
 
 /**
- * This funtion cycles through the APs stored in the SD card and stores them in
+ * @brief This funtion cycles through the APs stored in the SD card and stores them in
  * a String array. Since the String array parameter degenerates to a pointer it
- * chenges the original referenced parameter and thus returns the list of
- * credentials in two arrays.
+ * changes the original referenced parameter and thus returns the list of
+ * credentials in two arrays. The maximum limit is 10 entries.
+ * 
+ * @return Returns nothing but the SSID_List and Password_List (global arrays) are
+ * updated as a reference pointer to them
  */
 void Storage::return_APList(String SSID_List [10], String Password_List[10])
 {
@@ -486,9 +503,12 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
     }
 }
 
-/*
- * mark_data updates the curr_read_pos in config.txt
+/**
+ * @brief mark_data updates the curr_read_pos in config.txt
  * - if the remaining data in file is less than 10 it also updates the filename
+ * 
+ * @param timenow is a string in the format YYYYMMDD. This string the date of the
+ * file whose current pointer is to be marked
  */
 void Storage::mark_data(String timenow){
     String curr_write_file = "/" + timenow + ".txt";
@@ -534,6 +554,12 @@ void Storage::mark_data(String timenow){
     }
 }
 
+/**
+ * @brief next_file gives the complete path of next file
+ * 
+ * @param curr_file is a string (complete path) of the current file being written or read
+ * @return The string containing the path of next file
+*/
 String Storage::next_file(String curr_file){
     String syear = curr_file.substring(1,5);
     String smonth = curr_file.substring(5,7);
@@ -546,8 +572,13 @@ String Storage::next_file(String curr_file){
     return next_file;
 }
 
-/*
- * get_unsent_data returns the data in bytes
+/**
+ * @brief get_unsent_data returns the data in bytes. It reads current file from
+ * current position pointer till the present location iff wifi is available
+ * 
+ * @param timenow is the current date in format YYYYMMDD
+ * 
+ * @return total number of unsent bytes are returned as long datatype  
  */
 long Storage::get_unsent_data(String timenow){ 
     String filename;
