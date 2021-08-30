@@ -274,7 +274,7 @@ void vAcquireData( void *pvParameters ){
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
         log_v("Stack usage of acquiredata Task: %d",(int)uxHighWaterMark);
         flags[can_blink_f] = 1;
-        vTaskDelayUntil(&xLastWakeTime, 2*DATA_ACQUISITION_TIME);    //defines the data acquisition rate
+        vTaskDelayUntil(&xLastWakeTime, DATA_ACQUISITION_TIME);    //defines the data acquisition rate
     }   //end for
 }   //end vAcquireData
 
