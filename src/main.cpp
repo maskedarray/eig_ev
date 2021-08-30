@@ -48,7 +48,6 @@ void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
 void vLedBlink( void * blinkDelay); 
-void vTimeSync( void * pvParameters);
 int dataflag =0;
 FirebaseData firebaseData;
 String EV_ID;
@@ -487,5 +486,16 @@ void vStatusLed( void * pvParameters){
             }
         }
         vTaskDelay(50);
+    }
+}
+
+void vLedBlink( void * blinkDelay){ 
+    for (;;){
+        digitalWrite(CAN_LED, !digitalRead(CAN_LED));
+        digitalWrite(RTC_LED, !digitalRead(RTC_LED));
+        digitalWrite(BT_LED, !digitalRead(BT_LED));
+        digitalWrite(WIFI_LED, !digitalRead(WIFI_LED));
+        digitalWrite(STORAGE_LED, !digitalRead(STORAGE_LED));
+        vTaskDelay(*(int*)blinkDelay);
     }
 }
