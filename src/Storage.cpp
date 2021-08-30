@@ -307,8 +307,8 @@ void Storage::remove_oldest_file(){
 }
 
 
-/*
- * read_data() function reads the data starting with < character
+/**
+ * @brief read_data() function reads the data starting with < character
  * - it returns data by removing encapsulation "<>"
  * - it also updates the size of current chunk of data.
  * - to check the start of data, it checks the next 30 characters for '<'. if this is not found
@@ -317,7 +317,8 @@ void Storage::remove_oldest_file(){
  * - if data start is not at the curr_read_pos, then it also updates the curr_read_pos variable to start of data.
  * - if the starting character is found, then it loops over the data to check the end character '>' 
  *   till the max_chunk_size_b limit
- * - returns the string without encapsulation "<>" 
+ * 
+ * - @return returns the string without encapsulation "<>" 
  */
 String Storage::read_data(){    
     log_d("Reading file: ");
@@ -382,10 +383,13 @@ String Storage::read_data(){
 }
 
 /**
- * This funtion cycles through the APs stored in the SD card and stores them in
+ * @brief This funtion cycles through the APs stored in the SD card and stores them in
  * a String array. Since the String array parameter degenerates to a pointer it
- * chenges the original referenced parameter and thus returns the list of
- * credentials in two arrays.
+ * changes the original referenced parameter and thus returns the list of
+ * credentials in two arrays. The maximum limit is 10 entries.
+ * 
+ * @return Returns nothing but the SSID_List and Password_List (global arrays) are
+ * updated as a reference pointer to them
  */
 void Storage::return_APList(String SSID_List [10], String Password_List[10])
 {
@@ -499,9 +503,12 @@ void Storage::return_APList(String SSID_List [10], String Password_List[10])
     }
 }
 
-/*
- * mark_data updates the curr_read_pos in config.txt
+/**
+ * @brief mark_data updates the curr_read_pos in config.txt
  * - if the remaining data in file is less than 10 it also updates the filename
+ * 
+ * @param timenow is a string in the format YYYYMMDD. This string the date of the
+ * file whose current pointer is to be marked
  */
 void Storage::mark_data(String timenow){
     String curr_write_file = "/" + timenow + ".txt";
@@ -547,6 +554,12 @@ void Storage::mark_data(String timenow){
     }
 }
 
+/**
+ * @brief next_file gives the complete path of next file
+ * 
+ * @param curr_file is a string (complete path) of the current file being written or read
+ * @return The string containing the path of next file
+*/
 String Storage::next_file(String curr_file){
     String syear = curr_file.substring(1,5);
     String smonth = curr_file.substring(5,7);
@@ -559,8 +572,13 @@ String Storage::next_file(String curr_file){
     return next_file;
 }
 
-/*
- * get_unsent_data returns the data in bytes
+/**
+ * @brief get_unsent_data returns the data in bytes. It reads current file from
+ * current position pointer till the present location iff wifi is available
+ * 
+ * @param timenow is the current date in format YYYYMMDD
+ * 
+ * @return total number of unsent bytes are returned as long datatype  
  */
 long Storage::get_unsent_data(String timenow){ 
     String filename;
