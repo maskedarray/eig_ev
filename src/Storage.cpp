@@ -112,7 +112,7 @@ bool Storage::write_data(String timenow, String data){
         String path = "/" + timenow + ".txt";
         File file;
         if(!SD.exists(path)){
-            file = SD.open(path, FILE_APPEND);
+            file = SD.open(path, FILE_WRITE);
             if(!file){
                 log_e("Failed to open file for writing ");
                 return write_success;
@@ -172,7 +172,7 @@ bool Storage::write_AP(String SSID, String Password) //made with small edits to 
         String path = "/APs.txt";
         File file;
         if(!SD.exists(path)){
-            file = SD.open(path, FILE_APPEND);
+            file = SD.open(path, FILE_WRITE);
             if(!file){
                 log_e("Failed to open file for writing ");
                 return write_success;
