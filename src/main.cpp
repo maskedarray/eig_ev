@@ -44,7 +44,6 @@ TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask, timeSy
 TaskHandle_t status_blink_handler;
 void vAcquireData( void *pvParameters );
 void vBlTransfer( void *pvParameters );
-void vBlCheck( void *pvParameters );
 void vStorage( void *pvParameters );
 void vWifiTransfer( void * pvParameters);
 void vStatusLed( void * pvParameters);
