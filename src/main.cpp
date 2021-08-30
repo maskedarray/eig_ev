@@ -347,7 +347,7 @@ void vStorage( void *pvParameters ){
             String towrite_cpy;
             towrite_cpy = towrite;
             xSemaphoreGive(semaAqData1);
-            xSemaphoreTake(semaWifi1,portMAX_DELAY);    //wait for wifi transfer task to finish
+            // xSemaphoreTake(semaWifi1,portMAX_DELAY);    //wait for wifi transfer task to finish
             if(storage.write_data(getTime2(), towrite_cpy)){
                 log_i("data written to storage");
                 flags[sd_f] = 1;
@@ -356,7 +356,7 @@ void vStorage( void *pvParameters ){
                 log_e("Storage stopped working!");
                 flags[sd_f] = 0;
             }
-            xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
+            // xSemaphoreGive(semaWifi1);  //resume the wifi transfer task
             UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
             log_v("Stack usage of Storage Task: %d",(int)uxHighWaterMark);
         }   else{
