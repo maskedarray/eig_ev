@@ -88,18 +88,48 @@ void connect(){
   mqtt->mqttConnect();
 }
 
+void setCert1()
+{
+  WiFiClientSecure * temp = (WiFiClientSecure *)netClient;
+  temp->setCACert(root_cert_1);
+  log_i("Certificate 1");
+  temp->setPreSharedKey(NULL, NULL);
+}
+
+void setCert2()
+{
+  WiFiClientSecure * temp = (WiFiClientSecure *)netClient;
+  temp->setCACert(root_cert_2);
+  log_i("Certificate 2");
+  temp->setPreSharedKey(NULL, NULL);
+}
+
+void supperConnect()
+{
+  if(!mqttClient->connected())
+    {
+      setCert1();
+      mqtt->mqttConnect();
+    }
+
+  if(!mqttClient->connected())
+    {
+      setCert2();
+      mqtt->mqttConnect();
+    }
+}
+
 void setupCloudIoT(){
   device = new CloudIoTCoreDevice(
       project_id, location, registry_id, device_id,
       private_key_str);
 
   netClient = new WiFiClientSecure();
-  WiFiClientSecure * temp = (WiFiClientSecure *)netClient;
-  temp->setCACert(root_cert);
-  temp->setPreSharedKey(NULL, NULL);
+//  setCert1();
   mqttClient = new MQTTClient(6000); // number of characters 
   mqttClient->setOptions(180, true, 1000); // keepAlive, cleanSession, timeout
   mqtt = new CloudIoTCoreMqtt(mqttClient, netClient, device);
   mqtt->setUseLts(true);
   mqtt->startMQTT();
 }
+
