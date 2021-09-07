@@ -13,7 +13,7 @@
 //TODO: OPTIMIZATION: convert String to c string.
 
 
-#define DATA_ACQUISITION_TIME 1000      //perform action every 1000ms
+#define DATA_ACQUISITION_TIME 1000   //perform action every 1000ms
 #define DATA_MAX_LEN 1200   //bytes
 //#define RESET_ESP_STORAGE   //Warning: Do not uncomment this line
 #define SETUP_LED   32
@@ -181,7 +181,9 @@ void setup() {
         flags[bt_f] = 0;
     }
 
+    
     setupCloudIoT();    //TODO: change this function and add wifi initialization
+    setCert1();
     log_i("cloud iot setup complete");
     
     //set_system_time();      //timeout for response has been set to 20000 so slave initializes successfully 
@@ -266,9 +268,11 @@ void vAcquireData( void *pvParameters ){
             }
             //Now towrite string contains one valid string of CSV data chunk
         }
+
         xSemaphoreGive(semaAqData1); 
         xSemaphoreGive(semaBlTx1);      //signal to call bluetooth transfer function once
         xSemaphoreGive(semaStorage1);
+
         UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
         log_v("Stack usage of acquiredata Task: %d",(int)uxHighWaterMark);
         flags[can_blink_f] = 1;
@@ -379,12 +383,22 @@ void vWifiTransfer( void *pvParameters ){
                     vTaskDelay(10);  // <- fixes some issues with WiFi stability
                     if (!mqttClient->connected()) {
                         configTime(18000, 0, "pool.ntp.org");
+                        log_i("HERE IN Not Connected");
                         while(time(nullptr) < 1609441200)   //time less than 1 Jan 2021 12:00 AM
                         {
                             vTaskDelay(1000);
                             log_e("waiting for time update from ntp server");
                         }
+                        
                         mqtt->mqttConnect();
+                        if(!mqttClient->connected())
+                        {
+                            log_i("NEW IF");
+                            //setCert2();
+                            //mqtt->mqttConnect();
+                            supperConnect();  
+                        }
+                        
                     }
                     if (mqttClient->connected()) {
                         flags[cloud_f] = 1;
