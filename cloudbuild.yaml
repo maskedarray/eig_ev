@@ -1,0 +1,9 @@
+steps:
+- name: 'sglahn/platformio-core:latest'  
+  dir: .
+  args: ['run']  
+artifacts: 
+  objects: 
+    location: 'gs://batteryswapstation-firmwares/$TAG_NAME'
+    paths: 
+      - /workspace/.pio/build/esp32/firmware_esp32.bin
