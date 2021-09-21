@@ -18,5 +18,5 @@ steps:
     dir: .
 artifacts:
   objects:
-    location: 'gs://$PROJECT_ID-firmwares/$TAG_NAME'
+    location: 'gs://batteryswapstation-firmwares/$TAG_NAME'
     paths: '/workspace/.pio/build/esp32doit-devkit-v1/firmware.bin'
