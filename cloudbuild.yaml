@@ -1,22 +1,22 @@
-steps:
-- name: 'sglahn/platformio-core:4.3.4'  
- dir: .
- args: ['run']  
-artifacts: 
- objects: 
-   location: 'gs://batteryswapstation-firmwares/$TAG_NAME'
-   paths: '/workspace/.pio/build/esp32doit-devkit-v1/firmware.bin'
-
 # steps:
-#   - name: python
-#     #entrypoint: bash
-#    args:
-#     - '-c'
-#      - |
-#        pip install --upgrade platformio
-#        pio run
-    # dir: .
-#artifacts:
-#  objects:
+# - name: 'sglahn/platformio-core:4.3.4'  
+#  dir: .
+#  args: ['run']  
+# artifacts: 
+#  objects: 
 #    location: 'gs://batteryswapstation-firmwares/$TAG_NAME'
 #    paths: '/workspace/.pio/build/esp32doit-devkit-v1/firmware.bin'
+
+steps:
+  - name: python
+    entrypoint: bash
+   args:
+    - '-c'
+     - |
+       pip install --upgrade platformio
+       pio run
+    dir: .
+artifacts:
+ objects:
+   location: 'gs://batteryswapstation-firmwares/$TAG_NAME'
+   paths: '/workspace/.pio/build/esp32doit-devkit-v1/firmware.bin'
