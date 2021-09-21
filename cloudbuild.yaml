@@ -9,7 +9,7 @@
 
 steps:
   - name: python
-    entrypoint: bash
+    #entrypoint: bash
     args:
       - '-c'
       - |
