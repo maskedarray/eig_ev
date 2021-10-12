@@ -24,6 +24,7 @@
 #define WIFI_LED 33
 #define FIREBASE_HOST "batteryswapstation.firebaseio.com" 
 #define FIREBASE_AUTH "3v7E1QgsqLjEUx5KX1mw6kaj0ONb1IrtJ5HyNxCO" 
+#define UPDATE_ESP  // Comment this line if you don't want ESP tp check for update
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -38,6 +39,9 @@
 #include "defines.h"
 #include "FirebaseESP32.h"
 
+#ifdef UPDATE_ESP
+    #include "OTA.h"
+#endif
 Preferences settings__;
 String towrite;
 TaskHandle_t dataTask1, blTask1, blTask2, storageTask, wifiTask, ledTask, timeSyncTask;
@@ -114,6 +118,17 @@ void setup() {
     }
     wf.init();
     wf.check_connection();
+
+    #ifdef UPDATE_ESP
+        // Check if we need to download a new version
+        String downloadUrl = getDownloadUrl();
+        if (downloadUrl.length() > 0)
+        {
+            bool success = downloadUpdate(downloadUrl);
+            if (!success)
+                log_i("Error updating device\n");
+        }
+    #endif
 
     Serial.println(WiFi.macAddress());
         log_i("initialized wifi successfully");
