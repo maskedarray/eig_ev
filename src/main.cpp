@@ -24,7 +24,7 @@
 #define WIFI_LED 33
 #define FIREBASE_HOST "batteryswapstation.firebaseio.com" 
 #define FIREBASE_AUTH "3v7E1QgsqLjEUx5KX1mw6kaj0ONb1IrtJ5HyNxCO" 
-#define UPDATE_ESP  // Comment this line if you don't want ESP tp check for update
+// #define UPDATE_ESP  // Comment this line if you don't want ESP tp check for update
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
