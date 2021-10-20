@@ -24,7 +24,7 @@
 #define WIFI_LED 33
 #define FIREBASE_HOST "batteryswapstation.firebaseio.com" 
 #define FIREBASE_AUTH "3v7E1QgsqLjEUx5KX1mw6kaj0ONb1IrtJ5HyNxCO" 
-// #define UPDATE_ESP  // Comment this line if you don't want ESP tp check for update
+#define UPDATE_ESP  // Comment this line if you don't want ESP tp check for update
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -158,7 +158,7 @@ void setup() {
         EV_ID = bt.bluetooth_name;
         device_id = new char[30];
         bt.bluetooth_name.toCharArray(device_id, strlen(bt.bluetooth_name.c_str()) + 1);
-        if(bt.bluetooth_name != "" && bt.bluetooth_password != ""){                             //settings saved previously
+        if(bt.bluetooth_name == "" && bt.bluetooth_password == ""){                             //settings saved previously
             settings__.end();
             log_i("Settings found!\r\nbluetooth name: %s\r\n bluetooth password: %s", bt.bluetooth_name.c_str(), bt.bluetooth_password.c_str());
         }
